@@ -1,0 +1,115 @@
+// Test creating a subject with a phone contact
+$subjectWithPhone = App\Models\Subject::factory()
+    ->withPhoneContact()
+    ->create();
+
+echo "Created subject with phone contact: " . $subjectWithPhone->id . "\n";
+echo "Contact count: " . $subjectWithPhone->contacts()->count() . "\n";
+$phoneContact = $subjectWithPhone->contacts()->where('type', 'phone')->first();
+if ($phoneContact) {
+    echo "Phone contact: " . $phoneContact->id . "\n";
+    $phoneNumber = $phoneContact->phoneNumbers()->first();
+    if ($phoneNumber) {
+        echo "Phone number: " . $phoneNumber->phone_number . "\n\n";
+    } else {
+        echo "No phone number found\n\n";
+    }
+} else {
+    echo "No phone contact found\n\n";
+}
+
+// Test creating a subject with an email contact
+$subjectWithEmail = App\Models\Subject::factory()
+    ->withEmailContact()
+    ->create();
+
+echo "Created subject with email contact: " . $subjectWithEmail->id . "\n";
+echo "Contact count: " . $subjectWithEmail->contacts()->count() . "\n";
+$emailContact = $subjectWithEmail->contacts()->where('type', 'email')->first();
+if ($emailContact) {
+    echo "Email contact: " . $emailContact->id . "\n";
+    $email = $emailContact->emails()->first();
+    if ($email) {
+        echo "Email: " . $email->email . "\n\n";
+    } else {
+        echo "No email found\n\n";
+    }
+} else {
+    echo "No email contact found\n\n";
+}
+
+// Test creating a subject with an address contact
+$subjectWithAddress = App\Models\Subject::factory()
+    ->withAddressContact()
+    ->create();
+
+echo "Created subject with address contact: " . $subjectWithAddress->id . "\n";
+echo "Contact count: " . $subjectWithAddress->contacts()->count() . "\n";
+$addressContact = $subjectWithAddress->contacts()->where('type', 'address')->first();
+if ($addressContact) {
+    echo "Address contact: " . $addressContact->id . "\n";
+    $address = $addressContact->addresses()->first();
+    if ($address) {
+        echo "Address: " . $address->street . ", " . 
+            $address->city . ", " . 
+            $address->state . " " . 
+            $address->zip . "\n\n";
+    } else {
+        echo "No address found\n\n";
+    }
+} else {
+    echo "No address contact found\n\n";
+}
+
+// Test creating a subject with all contacts
+$subjectWithAllContacts = App\Models\Subject::factory()
+    ->withAllContacts()
+    ->create();
+
+echo "Created subject with all contacts: " . $subjectWithAllContacts->id . "\n";
+echo "Contact count: " . $subjectWithAllContacts->contacts()->count() . "\n";
+
+// Check phone contact
+$phoneContact = $subjectWithAllContacts->contacts()->where('type', 'phone')->first();
+if ($phoneContact) {
+    echo "Phone contact: " . $phoneContact->id . "\n";
+    $phoneNumber = $phoneContact->phoneNumbers()->first();
+    if ($phoneNumber) {
+        echo "Phone number: " . $phoneNumber->phone_number . "\n";
+    } else {
+        echo "No phone number found\n";
+    }
+} else {
+    echo "No phone contact found\n";
+}
+
+// Check email contact
+$emailContact = $subjectWithAllContacts->contacts()->where('type', 'email')->first();
+if ($emailContact) {
+    echo "Email contact: " . $emailContact->id . "\n";
+    $email = $emailContact->emails()->first();
+    if ($email) {
+        echo "Email: " . $email->email . "\n";
+    } else {
+        echo "No email found\n";
+    }
+} else {
+    echo "No email contact found\n";
+}
+
+// Check address contact
+$addressContact = $subjectWithAllContacts->contacts()->where('type', 'address')->first();
+if ($addressContact) {
+    echo "Address contact: " . $addressContact->id . "\n";
+    $address = $addressContact->addresses()->first();
+    if ($address) {
+        echo "Address: " . $address->street . ", " . 
+            $address->city . ", " . 
+            $address->state . " " . 
+            $address->zip . "\n";
+    } else {
+        echo "No address found\n";
+    }
+} else {
+    echo "No address contact found\n";
+}

@@ -1,0 +1,103 @@
+<?php
+
+use App\Models\Hostage;
+use App\Models\Image;
+use App\Models\Negotiation;
+use App\Models\Tenant;
+use App\Services\Hostage\HostageDestructionService;
+use Illuminate\Support\Facades\Storage;
+
+// This script tests the deletion of hostage images from S3 when a hostage is deleted
+
+// Get the first tenant
+$tenant = Tenant::first();
+
+if (!$tenant) {
+    echo "No tenants found in the database.\n";
+    exit;
+}
+
+// Set the current tenant
+app()->forgetInstance('tenant');
+app()->instance('tenant', $tenant);
+
+// Get or create a negotiation
+$negotiation = Negotiation::first() ?? Negotiation::factory()->create([
+    'tenant_id' => $tenant->id,
+]);
+
+// Create a hostage
+$hostage = Hostage::create([
+    'tenant_id' => $tenant->id,
+    'negotiation_id' => $negotiation->id,
+    'name' => 'Test Hostage for Image Deletion',
+    'age' => '30',
+    'gender' => 'Male',
+    'created_by' => 1,
+]);
+
+echo "Created hostage with ID: " . $hostage->id . "\n";
+
+// Create a test image for the hostage
+$imagePath = 'hostages/' . $hostage->id . '/test-image.jpg';
+$disk = 's3_public';
+
+// Create a dummy file in storage for testing
+Storage::disk($disk)->put($imagePath, 'Test image content');
+
+// Create an image record in the database
+$image = Image::create([
+    'path' => $imagePath,
+    'url' => Storage::disk($disk)->url($imagePath),
+    'disk' => $disk,
+    'original_filename' => 'test-image.jpg',
+    'mime_type' => 'image/jpeg',
+    'size' => 100,
+    'tenant_id' => $tenant->id,
+    'is_primary' => true,
+    'imageable_type' => get_class($hostage),
+    'imageable_id' => $hostage->id,
+]);
+
+echo "Created image with ID: " . $image->id . "\n";
+
+// Verify the image exists in S3
+if (Storage::disk($disk)->exists($imagePath)) {
+    echo "Image exists in S3 at path: " . $imagePath . "\n";
+} else {
+    echo "WARNING: Image does not exist in S3. Test may not be accurate.\n";
+}
+
+// Delete the hostage using the HostageDestructionService
+$hostageDestructionService = app(HostageDestructionService::class);
+$hostageDestructionService->deleteHostage($hostage->id);
+
+echo "Deleted hostage with ID: " . $hostage->id . "\n";
+
+// Verify the hostage is deleted from the database
+$deletedHostage = Hostage::find($hostage->id);
+if (!$deletedHostage) {
+    echo "Hostage successfully deleted from database.\n";
+} else {
+    echo "ERROR: Hostage still exists in database.\n";
+}
+
+// Verify the image is deleted from the database
+$deletedImage = Image::find($image->id);
+if (!$deletedImage) {
+    echo "Image successfully deleted from database.\n";
+} else {
+    echo "ERROR: Image still exists in database.\n";
+}
+
+// Verify the image is deleted from S3
+if (!Storage::disk($disk)->exists($imagePath)) {
+    echo "Image successfully deleted from S3.\n";
+} else {
+    echo "ERROR: Image still exists in S3 at path: " . $imagePath . "\n";
+    // Clean up the test image if it wasn't deleted
+    Storage::disk($disk)->delete($imagePath);
+    echo "Manually deleted the test image from S3.\n";
+}
+
+echo "Test completed.\n";

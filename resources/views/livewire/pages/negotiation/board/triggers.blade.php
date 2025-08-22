@@ -1,0 +1,246 @@
+<?php
+
+	use App\Models\Trigger;
+	use App\Models\Negotiation;
+	use App\Models\Subject;
+	use App\Services\Trigger\TriggerDestructionService;
+	use App\Services\Trigger\TriggerFetchingService;
+	use App\Services\Negotiation\NegotiationFetchingService;
+	use Livewire\Attributes\On;
+	use Livewire\Volt\Component;
+
+	/**
+	 * Triggers Component
+	 *
+	 * This Livewire component manages the display and manipulation of triggers
+	 * associated with a negotiation's primary subject. It handles creating,
+	 * editing, and deleting triggers, as well as listening for real-time updates
+	 * through broadcast events.
+	 */
+	new class extends Component {
+		/** @var bool Flag to control the visibility of the create trigger modal */
+		public bool $showCreateTriggerModal = false;
+
+		/** @var bool Flag to control the visibility of the edit trigger modal */
+		public bool $showEditTriggerModal = false;
+
+		/** @var Negotiation The negotiation being viewed */
+		public Negotiation $negotiation;
+
+		/** @var Subject The primary subject of the negotiation */
+		public Subject $primarySubject;
+
+		/** @var int The ID of the negotiation */
+		public int $negotiationId;
+
+		/** @var Trigger|null The trigger being edited */
+		public $triggerToEdit;
+
+		/**
+		 * Initialize the component with the negotiation data
+		 *
+		 * @param  int  $negotiationId  The ID of the negotiation to load
+		 *
+		 * @return void
+		 */
+		public function mount($negotiationId)
+		{
+			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
+			$this->primarySubject = $this->negotiation->primarySubject();
+			$this->negotiationId = $this->negotiation->id;
+
+			// Eager load triggers with their relationships to prevent N+1 queries
+			$this->primarySubject->load('triggers');
+		}
+
+		/**
+		 * Define the event listeners for this component
+		 *
+		 * @return array Array of event listeners mapped to handler methods
+		 */
+ 	public function getListeners()
+ 	{
+ 		return [
+ 			"echo-private:negotiation.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
+ 			"echo-private:negotiation.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
+ 			"echo-private:negotiation.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
+ 		];
+ 	}
+
+		/**
+		 * Handle the TriggerCreated event by refreshing the triggers collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleTriggerCreated(array $data):void
+		{
+			// Eager load triggers with their relationships to prevent N+1 queries
+			$this->primarySubject->load('triggers');
+		}
+
+		/**
+		 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleTriggerUpdated(array $data)
+		{
+			// Eager load triggers with their relationships to prevent N+1 queries
+			$this->primarySubject->load('triggers');
+		}
+
+		/**
+		 * Prepare a trigger for editing and show the edit modal
+		 *
+		 * @param  int  $triggerId  The ID of the trigger to edit
+		 *
+		 * @return void
+		 */
+		public function editTrigger($triggerId):void
+		{
+			// Reset the trigger being edited before setting a new one
+			$this->triggerToEdit = null;
+
+			$trigger = app(TriggerFetchingService::class)->getTrigger($triggerId);
+			if ($trigger) {
+				$this->triggerToEdit = $trigger;
+			}
+			$this->showEditTriggerModal = true;
+		}
+
+		/**
+		 * Delete a trigger by its ID
+		 *
+		 * @param  int  $triggerId  The ID of the trigger to delete
+		 *
+		 * @return void
+		 */
+		public function deleteTrigger($triggerId)
+		{
+			app(TriggerDestructionService::class)->deleteTrigger($triggerId);
+		}
+
+		/**
+		 * Close all modal dialogs
+		 *
+		 * This method is triggered by the 'close-modal' event
+		 *
+		 * @return void
+		 */
+		#[On('close-modal')]
+		public function closeModal():void
+		{
+			$this->showCreateTriggerModal = false;
+			$this->showEditTriggerModal = false;
+			$this->triggerToEdit = null; // Reset the trigger being edited
+		}
+
+	}
+
+?>
+
+<div
+		class=""
+		x-data="{ showTriggers: true }">
+	<div class="bg-rose-600 px-4 py-2 rounded-lg flex items-center justify-between">
+		<h3 class="text-sm">Triggers <span
+					x-show="!showTriggers"
+					x-transition>({{ $primarySubject->triggers->count() }})</span></h3>
+		<div>
+			<x-button
+					wire:click="$toggle('showCreateTriggerModal')"
+					color="white"
+					sm
+					flat
+					icon="plus" />
+			<x-button
+					@click="showTriggers = !showTriggers"
+					color="white"
+					sm
+					flat
+					icon="chevron-up-down" />
+		</div>
+	</div>
+	<div
+			class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4"
+			x-show="showTriggers"
+			x-transition>
+		@if($primarySubject->triggers->isNotEmpty())
+			@foreach($primarySubject->triggers as $trigger)
+				<x-card color="secondary">
+					<x-slot:header>
+						<div class="p-3 flex items-center justify-between">
+							<div>
+								<p class="capitalize font-semibold text-lg">{{ $trigger->title }}</p>
+								<p class="text-gray-300 text-xs">{{ $trigger->source }}</p>
+							</div>
+							<div class="text-right">
+								<x-subject.confidence-badge :confidence-score="$trigger->confidence_score" />
+								<p class="text-gray-300 text-xs mt-1">{{ $trigger->user->name }}</p>
+							</div>
+						</div>
+					</x-slot:header>
+					<p class="text-sm">
+						{{ $trigger->description }}
+					</p>
+					<x-slot:footer>
+						<div class="flex items-center justify-between">
+							<x-badge
+									:color="App\Enums\Trigger\TriggerCategories::from($trigger->category)->color()"
+									xs
+									round
+									icon="tag"
+									position="left">
+								<span class="text-xs">{{ App\Enums\Trigger\TriggerCategories::from($trigger->category)->label() }}</span>
+							</x-badge>
+							<div>
+								<x-button
+										wire:click="editTrigger({{ $trigger->id }})"
+										color="cyan"
+										sm
+										flat
+										icon="pencil-square" />
+								<x-button
+										wire:click="deleteTrigger({{ $trigger->id }})"
+										color="red"
+										sm
+										flat
+										icon="trash" />
+							</div>
+						</div>
+					</x-slot:footer>
+				</x-card>
+			@endforeach
+		@else
+			<div class="col-span-3 text-center py-8">
+				<p class="text-gray-500 mb-4">No triggers available for this subject.</p>
+				<p class="text-sm text-gray-400">Click the + button above to create a new trigger.</p>
+			</div>
+		@endif
+	</div>
+	<x-modal
+			id="create-trigger-modal"
+			center
+			title="Create Trigger"
+			wire="showCreateTriggerModal">
+		<livewire:forms.trigger.create-trigger
+				:subjectId="$primarySubject->id"
+				:negotiationId="$negotiation->id" />
+	</x-modal>
+	<x-modal
+			id="edit-trigger-modal"
+			center
+			title="Edit Trigger"
+			wire="showEditTriggerModal"
+			x-on:hidden.window="$wire.closeModal()">
+		@if($triggerToEdit)
+			<livewire:forms.trigger.edit-trigger
+					:trigger="$triggerToEdit"
+					:key="'edit-trigger-'.$triggerToEdit->id" />
+		@endif
+	</x-modal>
+</div>

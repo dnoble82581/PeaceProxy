@@ -1,0 +1,73 @@
+<?php
+
+use App\Models\ContactPoint;
+use App\Models\Subject;
+use App\Models\Tenant;
+
+// This script tests retrieving contact points using the polymorphic relationship
+
+// Get the first tenant
+$tenant = Tenant::first();
+
+if (!$tenant) {
+    echo "No tenants found in the database.\n";
+    exit;
+}
+
+// Set the current tenant
+app()->forgetInstance('tenant');
+app()->instance('tenant', $tenant);
+
+// Get the first subject
+$subject = Subject::first();
+
+if (!$subject) {
+    echo "No subjects found in the database.\n";
+    exit;
+}
+
+echo "Testing with Subject ID: " . $subject->id . "\n";
+
+try {
+    // Test retrieving contact points using the polymorphic relationship
+    echo "Testing polymorphic relationship query...\n";
+    $contactPoints = ContactPoint::where('contactable_id', $subject->id)
+        ->where('contactable_type', Subject::class)
+        ->get();
+
+    echo "Found " . $contactPoints->count() . " contact points for the subject.\n";
+
+    // Test retrieving contact points through the relationship
+    echo "Testing relationship query...\n";
+    $relationshipContactPoints = $subject->contactPoints;
+
+    echo "Found " . $relationshipContactPoints->count() . " contact points through the relationship.\n";
+
+    // If we found any contact points, display their details
+    if ($contactPoints->count() > 0) {
+        echo "\nContact Point Details:\n";
+        foreach ($contactPoints as $index => $contactPoint) {
+            echo "Contact Point " . ($index + 1) . ":\n";
+            echo "  ID: " . $contactPoint->id . "\n";
+            echo "  Kind: " . $contactPoint->kind . "\n";
+            echo "  Label: " . $contactPoint->label . "\n";
+            echo "  Is Primary: " . ($contactPoint->is_primary ? 'Yes' : 'No') . "\n";
+
+            // Load the specific relationship based on the kind
+            if ($contactPoint->kind === 'email' && $contactPoint->email) {
+                echo "  Email: " . $contactPoint->email->email . "\n";
+            } elseif ($contactPoint->kind === 'phone' && $contactPoint->phone) {
+                echo "  Phone: " . $contactPoint->phone->e164 . "\n";
+            } elseif ($contactPoint->kind === 'address' && $contactPoint->address) {
+                echo "  Address: " . $contactPoint->address->address1 . ", " . $contactPoint->address->city . "\n";
+            }
+
+            echo "\n";
+        }
+    }
+
+    echo "All tests completed successfully!\n";
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+    echo "Stack trace: " . $e->getTraceAsString() . "\n";
+}

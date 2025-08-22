@@ -1,0 +1,88 @@
+<?php
+
+	use App\Models\Negotiation;
+	use App\Services\NegotiationUser\NegotiationUserUpdatingService;
+	use Illuminate\Routing\Redirector;
+	use Livewire\Volt\Component;
+
+	new class extends Component {
+		public ?Negotiation $negotiation = null;
+
+		public function mount($negotiation = null)
+		{
+			$this->negotiation = $negotiation;
+		}
+
+		public function leaveNegotiation():Redirector
+		{
+			if ($this->negotiation) {
+				try {
+					$user = $this->negotiation->users()->where('user_id', authUser()->id)->where('left_at',
+						null)->first();
+
+					if ($user && $user->pivot) {
+						app(NegotiationUserUpdatingService::class)->updateLeftAtForUser(
+							$this->negotiation->id, $user->pivot->role->value
+						);
+					}
+				} catch (Exception $e) {
+					// Log the error or handle it as needed
+					// You can add a flash message here if you want to inform the user
+				}
+			}
+
+			return redirect(route('dashboard.negotiations', tenant()->subdomain));
+		}
+	}
+
+?>
+
+<div class="flex items-center justify-between py-2 px-8 dark:bg-dark-700 mb-4">
+	<div class="flex items-center gap-4">
+		<div>
+			<x-avatar image="{{ authUser()->avatar_path}}" />
+		</div>
+		<div>
+			<p class="text-sm font-bold">{{ authUser()->name }}</p>
+			@if($this->negotiation)
+				<p class="text-xs">{{ authUserRole($this->negotiation)->label() }}</p>
+			@else
+				<p class="text-xs">User</p>
+			@endif
+		</div>
+
+	</div>
+	<div
+			class="flex items-center gap-2">
+		<x-theme-switch only-icons />
+		<x-dropdown>
+			<x-slot:action>
+				<x-button
+						color=""
+						icon="cog-6-tooth"
+						flat="true"
+						x-on:click="show = !show">
+				</x-button>
+			</x-slot:action>
+
+			<x-dropdown.items
+					href="{{ route('user.settings', tenant()->subdomain) }}"
+					icon="cog"
+					text="Settings" />
+			<x-dropdown.items
+					wire:click="leaveNegotiation"
+					icon="arrow-left-start-on-rectangle"
+					text="Dashboard" />
+			<form
+					method="POST"
+					action="{{ route('logout') }}">
+				@csrf
+				<x-dropdown.items
+						icon="arrow-left-start-on-rectangle"
+						text="Logout"
+						onclick="event.preventDefault(); this.closest('form').submit();" />
+			</form>
+
+		</x-dropdown>
+	</div>
+</div>
