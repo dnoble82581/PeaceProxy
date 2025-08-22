@@ -32,7 +32,7 @@
 
 				// Redirect to tenant-specific dashboard
 				$subdomain = $user->tenant->subdomain;
-				return redirect()->to("http://{$subdomain}." . config('app.domain') . "/dashboard");
+				return redirect()->to("http://{$subdomain}.peaceproxypro_2.test/dashboard");
 			}
 			$this->addError('email', 'Invalid login credentials.');
 		}

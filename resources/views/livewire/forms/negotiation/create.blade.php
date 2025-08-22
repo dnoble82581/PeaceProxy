@@ -50,9 +50,7 @@
  	 */
  	private function createSubject():Subject
  	{
- 		$formattedPhone = new PhoneNumber($this->subjectPhone, 'US');
-
- 		// Create Subject without phone number
+ 		// Create Subject
  		$newSubjectDTO = new SubjectDTO(
  			tenant_id: tenant()->id,
  			name: $this->subjectName,
@@ -65,19 +63,24 @@
  		// Create the Subject
  		$subject = app(SubjectCreationService::class)->createSubject($newSubjectDTO);
 
- 		// Create a ContactPoint record for the Subject with associated phone information
- 		app(ContactPointCreationService::class)->createContactPoint([
- 			'subject_id' => $subject->id,
- 			'tenant_id' => tenant()->id,
- 			'kind' => 'phone',
- 			'label' => 'home',
- 			'is_primary' => true,
- 			'is_verified' => false,
- 			'priority' => 1,
- 			'e164' => $formattedPhone,
- 			'ext' => null,
- 			'phone_country_iso' => 'US',
- 		]);
+ 		// Only create a contact point if a phone number is provided
+ 		if (!empty($this->subjectPhone)) {
+ 			$formattedPhone = new PhoneNumber($this->subjectPhone, 'US');
+			
+ 			// Create a ContactPoint record for the Subject with associated phone information
+ 			app(ContactPointCreationService::class)->createContactPoint([
+ 				'subject_id' => $subject->id,
+ 				'tenant_id' => tenant()->id,
+ 				'kind' => 'phone',
+ 				'label' => 'home',
+ 				'is_primary' => true,
+ 				'is_verified' => false,
+ 				'priority' => 1,
+ 				'e164' => $formattedPhone,
+ 				'ext' => null,
+ 				'phone_country_iso' => 'US',
+ 			]);
+ 		}
 
  		return $subject;
  	}

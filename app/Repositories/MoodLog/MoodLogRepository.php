@@ -3,24 +3,24 @@
 namespace App\Repositories\MoodLog;
 
 use App\Contracts\MoodLogRepositoryInterface;
-use App\Models\moodLog;
+use App\Models\MoodLog;
 use Illuminate\Database\Eloquent\Collection;
 
 class MoodLogRepository implements MoodLogRepositoryInterface
 {
     public function createMoodLog($data)
     {
-        return moodLog::create($data);
+        return MoodLog::create($data);
     }
 
     public function getMoodLogs(): Collection
     {
-        return moodLog::all();
+        return MoodLog::all();
     }
 
     public function getMoodLogsBySubject($subjectId): Collection
     {
-        return moodLog::where('subject_id', $subjectId)->get();
+        return MoodLog::where('subject_id', $subjectId)->get();
     }
 
     public function updateMoodLog($id, $data)
@@ -32,7 +32,7 @@ class MoodLogRepository implements MoodLogRepositoryInterface
 
     public function getMoodLog($id)
     {
-        return moodLog::find($id);
+        return MoodLog::find($id);
     }
 
     public function deleteMoodLog($id)
