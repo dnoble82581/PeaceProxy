@@ -15,7 +15,7 @@ Route::middleware([
 });
 
 // TENANT AWARE ROUTES
-Route::domain('{tenantSubdomain}.peaceproxypro_2.test')->middleware([
+Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
     'web', 'auth', App\Http\Middleware\IdentifyTenantMiddleware::class,
 ])->group(function () {
 

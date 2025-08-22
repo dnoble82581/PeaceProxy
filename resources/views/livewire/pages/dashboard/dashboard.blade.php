@@ -17,7 +17,14 @@
 		#[Computed]
 		public function averageDuration():float|int
 		{
-			return Negotiation::sum('duration_minutes') / Negotiation::count();
+			$totalNegotiations = Negotiation::count();
+
+			if ($totalNegotiations === 0) {
+				return 0; // Return 0 or any default value you'd prefer when no negotiations exist
+			}
+
+			return Negotiation::sum('duration_minutes') / $totalNegotiations;
+
 		}
 
 		#[Computed]
