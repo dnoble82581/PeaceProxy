@@ -41,29 +41,29 @@
 			]));
 		}
 
- 	private function addUserToNegotiation(int $negotiationId):void
- 	{
- 		// Update left_at for all previous records of this user in this negotiation
- 		// This ensures we track each time a user enters a negotiation, regardless of role
- 		\Illuminate\Support\Facades\DB::table('negotiation_users')
- 			->where('negotiation_id', $negotiationId)
- 			->where('user_id', authUser()->id)
- 			->whereNull('left_at')
- 			->update([
- 				'left_at' => now(),
- 				'updated_at' => now(),
- 			]);
-		
- 		// Create a new record with the chosen role
- 		$negotiationUserDTO = new NegotiationUserDTO(
- 			negotiation_id: $negotiationId, user_id: authUser()->id,
- 			role: UserNegotiationRole::from($this->choseRole), status: 'active',
- 			joined_at: now(), left_at: null,
- 			created_at: now(), updated_at: now(),
- 		);
- 		app(NegotiationUserCreationService::class)
- 			->createNegotiationUser($negotiationUserDTO);
- 	}
+		private function addUserToNegotiation(int $negotiationId):void
+		{
+			// Update left_at for all previous records of this user in this negotiation
+			// This ensures we track each time a user enters a negotiation, regardless of role
+			\Illuminate\Support\Facades\DB::table('negotiation_users')
+				->where('negotiation_id', $negotiationId)
+				->where('user_id', authUser()->id)
+				->whereNull('left_at')
+				->update([
+					'left_at' => now(),
+					'updated_at' => now(),
+				]);
+
+			// Create a new record with the chosen role
+			$negotiationUserDTO = new NegotiationUserDTO(
+				negotiation_id: $negotiationId, user_id: authUser()->id,
+				role: UserNegotiationRole::from($this->choseRole), status: 'active',
+				joined_at: now(), left_at: null,
+				created_at: now(), updated_at: now(),
+			);
+			app(NegotiationUserCreationService::class)
+				->createNegotiationUser($negotiationUserDTO);
+		}
 	}
 
 ?>
@@ -73,6 +73,13 @@
 		<div class="mx-auto sm:px-4 lg:px-2">
 			<div class="bg-white dark:bg-dark-700 overflow-hidden shadow-sm sm:rounded-lg">
 				<div class="p-6 text-gray-900 dark:text-gray-100">
+					<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+						<x-button
+								wire:navigate
+								href="{{route('negotiation.create', tenant()->subdomain)}}"
+								sm>Create Negotiation
+						</x-button>
+					</div>
 					@if($negotiations->isEmpty())
 						<div class="text-center py-8">
 							<p class="text-gray-500 dark:text-gray-400">No negotiations found.</p>
@@ -87,13 +94,6 @@
 											Negotiations</h1>
 										<p class="mt-2 text-sm text-gray-700 dark:text-white">A list of your agencies
 										                                                      negotiations</p>
-									</div>
-									<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-										<x-button
-												wire:navigate
-												href="{{route('negotiation.create', tenant()->subdomain)}}"
-												sm>Create Negotiation
-										</x-button>
 									</div>
 								</div>
 								<div class="mt-8 flow-root">
