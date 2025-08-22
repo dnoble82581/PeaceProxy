@@ -61,14 +61,14 @@
 		 *
 		 * @return array Array of event listeners mapped to handler methods
 		 */
- 	public function getListeners():array
- 	{
- 		return [
- 			"echo-private:negotiation.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
- 			"echo-private:negotiation.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
- 			"echo-private:negotiation.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
- 		];
- 	}
+		public function getListeners():array
+		{
+			return [
+				"echo-private:negotiation.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
+				"echo-private:negotiation.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
+				"echo-private:negotiation.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
+			];
+		}
 
 		/**
 		 * Handle the DemandCreated event by refreshing the demands collection
@@ -176,81 +176,85 @@
 			x-transition>
 		@if($primarySubject->demands->isNotEmpty())
 			@foreach($primarySubject->demands as $demand)
-				<x-card color="secondary">
-					<x-slot:header>
-						<div class="p-3 flex items-center justify-between">
-							<div>
-								<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
-								<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
-							</div>
-							<div class="text-right">
-								<x-badge
-										color="{{ $demand->priority_level?->color() ?? 'gray' }}"
-										xs
-										round
-										icon="exclamation-circle"
-										position="left">
-									<span class="text-xs">{{ $demand->priority_level?->label() ?? 'No Priority' }}</span>
-								</x-badge>
-								<p class="text-gray-300 text-xs mt-1">{{ $demand->created_by ?? 'Unknown' }}</p>
-							</div>
-						</div>
-					</x-slot:header>
-					<p class="text-sm">
-						{{ $demand->content }}
-					</p>
-					<x-slot:footer>
-						<div class="flex items-center justify-between">
-							<div class="flex items-center space-x-2">
-								<x-badge
-										color="teal"
-										xs
-										round
-										icon="tag"
-										position="left">
-									<span class="text-xs">{{ $demand->category?->label() ?? 'No Category' }}</span>
-								</x-badge>
-								<x-badge
-										color="{{ $demand->status?->color() ?? 'gray' }}"
-										xs
-										round>
-									<span class="text-xs">{{ $demand->status?->label() ?? 'No Status' }}</span>
-								</x-badge>
-								@if($demand->deadline_date)
+				<div
+						wire:key="tsui-card-{{ $demand->id }}"
+						wire:ignore>
+					<x-card color="secondary">
+						<x-slot:header>
+							<div class="p-3 flex items-center justify-between">
+								<div>
+									<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
+									<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
+								</div>
+								<div class="text-right">
 									<x-badge
-											color="red"
+											color="{{ $demand->priority_level?->color() ?? 'gray' }}"
 											xs
 											round
-											icon="clock"
+											icon="exclamation-circle"
 											position="left">
+										<span class="text-xs">{{ $demand->priority_level?->label() ?? 'No Priority' }}</span>
+									</x-badge>
+									<p class="text-gray-300 text-xs mt-1">{{ $demand->created_by ?? 'Unknown' }}</p>
+								</div>
+							</div>
+						</x-slot:header>
+						<p class="text-sm">
+							{{ $demand->content }}
+						</p>
+						<x-slot:footer>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center space-x-2">
+									<x-badge
+											color="teal"
+											xs
+											round
+											icon="tag"
+											position="left">
+										<span class="text-xs">{{ $demand->category?->label() ?? 'No Category' }}</span>
+									</x-badge>
+									<x-badge
+											color="{{ $demand->status?->color() ?? 'gray' }}"
+											xs
+											round>
+										<span class="text-xs">{{ $demand->status?->label() ?? 'No Status' }}</span>
+									</x-badge>
+									@if($demand->deadline_date)
+										<x-badge
+												color="red"
+												xs
+												round
+												icon="clock"
+												position="left">
 										<span class="text-xs">
 											{{ $demand->deadline_date->format('M d, Y') }}
 											@if($demand->deadline_time)
 												{{ $demand->deadline_time }}
 											@endif
 										</span>
-									</x-badge>
-								@endif
-							</div>
-							<div>
-								<x-button
-										wire:click="editDemand({{ $demand->id }})"
-										color="cyan"
-										sm
-										flat
-										icon="pencil-square" />
-								<x-button
-										wire:click="deleteDemand({{ $demand->id }})"
-										color="red"
-										sm
-										flat
-										icon="trash" />
+										</x-badge>
+									@endif
+								</div>
+								<div>
+									<x-button
+											wire:click="editDemand({{ $demand->id }})"
+											color="cyan"
+											sm
+											flat
+											icon="pencil-square" />
+									<x-button
+											wire:click="deleteDemand({{ $demand->id }})"
+											color="red"
+											sm
+											flat
+											icon="trash" />
+								</div>
+
 							</div>
 
-						</div>
-
-					</x-slot:footer>
-				</x-card>
+						</x-slot:footer>
+					</x-card>
+				</div>
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">

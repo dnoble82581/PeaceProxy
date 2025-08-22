@@ -58,14 +58,14 @@
 		 *
 		 * @return array Array of event listeners mapped to handler methods
 		 */
- 	public function getListeners()
- 	{
- 		return [
- 			"echo-private:negotiation.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
- 			"echo-private:negotiation.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
- 			"echo-private:negotiation.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
- 		];
- 	}
+		public function getListeners()
+		{
+			return [
+				"echo-private:negotiation.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
+				"echo-private:negotiation.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
+				"echo-private:negotiation.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
+			];
+		}
 
 		/**
 		 * Handle the TriggerCreated event by refreshing the triggers collection
@@ -171,49 +171,53 @@
 			x-transition>
 		@if($primarySubject->triggers->isNotEmpty())
 			@foreach($primarySubject->triggers as $trigger)
-				<x-card color="secondary">
-					<x-slot:header>
-						<div class="p-3 flex items-center justify-between">
-							<div>
-								<p class="capitalize font-semibold text-lg">{{ $trigger->title }}</p>
-								<p class="text-gray-300 text-xs">{{ $trigger->source }}</p>
+				<div
+						wire:key="tsui-card-{{ $trigger->id }}"
+						wire:ignore>
+					<x-card color="secondary">
+						<x-slot:header>
+							<div class="p-3 flex items-center justify-between">
+								<div>
+									<p class="capitalize font-semibold text-lg">{{ $trigger->title }}</p>
+									<p class="text-gray-300 text-xs">{{ $trigger->source }}</p>
+								</div>
+								<div class="text-right">
+									<x-subject.confidence-badge :confidence-score="$trigger->confidence_score" />
+									<p class="text-gray-300 text-xs mt-1">{{ $trigger->user->name }}</p>
+								</div>
 							</div>
-							<div class="text-right">
-								<x-subject.confidence-badge :confidence-score="$trigger->confidence_score" />
-								<p class="text-gray-300 text-xs mt-1">{{ $trigger->user->name }}</p>
+						</x-slot:header>
+						<p class="text-sm">
+							{{ $trigger->description }}
+						</p>
+						<x-slot:footer>
+							<div class="flex items-center justify-between">
+								<x-badge
+										:color="App\Enums\Trigger\TriggerCategories::from($trigger->category)->color()"
+										xs
+										round
+										icon="tag"
+										position="left">
+									<span class="text-xs">{{ App\Enums\Trigger\TriggerCategories::from($trigger->category)->label() }}</span>
+								</x-badge>
+								<div>
+									<x-button
+											wire:click="editTrigger({{ $trigger->id }})"
+											color="cyan"
+											sm
+											flat
+											icon="pencil-square" />
+									<x-button
+											wire:click="deleteTrigger({{ $trigger->id }})"
+											color="red"
+											sm
+											flat
+											icon="trash" />
+								</div>
 							</div>
-						</div>
-					</x-slot:header>
-					<p class="text-sm">
-						{{ $trigger->description }}
-					</p>
-					<x-slot:footer>
-						<div class="flex items-center justify-between">
-							<x-badge
-									:color="App\Enums\Trigger\TriggerCategories::from($trigger->category)->color()"
-									xs
-									round
-									icon="tag"
-									position="left">
-								<span class="text-xs">{{ App\Enums\Trigger\TriggerCategories::from($trigger->category)->label() }}</span>
-							</x-badge>
-							<div>
-								<x-button
-										wire:click="editTrigger({{ $trigger->id }})"
-										color="cyan"
-										sm
-										flat
-										icon="pencil-square" />
-								<x-button
-										wire:click="deleteTrigger({{ $trigger->id }})"
-										color="red"
-										sm
-										flat
-										icon="trash" />
-							</div>
-						</div>
-					</x-slot:footer>
-				</x-card>
+						</x-slot:footer>
+					</x-card>
+				</div>
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">

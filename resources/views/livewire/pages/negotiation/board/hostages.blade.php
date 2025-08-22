@@ -158,8 +158,11 @@
 
 		@if(count($hostages) > 0)
 			@foreach($hostages as $hostage)
-				<x-card
-						x-data="{
+				<div
+						wire:key="tsui-card-{{ $hostage->id }}"
+						wire:ignore>
+					<x-card
+							x-data="{
 					currentImageIndex: 0,
 					images: {{ json_encode($hostage->images->map->url()) }},
 					totalImages: {{ $hostage->images->count() }},
@@ -177,110 +180,111 @@
 						}
 					}
 				}">
-					<div class="flex justify-between gap-4">
-						<div>
-							<div class="flex gap-4">
-								<img
-										class="size-26 rounded-lg"
-										:src="getCurrentImage()"
-										alt="Hostage Image">
-								<div class="text-sm flex flex-col justify-between">
-									<h5 class="font-semibold">{{ $hostage->name }}</h5>
-									<p>{{ $hostage->age }} Year Old {{ $hostage->gender->label() }}</p>
-									<p>{{ $hostage->contacts->where('kind', 'phone')->first()?->phone?->e164 ?? 'No phone' }}</p>
-									<p>{{ $hostage->contacts->where('kind', 'email')->first()?->email?->email ?? 'No email' }}</p>
+						<div class="flex justify-between gap-4">
+							<div>
+								<div class="flex gap-4">
+									<img
+											class="size-26 rounded-lg"
+											:src="getCurrentImage()"
+											alt="Hostage Image">
+									<div class="text-sm flex flex-col justify-between">
+										<h5 class="font-semibold">{{ $hostage->name }}</h5>
+										<p>{{ $hostage->age }} Year Old {{ $hostage->gender->label() }}</p>
+										<p>{{ $hostage->contacts->where('kind', 'phone')->first()?->phone?->e164 ?? 'No phone' }}</p>
+										<p>{{ $hostage->contacts->where('kind', 'email')->first()?->email?->email ?? 'No email' }}</p>
+									</div>
+								</div>
+								<div
+										class="mt-2 flex justify-between items-center w-fit"
+										x-show="totalImages > 1">
+									<button
+											@click="previousImage"
+											class="hover:bg-gray-200 dark:hover:bg-gray-700 hover:cursor-pointer p-1 rounded-lg"
+									>
+										<x-icon
+												class="size-4"
+												name="chevron-left" />
+									</button>
+									<p
+											class="px-2 text-xs"
+											x-text="`${currentImageIndex + 1} of ${totalImages}`"></p>
+									<button
+											@click="nextImage"
+											class="hover:bg-gray-200 dark:hover:bg-gray-700 hover:cursor-pointer p-1 rounded-lg"
+									>
+										<x-icon
+												class="size-4 hover:cursor-pointer"
+												name="chevron-right" />
+									</button>
 								</div>
 							</div>
-							<div
-									class="mt-2 flex justify-between items-center w-fit"
-									x-show="totalImages > 1">
-								<button
-										@click="previousImage"
-										class="hover:bg-gray-200 dark:hover:bg-gray-700 hover:cursor-pointer p-1 rounded-lg"
-								>
-									<x-icon
-											class="size-4"
-											name="chevron-left" />
-								</button>
-								<p
-										class="px-2 text-xs"
-										x-text="`${currentImageIndex + 1} of ${totalImages}`"></p>
-								<button
-										@click="nextImage"
-										class="hover:bg-gray-200 dark:hover:bg-gray-700 hover:cursor-pointer p-1 rounded-lg"
-								>
-									<x-icon
-											class="size-4 hover:cursor-pointer"
-											name="chevron-right" />
-								</button>
-							</div>
-						</div>
 
-						<div class="text-sm">
-							<h5 class="font-semibold">Risk Factors</h5>
-							@if($hostage->risk_factors && is_array($hostage->risk_factors))
-								@foreach($hostage->risk_factors as $factor)
-									<p>{{ $factor }}</p>
-								@endforeach
-							@else
-								<p>No risk factors</p>
-							@endif
-						</div>
-						<div class="text-sm">
-							<h5 class="font-semibold">Details</h5>
-							<p>{{ $hostage->relation_to_subject ?? 'Unknown Relation' }}</p>
-							<p>{{ $hostage->location ?? 'Unknown Location' }}</p>
-							<p>{{ $hostage->injury_status ?? 'Unknown Injury Status' }}</p>
-							<p>Last
-							   Contact {{ $hostage->last_seen_at ? $hostage->last_seen_at->diffForHumans() : 'Unknown' }}</p>
-						</div>
-						<div class="space-x-2 space-y-2">
-							@if($hostage->risk_level)
-								<x-badge
-										xs
-										text="{{ $hostage->risk_level }}"
-										round />
-							@endif
-							@if($hostage->injury_status)
-								<x-badge
-										xs
-										color="{{ $hostage->injury_status === 'Uninjured' ? 'green' : 'red' }}"
-										text="{{ $hostage->injury_status }}"
-										round />
-							@endif
-							@if($hostage->status)
-								<x-badge
-										xs
-										color="blue"
-										text="{{ $hostage->status }}"
-										round />
-							@endif
-						</div>
-						<div class="">
-							<x-dropdown
-									icon="ellipsis-vertical"
-									static>
-								<x-dropdown.items
-										wire:click="viewHostage({{ $hostage->id }})"
-										icon="eye"
-										text="View" />
-								<x-dropdown.items
-										wire:navigate.hover
-										href="{{ route('hostage.edit', [
+							<div class="text-sm">
+								<h5 class="font-semibold">Risk Factors</h5>
+								@if($hostage->risk_factors && is_array($hostage->risk_factors))
+									@foreach($hostage->risk_factors as $factor)
+										<p>{{ $factor }}</p>
+									@endforeach
+								@else
+									<p>No risk factors</p>
+								@endif
+							</div>
+							<div class="text-sm">
+								<h5 class="font-semibold">Details</h5>
+								<p>{{ $hostage->relation_to_subject ?? 'Unknown Relation' }}</p>
+								<p>{{ $hostage->location ?? 'Unknown Location' }}</p>
+								<p>{{ $hostage->injury_status ?? 'Unknown Injury Status' }}</p>
+								<p>Last
+								   Contact {{ $hostage->last_seen_at ? $hostage->last_seen_at->diffForHumans() : 'Unknown' }}</p>
+							</div>
+							<div class="space-x-2 space-y-2">
+								@if($hostage->risk_level)
+									<x-badge
+											xs
+											text="{{ $hostage->risk_level }}"
+											round />
+								@endif
+								@if($hostage->injury_status)
+									<x-badge
+											xs
+											color="{{ $hostage->injury_status === 'Uninjured' ? 'green' : 'red' }}"
+											text="{{ $hostage->injury_status }}"
+											round />
+								@endif
+								@if($hostage->status)
+									<x-badge
+											xs
+											color="blue"
+											text="{{ $hostage->status }}"
+											round />
+								@endif
+							</div>
+							<div class="">
+								<x-dropdown
+										icon="ellipsis-vertical"
+										static>
+									<x-dropdown.items
+											wire:click="viewHostage({{ $hostage->id }})"
+											icon="eye"
+											text="View" />
+									<x-dropdown.items
+											wire:navigate.hover
+											href="{{ route('hostage.edit', [
 											'hostage' => $hostage,
 											'negotiation' => $negotiation ?? null,
 											'tenantSubdomain' => tenant()->subdomain
 										]) }}"
-										icon="pencil-square"
-										text="Edit" />
-								<x-dropdown.items
-										wire:click="confirmDeleteHostage({{ $hostage->id }})"
-										icon="trash"
-										text="Delete" />
-							</x-dropdown>
+											icon="pencil-square"
+											text="Edit" />
+									<x-dropdown.items
+											wire:click="confirmDeleteHostage({{ $hostage->id }})"
+											icon="trash"
+											text="Delete" />
+								</x-dropdown>
+							</div>
 						</div>
-					</div>
-				</x-card>
+					</x-card>
+				</div>
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">
