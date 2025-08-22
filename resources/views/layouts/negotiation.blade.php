@@ -42,6 +42,7 @@
 
 {{-- Scripts --}}
 @livewireScripts
+@tallStackUiScript
 @stack('scripts')
 </body>
 </html>
