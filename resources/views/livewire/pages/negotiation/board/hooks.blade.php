@@ -172,50 +172,54 @@
 			x-transition>
 		@if($primarySubject->hooks->isNotEmpty())
 			@foreach($primarySubject->hooks as $hook)
-				<x-card color="secondary">
-					<x-slot:header>
-						<div class="p-3 flex items-center justify-between">
-							<div>
-								<p class="capitalize font-semibold text-lg">{{ $hook->title }}</p>
-								<p class="text-gray-300 text-xs">{{ $hook->source }}</p>
+				<div
+						wire:key="tsui-card-{{ $hook->id }}"
+						wire:ignore>
+					<x-card color="secondary">
+						<x-slot:header>
+							<div class="p-3 flex items-center justify-between">
+								<div>
+									<p class="capitalize font-semibold text-lg">{{ $hook->title }}</p>
+									<p class="text-gray-300 text-xs">{{ $hook->source }}</p>
+								</div>
+								<div class="text-right">
+									<x-subject.confidence-badge :confidence-score="$hook->confidence_score" />
+									<p class="text-gray-300 text-xs mt-1">{{ $hook->createdBy->name }}</p>
+								</div>
 							</div>
-							<div class="text-right">
-								<x-subject.confidence-badge :confidence-score="$hook->confidence_score" />
-								<p class="text-gray-300 text-xs mt-1">{{ $hook->createdBy->name }}</p>
-							</div>
-						</div>
-					</x-slot:header>
-					<p class="text-sm">
-						{{ $hook->description }}
-					</p>
-					<x-slot:footer>
-						<div class="flex items-center justify-between">
-							<x-badge
-									color="teal"
-									xs
-									round
-									icon="tag"
-									position="left"><span class="text-xs">{{ $hook->category->label() }}</span>
-							</x-badge>
-							<div>
-								<x-button
-										wire:click="editHook({{ $hook->id }})"
-										color="cyan"
-										sm
-										flat
-										icon="pencil-square" />
-								<x-button
-										wire:click="deleteHook({{ $hook->id }})"
-										color="red"
-										sm
-										flat
-										icon="trash" />
+						</x-slot:header>
+						<p class="text-sm">
+							{{ $hook->description }}
+						</p>
+						<x-slot:footer>
+							<div class="flex items-center justify-between">
+								<x-badge
+										color="teal"
+										xs
+										round
+										icon="tag"
+										position="left"><span class="text-xs">{{ $hook->category->label() }}</span>
+								</x-badge>
+								<div>
+									<x-button
+											wire:click="editHook({{ $hook->id }})"
+											color="cyan"
+											sm
+											flat
+											icon="pencil-square" />
+									<x-button
+											wire:click="deleteHook({{ $hook->id }})"
+											color="red"
+											sm
+											flat
+											icon="trash" />
+								</div>
+
 							</div>
 
-						</div>
-
-					</x-slot:footer>
-				</x-card>
+						</x-slot:footer>
+					</x-card>
+				</div>
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">
