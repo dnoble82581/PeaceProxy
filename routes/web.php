@@ -5,7 +5,7 @@ use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
 use Livewire\Volt\Volt;
 
 Broadcast::routes([
-    'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
+'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
 ]);
 
 Route::middleware([
@@ -29,13 +29,14 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
 
         Volt::route('/settings', 'pages.dashboard.settings')
             ->name('dashboard.settings');
+        Volt::route('/users', 'pages.dashboard.users')
+            ->name('dashboard.users');
     });
 
-    // USER ROUTES
-    Route::prefix('/user')->group(function () {
-        Volt::route('/settings', 'pages.user.settings')
-            ->name('user.settings');
-    });
+    //	Testing Calls here. delete later
+    Volt::route('/dev/call-ui', 'pages.calls.call-tester')
+        ->name('dev.call.ui');
+
 
     //	NEGOTIATIONS ROUTES
     Route::prefix('/negotiations')->group(function () {

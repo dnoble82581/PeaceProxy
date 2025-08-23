@@ -170,13 +170,15 @@
 								name="phone"
 								class="size-5 text-primary-500" />
 					</button>
+
 					<a
-							href="mailto:{{ $primarySubject->email ?? '' }}"
+							href="{{ route('dev.call.ui', ['tenantSubdomain' => tenant()->subdomain]) }}"
 							class="bg-white dark:bg-dark-700 rounded-full p-2 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors">
 						<x-icon
 								name="envelope"
 								class="size-5 text-primary-500" />
 					</a>
+
 				</div>
 			</div>
 

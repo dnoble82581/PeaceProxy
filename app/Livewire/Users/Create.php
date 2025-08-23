@@ -60,6 +60,7 @@ class Create extends Component
 
         $this->user->password = bcrypt($this->password);
         $this->user->email_verified_at = now();
+        $this->user->tenant_id = tenant()->id;
         $this->user->save();
 
         $this->dispatch('created');

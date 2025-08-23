@@ -111,12 +111,12 @@
 	<div
 			class="p-4"
 			x-show="tab === 'initial_complaint'">
-		<p class="text-sm">{{ $this->negotiation->initial_complaint ?? 'No Initial Complaint Available' }}</p>
+		<p class="text-sm">{{ $this->negotiation->initial_complaint ?? 'No Initial Complaint Available. To add an initial complaint, please edit the negotiation details from the negotiation management page.' }}</p>
 	</div>
 	<div
 			class="p-4"
 			x-show="tab === 'summary'">
-		<p class="text-sm">{{ $this->negotiation->summary ?? 'No Summary Information Available' }}</p>
+		<p class="text-sm">{{ $this->negotiation->summary ?? 'No Summary Information Available. To add a summary, please edit the negotiation details from the negotiation management page.' }}</p>
 	</div>
 	<div x-show="tab === 'documents'">
 		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-documents :negotiationId="$this->negotiation->id" />

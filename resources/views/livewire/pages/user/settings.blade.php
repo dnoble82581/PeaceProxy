@@ -75,15 +75,17 @@
 			// Reset form fields
 			$this->reset(['password', 'password_confirmation', 'avatar']);
 
+			$this->redirect(request()->header('Referer'));
+
 			// Show success message
 			session()->flash('message', 'Profile updated successfully.');
 		}
 
- 	public function cancel()
- 	{
- 		// Redirect to the dashboard
- 		return redirect()->route('dashboard', ['tenantSubdomain' => tenant()->subdomain]);
- 	}
+		public function cancel()
+		{
+			// Redirect to the dashboard
+			return redirect()->route('dashboard', ['tenantSubdomain' => tenant()->subdomain]);
+		}
 	}
 
 ?>

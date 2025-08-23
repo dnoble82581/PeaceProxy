@@ -13,6 +13,7 @@ use App\Contracts\MessageRepositoryInterface;
 use App\Contracts\MoodLogRepositoryInterface;
 use App\Contracts\NegotiationRepositoryInterface;
 use App\Contracts\NoteRepositoryInterface;
+use App\Contracts\ObjectiveRepositoryInterface;
 use App\Contracts\TriggerRepositoryInterface;
 use App\Contracts\WarningRepositoryInterface;
 use App\Contracts\WarrantRepositoryInterface;
@@ -27,6 +28,7 @@ use App\Repositories\Message\MessageRepository;
 use App\Repositories\MoodLog\MoodLogRepository;
 use App\Repositories\Negotiation\NegotiationRepository;
 use App\Repositories\Note\NoteRepository;
+use App\Repositories\Objective\ObjectiveRepository;
 use App\Repositories\Trigger\TriggerRepository;
 use App\Repositories\Warning\WarningRepository;
 use App\Repositories\Warrant\WarrantRepository;
@@ -36,6 +38,12 @@ class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Bind Call repository
+        $this->app->bind(
+            CallRepositoryInterface::class,
+            CallRepository::class
+        );
+
         $this->app->bind(
             WarrantRepositoryInterface::class,
             WarrantRepository::class,

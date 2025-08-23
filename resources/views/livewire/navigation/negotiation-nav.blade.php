@@ -66,7 +66,7 @@
 			</x-slot:action>
 
 			<x-dropdown.items
-					href="{{ route('user.settings', tenant()->subdomain) }}"
+					href="{{ route('dashboard.settings', ['tenantSubdomain' => tenant()->subdomain, 'tab' => 'profile']) }}"
 					icon="cog"
 					text="Settings" />
 			<x-dropdown.items

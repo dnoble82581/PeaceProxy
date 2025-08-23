@@ -8,7 +8,7 @@
 
 ?>
 
-<div class="h-16 bg-dark-800 mt-5 p-2 rounded-lg flex items-center justify-between"
+<div class="h-16 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-600 mt-5 p-2 rounded-lg flex items-center justify-between"
      x-data="{
         showTimer: false,
         timerRunning: false,
@@ -55,7 +55,7 @@
      
     <!-- Timer display - positioned on the far left -->
     <div x-show="showTimer" class="flex items-center space-x-2">
-        <div class="text-white flex items-center">
+        <div class="text-dark-800 dark:text-white flex items-center">
             <span class="font-mono text-lg" x-text="formatTime(hours)"></span>
             <span class="mx-0.5">:</span>
             <span class="font-mono text-lg" x-text="formatTime(minutes)"></span>
@@ -66,13 +66,13 @@
         <div class="flex space-x-1">
             <button 
                 @click="stopTimer()"
-                class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition-colors"
+                class="px-2 py-1 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white text-xs rounded-md transition-colors"
                 x-show="timerRunning">
                 Stop
             </button>
             <button 
                 @click="resetTimer()"
-                class="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-md transition-colors"
+                class="px-2 py-1 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white text-xs rounded-md transition-colors"
                 x-show="!timerRunning && showTimer">
                 Reset
             </button>
@@ -80,12 +80,12 @@
     </div>
     
     <!-- Default content when timer is not shown -->
-    <div x-show="!showTimer" class="text-white">
+    <div x-show="!showTimer" class="text-dark-800 dark:text-white font-medium">
         Notifications
     </div>
     
     <!-- Placeholder for other notification content -->
-    <div class="text-white ml-auto" x-show="showTimer">
+    <div class="text-dark-800 dark:text-white ml-auto" x-show="showTimer">
         <!-- Other notification content can go here -->
     </div>
 </div>

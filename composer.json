@@ -17,6 +17,7 @@
   ],
   "require": {
     "php": "^8.2",
+    "intervention/image": "^3.11",
     "intervention/image-laravel": "^1.5",
     "laravel/framework": "^12.0",
     "laravel/reverb": "^1.0",
@@ -25,7 +26,8 @@
     "livewire/livewire": "^3.0.0",
     "livewire/volt": "^1.7",
     "propaganistas/laravel-phone": "^6.0",
-    "tallstackui/tallstackui": "^2.12"
+    "tallstackui/tallstackui": "^2.12",
+    "twilio/sdk": "^8.7"
   },
   "require-dev": {
     "barryvdh/laravel-debugbar": "^3.15",

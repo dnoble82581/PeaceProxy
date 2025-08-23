@@ -3,35 +3,10 @@
 		lang="en"
 		x-data="tallstackui_darkTheme()">
 <head>
-	<meta charset="UTF-8" />
-	<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0" />
-
-	<title>{{ $title ?? 'Dashboard - Peace Proxy' }}</title>
-	<meta
-			name="description"
-			content="{{ $description ?? 'Law enforcement negotiation dashboard.' }}">
-
-	<meta
-			name="csrf-token"
-			content="{{ csrf_token() }}">
-
-	<link
-			rel="icon"
-			href="{{ asset('favicon.ico') }}" />
-
-	<link
-			rel="stylesheet"
-			href="https://use.typekit.net/ccn6txi.css">
-
-	{{-- Styles --}}
-	@vite('resources/css/app.css')
-	@livewireStyles
-	@stack('head')
+	@include('layouts.partials._head')
 </head>
 <body
-		class="bg-gray-100 text-gray-900 dark:bg-dark-900 antialiased min-h-screen"
+		class="bg-gray-100 text-dark-800 dark:bg-dark-900 dark:text-white antialiased min-h-screen"
 		x-bind:class="{ 'dark bg-dark-900': darkTheme, 'bg-white': !darkTheme }">
 
 <x-layout>
@@ -81,6 +56,13 @@
 			/>
 			<x-side-bar.item
 					wire:navigate
+					:route="route('dashboard.users', authUser()->tenant->subdomain)"
+					:current="request()->routeIs('dashboard.users')"
+					text="Users"
+					icon="users"
+			/>
+			<x-side-bar.item
+					wire:navigate
 					:route="route('dashboard.settings', authUser()->tenant->subdomain)"
 					:current="request()->routeIs('dashboard.settings')"
 					text="Settings"
@@ -94,8 +76,6 @@
 </x-layout>
 
 {{-- Scripts --}}
-@livewireScripts
-@vite('resources/js/app.js')
-@stack('scripts')
+@include('layouts.partials._tail')
 </body>
 </html>

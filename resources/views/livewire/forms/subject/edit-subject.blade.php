@@ -327,7 +327,7 @@
 
 ?>
 
-<div class="max-w-7xl mx-auto bg-dark-700 p-8 mt-4 rounded-lg">
+<div class="max-w-7xl mx-auto bg-dark-100 dark:bg-dark-800 p-8 mt-4 rounded-lg">
 	<div class="px-4 sm:px-8 text-center space-y-3">
 		<h1 class="text-2xl text-gray-400 font-semibold uppercase">Update Subject</h1>
 		<p class="text-xs">Updating subject: <span class="text-primary-400">{{ $subject->name }}</span></p>
@@ -340,10 +340,10 @@
 				<button
 						wire:click="goToStep({{ $i }})"
 						class="flex flex-col items-center group">
-					<div class="w-10 h-10 rounded-full flex items-center justify-center {{ $currentStep >= $i ? 'bg-primary-500' : 'bg-gray-700' }} transition-colors duration-300">
+					<div class="w-10 h-10 rounded-full flex items-center justify-center {{ $currentStep >= $i ? 'bg-primary-500' : 'bg-dark-400 dark:bg-dark-800' }} transition-colors duration-300">
 						<span class="text-white">{{ $i }}</span>
 					</div>
-					<span class="text-xs mt-1 {{ $currentStep >= $i ? 'text-primary-400' : 'text-gray-500' }} group-hover:text-primary-300 transition-colors duration-300">
+					<span class="text-xs mt-1 {{ $currentStep >= $i ? 'text-primary-400' : 'text-dark-500' }} group-hover:text-primary-300 transition-colors duration-300">
 						@switch($i)
 							@case(1)
 								Basic Info
@@ -384,8 +384,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 1">
-			<h2 class="text-lg font-semibold text-white">Basic Information</h2>
-			<p class="mb-4 text-sm text-gray-400">Enter the basic details about this subject</p>
+			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Basic Information</h2>
+			<p class="mb-4 text-sm text-dark-500">Enter the basic details about this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<x-input
@@ -655,7 +655,7 @@
 					<!-- Display existing images first -->
 					@if(count(array_filter($tempImages, 'is_string')) > 0)
 						<h4 class="text-sm font-medium text-primary-400 mb-2">Existing Images</h4>
-						<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+						<div class="grid grid-cols-6 md:grid-cols-8 gap-4 mb-6">
 							@foreach($tempImages as $index => $image)
 								@if(is_string($image))
 									<div class="relative group">

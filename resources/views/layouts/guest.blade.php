@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html
+		lang="en"
+		x-data="tallstackui_darkTheme()">
 <head>
 	<meta charset="UTF-8">
 	<meta
@@ -59,12 +61,13 @@
 	<link
 			rel="stylesheet"
 			href="https://use.typekit.net/ccn6txi.css">
-
 	@vite('resources/css/app.css')
 	@livewireStyles
 	@stack('head')
 </head>
-<body class="antialiased text-gray-800 bg-white">
+<body
+		class="antialiased text-dark-800 dark:text-white bg-white dark:bg-dark-900"
+		x-bind:class="{ 'dark bg-dark-900': darkTheme, 'bg-white': !darkTheme }">
 
 {{-- Navigation --}}
 {{--@include('partials.nav')--}}
@@ -76,9 +79,6 @@
 
 {{-- Footer --}}
 {{--@include('partials.footer')--}}
-
-@livewireScripts
-@vite('resources/js/app.js')
-@stack('scripts')
+@include('layouts.partials._tail')
 </body>
 </html>

@@ -122,7 +122,7 @@
 				</tr>
 				</thead>
 				<tbody>
-				@foreach($this->subject->contactPoints as $contactPoint)
+				@forelse($this->subject->contactPoints as $contactPoint)
 					<tr>
 						<td class="relative pl-3 text-xs font-medium text-primary-950 dark:text-dark-100">
 							{{ ucfirst($contactPoint->kind) }}
@@ -173,7 +173,16 @@
 									sm />
 						</td>
 					</tr>
-				@endforeach
+				@empty
+					<tr>
+						<td colspan="5" class="text-center p-4 text-gray-500">
+							No contacts found for this subject.
+							<p class="mt-2">
+								Click the <span class="inline-flex items-center"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner to create a new contact.
+							</p>
+						</td>
+					</tr>
+				@endforelse
 				</tbody>
 			</table>
 		</div>

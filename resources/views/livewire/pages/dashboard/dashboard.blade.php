@@ -6,31 +6,42 @@
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
+	use Illuminate\Support\Facades\DB;
 
 	new #[Layout('layouts.app')] class extends Component {
-		#[Computed]
-		public function active():int
+		public $stats;
+		
+		public function mount()
 		{
-			return User::where('is_active', true)->count();
-		}
-
-		#[Computed]
-		public function averageDuration():float|int
-		{
-			$totalNegotiations = Negotiation::count();
-
-			if ($totalNegotiations === 0) {
-				return 0; // Return 0 or any default value you'd prefer when no negotiations exist
-			}
-
-			return Negotiation::sum('duration_minutes') / $totalNegotiations;
-
-		}
-
-		#[Computed]
-		public function userCount():int
-		{
-			return User::count();
+			// Get tenant ID once
+			$tenantId = tenant()->id;
+			
+			// Get all user stats in a single query
+			$userStats = User::selectRaw('COUNT(*) as total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
+				->where('tenant_id', $tenantId)
+				->first();
+				
+			// Get negotiation stats in a single query
+			$negotiationStats = Negotiation::selectRaw('
+				COUNT(*) as total, 
+				COUNT(CASE WHEN status = "active" THEN 1 END) as active,
+				CASE WHEN COUNT(*) > 0 THEN SUM(duration_minutes) / COUNT(*) ELSE 0 END as avg_duration
+			')
+			->where('tenant_id', $tenantId)
+			->first();
+			
+			// Store all stats in a single property
+			$this->stats = [
+				'users' => [
+					'total' => $userStats->total ?? 0,
+					'active' => $userStats->active ?? 0,
+				],
+				'negotiations' => [
+					'total' => $negotiationStats->total ?? 0,
+					'active' => $negotiationStats->active ?? 0,
+					'avgDuration' => $negotiationStats->avg_duration ?? 0,
+				],
+			];
 		}
 	}
 
@@ -43,15 +54,15 @@
 		<div class="space-y-4 bg-gray-100/60 dark:bg-dark-700 p-4 rounded-lg">
 			<div class="flex justify-between text-xs border-b">
 				<div>Total</div>
-				<div>{{ tenant()->negotiations()->count() }}</div>
+				<div>{{ $stats['negotiations']['total'] }}</div>
 			</div>
 			<div class="flex justify-between text-xs border-b">
 				<div>Active</div>
-				<div>{{ tenant()->negotiations()->count() }}</div>
+				<div>{{ $stats['negotiations']['active'] }}</div>
 			</div>
 			<div class="flex justify-between text-xs border-b">
 				<div>Average Duration</div>
-				<div>{{ $this->averageDuration() }}m</div>
+				<div>{{ $stats['negotiations']['avgDuration'] }}m</div>
 			</div>
 		</div>
 	</x-card>
@@ -62,11 +73,11 @@
 		<div class="space-y-4 bg-gray-100/60 dark:bg-dark-700 p-4 rounded-lg">
 			<div class="flex justify-between text-xs border-b">
 				<div>Total</div>
-				<div>{{ $this->userCount() }}</div>
+				<div>{{ $stats['users']['total'] }}</div>
 			</div>
 			<div class="flex justify-between text-xs border-b">
 				<div>Active</div>
-				<div>{{ $this->active() }}</div>
+				<div>{{ $stats['users']['active'] }}</div>
 			</div>
 		</div>
 	</x-card>

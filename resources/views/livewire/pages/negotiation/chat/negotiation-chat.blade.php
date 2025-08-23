@@ -682,11 +682,6 @@
 									{{ $this->getActiveUsersCount($publicConv) }} participants
 								</div>
 							</div>
-							{{--							@if(($unread[$publicConv->id] ?? 0) > 0)--}}
-							{{--								<span class="ml-2 inline-flex h-5 min-w-5 items-center absolute top-2 right-1 justify-center rounded-full bg-indigo-600 px-1 text-xs font-semibold text-white">--}}
-							{{--							                                    {{ $unread[$publicConv->id] }}--}}
-							{{--							                                </span>--}}
-							{{--							@endif--}}
 						@else
 							<div class="text-sm text-gray-500 dark:text-dark-300">No public chat available</div>
 						@endif
@@ -789,16 +784,8 @@
 		        class="size-6 rounded-full object-cover"
 		        :alt="u.name || ('User #' + (u.id ?? ''))"
         >
-
-        <!-- Initials fallback -->
-        <div
-		        x-show="!u.avatar"
-		        class="grid size-6 place-items-center rounded-full bg-dark-900 text-[12px] font-semibold"
-		        :title="u.name || ('User #' + (u.id ?? ''))"
-		        x-text="initials(u.name)"></div>
       </span>
 						</template>
-
 					</div>
 				</div>
 			</div>
@@ -858,7 +845,7 @@
 								<div class="flex items-center max-w-xs md:max-w-md space-x-2 {{ $message->user_id === auth()->id() ? 'flex-row-reverse space-x-reverse' : '' }}">
 									<div class="flex-shrink-0">
 										<x-avatar
-												image="{{ $message->user->avatar_path ?? $message->user->avatarUrl() }}"
+												image="{{ $message->user->avatarUrl() }}"
 												sm />
 									</div>
 									<div>

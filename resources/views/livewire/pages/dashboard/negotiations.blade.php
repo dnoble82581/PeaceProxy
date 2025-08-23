@@ -13,13 +13,28 @@
 	new #[Layout('layouts.app')] class extends Component {
 		public Collection $negotiations;
 		public bool $roleModal = false;
+		public bool $editModal = false;
+		public bool $deleteModal = false;
 		public int $selectedNegotiation;
 
 		#[Validate('required')]
 		public string $choseRole = '';
 
+		#[Validate('required')]
+		public string $title = '';
+
+		#[Validate('required')]
+		public string $location = '';
+
+		#[Validate('required')]
+		public string $status = '';
+
+		#[Validate('required')]
+		public string $type = '';
+
 		public function mount():void
 		{
+			// Eager load any relationships that might be needed in the view
 			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
 		}
 
@@ -29,40 +44,106 @@
 			$this->roleModal = true;
 		}
 
-		public function enterNegotiation(int $negotiationId):void
+		public function openEditModal(int $negotiationId):void
+		{
+			$this->selectedNegotiation = $negotiationId;
+
+			// Find the negotiation in the collection
+			$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
+
+			// Populate the form fields
+			$this->title = $negotiation->title;
+			$this->location = $negotiation->location ?? '';
+			$this->status = $negotiation->status->value; // Convert enum to string
+			$this->type = $negotiation->type->value; // Convert enum to string
+
+			$this->editModal = true;
+		}
+
+		public function saveNegotiation():void
 		{
 			$this->validate();
 
+			// Find the negotiation in the database
+			$negotiation = Negotiation::find($this->selectedNegotiation);
+
+			// Update the negotiation
+			$negotiation->update([
+				'title' => $this->title,
+				'location' => $this->location,
+				'status' => $this->status,
+				'type' => $this->type,
+			]);
+
+			// Close the modal
+			$this->editModal = false;
+
+			// Refresh the negotiations list
+			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+		}
+
+		public function openDeleteModal(int $negotiationId):void
+		{
+			$this->selectedNegotiation = $negotiationId;
+			$this->deleteModal = true;
+		}
+
+		public function deleteNegotiation():void
+		{
+			// Find the negotiation in the database
+			$negotiation = Negotiation::find($this->selectedNegotiation);
+
+			// Delete the negotiation
+			$negotiation->delete();
+
+			// Close the modal
+			$this->deleteModal = false;
+
+			// Refresh the negotiations list
+			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+		}
+
+		public function enterNegotiation(int $negotiationId):void
+		{
+			$this->validateOnly('choseRole', ['choseRole' => 'required|string']);
+
 			$this->addUserToNegotiation($negotiationId);
+
+			// Get the negotiation title directly from the collection to avoid an extra query
+			$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
+			$title = $negotiation? $negotiation->title : '';
 
 			$this->redirect(route('negotiation-noc', [
 				'tenantSubdomain' => tenant()->subdomain,
-				'negotiation' => Negotiation::find($negotiationId)->title
+				'negotiation' => $title
 			]));
 		}
 
 		private function addUserToNegotiation(int $negotiationId):void
 		{
-			// Update left_at for all previous records of this user in this negotiation
-			// This ensures we track each time a user enters a negotiation, regardless of role
-			\Illuminate\Support\Facades\DB::table('negotiation_users')
-				->where('negotiation_id', $negotiationId)
-				->where('user_id', authUser()->id)
-				->whereNull('left_at')
-				->update([
-					'left_at' => now(),
-					'updated_at' => now(),
-				]);
+			// Use a transaction to ensure both operations complete successfully
+			\Illuminate\Support\Facades\DB::transaction(function () use ($negotiationId) {
+				// Update left_at for all previous records of this user in this negotiation
+				// This ensures we track each time a user enters a negotiation, regardless of role
+				\Illuminate\Support\Facades\DB::table('negotiation_users')
+					->where('negotiation_id', $negotiationId)
+					->where('user_id', authUser()->id)
+					->whereNull('left_at')
+					->update([
+						'left_at' => now(),
+						'updated_at' => now(),
+					]);
 
-			// Create a new record with the chosen role
-			$negotiationUserDTO = new NegotiationUserDTO(
-				negotiation_id: $negotiationId, user_id: authUser()->id,
-				role: UserNegotiationRole::from($this->choseRole), status: 'active',
-				joined_at: now(), left_at: null,
-				created_at: now(), updated_at: now(),
-			);
-			app(NegotiationUserCreationService::class)
-				->createNegotiationUser($negotiationUserDTO);
+				// Create a new record with the chosen role
+				$negotiationUserDTO = new NegotiationUserDTO(
+					negotiation_id: $negotiationId, user_id: authUser()->id,
+					role: UserNegotiationRole::from($this->choseRole), status: 'active',
+					joined_at: now(), left_at: null,
+					created_at: now(), updated_at: now(),
+				);
+				app(NegotiationUserCreationService::class)
+					->createNegotiationUser($negotiationUserDTO);
+			});
 		}
 	}
 
@@ -72,28 +153,28 @@
 	<div class="">
 		<div class="mx-auto sm:px-4 lg:px-2">
 			<div class="bg-white dark:bg-dark-700 overflow-hidden shadow-sm sm:rounded-lg">
-				<div class="p-6 text-gray-900 dark:text-gray-100">
-					<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-						<x-button
-								wire:navigate
-								href="{{route('negotiation.create', tenant()->subdomain)}}"
-								sm>Create Negotiation
-						</x-button>
-					</div>
+				<div class="p-6 text-gray-900 dark:text-white">
 					@if($negotiations->isEmpty())
 						<div class="text-center py-8">
-							<p class="text-gray-500 dark:text-gray-400">No negotiations found.</p>
+							<p class="text-gray-500 dark:text-white">No negotiations found.</p>
 							<p class="mt-2">Create your first negotiation to get started.</p>
 						</div>
 					@else
 						<div class="overflow-x-auto">
 							<div class="px-4 sm:px-6 lg:px-8">
-								<div class="sm:flex sm:items-center">
+								<div class="flex items-center justify-between">
 									<div class="sm:flex-auto">
 										<h1 class="text-base font-semibold text-gray-900 dark:text-white">
 											Negotiations</h1>
 										<p class="mt-2 text-sm text-gray-700 dark:text-white">A list of your agencies
 										                                                      negotiations</p>
+									</div>
+									<div class="flex-none">
+										<x-button
+												wire:navigate
+												href="{{route('negotiation.create', tenant()->subdomain)}}"
+												sm>Create Negotiation
+										</x-button>
 									</div>
 								</div>
 								<div class="mt-8 flow-root">
@@ -146,14 +227,14 @@
 														</td>
 														<td class="relative py-4 pr-4 pl-3 text-right text-xs font-medium whitespace-nowrap sm:pr-0">
 															<x-button
+																	wire:click="openEditModal({{ $negotiation->id }})"
 																	color="sky"
 																	flat
-
 																	icon="pencil-square" />
 															<x-button
+																	wire:click="openDeleteModal({{ $negotiation->id }})"
 																	color="rose"
 																	flat
-
 																	icon="x-mark" />
 															<x-button
 																	wire:click="openRoleModal({{ $negotiation->id }})"
@@ -178,10 +259,78 @@
 																		</x-button>
 																		<x-button
 																				wire:click="$toggle('roleModal')"
-																				color="zinc">cancel
+																				color="zinc">Cancel
 																		</x-button>
 																	</div>
 
+																</div>
+															</x-modal>
+
+															<!-- Edit Negotiation Modal -->
+															<x-modal
+																	persistent
+																	center
+																	wire="editModal"
+																	title="Edit Negotiation">
+																<div class="mt-4 space-y-4">
+																	<div>
+																		<x-input
+																				label="Title"
+																				wire:model="title"
+																				placeholder="Enter negotiation title"
+																				required />
+																	</div>
+																	<div>
+																		<x-input
+																				label="Location"
+																				wire:model="location"
+																				placeholder="Enter location" />
+																	</div>
+																	<div>
+																		<x-input
+																				label="Status"
+																				wire:model="status"
+																				placeholder="Enter status"
+																				required />
+																	</div>
+																	<div>
+																		<x-input
+																				label="Type"
+																				wire:model="type"
+																				placeholder="Enter type"
+																				required />
+																	</div>
+																	<div class="space-x-2">
+																		<x-button
+																				wire:click="saveNegotiation">
+																			Save
+																		</x-button>
+																		<x-button
+																				wire:click="$toggle('editModal')"
+																				color="zinc">Cancel
+																		</x-button>
+																	</div>
+																</div>
+															</x-modal>
+
+															<!-- Delete Confirmation Modal -->
+															<x-modal
+																	persistent
+																	center
+																	wire="deleteModal"
+																	title="Delete Negotiation">
+																<p>Are you sure you want to delete this negotiation?
+																   This action cannot be undone.</p>
+																<div class="mt-4 space-x-2">
+																	<x-button
+																			wire:click="deleteNegotiation"
+																			color="rose">
+																		Delete
+																	</x-button>
+																	<x-button
+																			wire:click="$toggle('deleteModal')"
+																			color="zinc">Cancel
+																	</x-button>
 																</div>
 															</x-modal>
 														</td>

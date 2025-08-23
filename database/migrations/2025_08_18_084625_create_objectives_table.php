@@ -14,6 +14,7 @@ return new class () extends Migration {
             $table->foreignId('tenant_id');
             $table->foreignId('negotiation_id');
             $table->foreignId('created_by_id');
+            $table->boolean('is_pinned')->default(false);
             $table->enum('priority', array_map(
                 fn ($priority) => $priority->value,
                 Priority::cases()
