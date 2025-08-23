@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\CallRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
 use App\Contracts\ConversationRepositoryInterface;
 use App\Contracts\ConversationUserRepositoryInterface;
@@ -14,9 +15,11 @@ use App\Contracts\MoodLogRepositoryInterface;
 use App\Contracts\NegotiationRepositoryInterface;
 use App\Contracts\NoteRepositoryInterface;
 use App\Contracts\ObjectiveRepositoryInterface;
+use App\Contracts\PinRepositoryInterface;
 use App\Contracts\TriggerRepositoryInterface;
 use App\Contracts\WarningRepositoryInterface;
 use App\Contracts\WarrantRepositoryInterface;
+use App\Repositories\Call\CallRepository;
 use App\Repositories\Contact\ContactRepository;
 use App\Repositories\Conversation\ConversationRepository;
 use App\Repositories\ConversationUser\ConversationUserRepository;
@@ -29,6 +32,7 @@ use App\Repositories\MoodLog\MoodLogRepository;
 use App\Repositories\Negotiation\NegotiationRepository;
 use App\Repositories\Note\NoteRepository;
 use App\Repositories\Objective\ObjectiveRepository;
+use App\Repositories\Pin\PinRepository;
 use App\Repositories\Trigger\TriggerRepository;
 use App\Repositories\Warning\WarningRepository;
 use App\Repositories\Warrant\WarrantRepository;
@@ -138,6 +142,12 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             ObjectiveRepositoryInterface::class,
             ObjectiveRepository::class
+        );
+
+        // Bind Pin repository
+        $this->app->bind(
+            PinRepositoryInterface::class,
+            PinRepository::class
         );
     }
 

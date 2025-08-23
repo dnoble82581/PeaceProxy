@@ -35,3 +35,7 @@ Broadcast::channel('negotiation.{conversationId}', function (User $user, int $co
         'avatar' => $user->avatarUrl(),
     ];
 });
+
+Broadcast::channel('tenants.{tenantId}.notifications', function ($user, $tenantId) {
+    return (int) $user->tenant_id === (int) $tenantId; // adapt to your tenant resolver
+});

@@ -32,6 +32,11 @@ class Note extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function pin()
+    {
+        return $this->morphOne(\App\Models\Pin::class, 'pinnable');
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');

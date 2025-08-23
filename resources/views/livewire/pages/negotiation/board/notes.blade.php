@@ -3,10 +3,14 @@
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use App\DTOs\Note\NoteDTO;
+	use App\DTOs\Pin\PinDTO;
 	use App\Services\Note\NoteCreationService;
 	use App\Services\Note\NoteDeletionService;
 	use App\Services\Note\NoteFetchingService;
 	use App\Services\Note\NoteUpdateService;
+	use App\Services\Pin\PinCreationService;
+	use App\Services\Pin\PinDeletionService;
+	use App\Services\Pin\PinFetchingService;
 	use Carbon\Carbon;
 	use Illuminate\Support\Facades\Auth;
 
@@ -18,16 +22,32 @@
 		public $body = '';
 		public $editingNoteId = null;
 		public $negotiationId = null;
+		public $pinnedNotes = [];
+		public int $tenantId;
 
 		public function mount($negotiationId = null)
 		{
 			$this->negotiationId = $negotiationId;
-			$this->loadNotes();
+			$this->tenantId = tenant()->id;
+			$this->loadNotes(); // This now also loads pinned notes
 		}
 
 		public function loadNotes():void
 		{
 			$this->notes = app(NoteFetchingService::class)->getNotes();
+			$this->loadPinnedNotes();
+		}
+
+		public function loadPinnedNotes():void
+		{
+			$this->pinnedNotes = [];
+			$pins = app(PinFetchingService::class)->getPins();
+
+			foreach ($pins as $pin) {
+				if ($pin->pinnable_type === 'App\\Models\\Note') {
+					$this->pinnedNotes[$pin->pinnable_id] = true;
+				}
+			}
 		}
 
 		public function openCreateModal()
@@ -49,7 +69,9 @@
 				auth()->user()->tenant_id,
 				auth()->id(),
 				$this->title,
-				$this->body
+				$this->body,
+				false, // is_private
+				false  // pinned - We're no longer using the pinned flag on the Note model
 			);
 
 			app(NoteCreationService::class)->createNote($noteDTO);
@@ -85,7 +107,7 @@
 				$this->title,
 				$this->body,
 				$note->is_private,
-				$note->pinned,
+				false, // We're no longer using the pinned flag on the Note model
 				$note->tags,
 				$note->created_at,
 				Carbon::now()
@@ -117,6 +139,44 @@
 			app(NoteDeletionService::class)->deleteNote($noteId);
 			$this->loadNotes();
 		}
+
+		public function getListeners()
+		{
+			return [
+				"echo-private:tenants.$this->tenantId.notifications,.NotePinned" => 'loadNotes',
+				"echo-private:tenants.$this->tenantId.notifications,.NoteUnpinned" => 'loadNotes',
+			];
+		}
+
+		public function pinNote($noteId):void
+		{
+			$note = app(NoteFetchingService::class)->getNote($noteId);
+
+			if ($note) {
+				$pinDTO = new PinDTO(
+					null,
+					auth()->user()->tenant_id,
+					auth()->id(),
+					'App\\Models\\Note',
+					$noteId
+				);
+
+				app(PinCreationService::class)->createPin($pinDTO);
+				event(new \App\Events\Pin\NotePinnedEvent(tenant()->id, $noteId));
+				$this->loadPinnedNotes();
+			}
+		}
+
+		public function unpinNote($noteId):void
+		{
+			app(PinDeletionService::class)->deletePinByPinnable('App\\Models\\Note', $noteId);
+			$this->loadPinnedNotes();
+		}
+
+		public function isPinned($noteId):bool
+		{
+			return isset($this->pinnedNotes[$noteId]);
+		}
 	}
 
 ?>
@@ -145,6 +205,20 @@
 								                   by {{ $note->author->name }} {{ $note->created_at->diffForHumans() }}</p>
 							</div>
 							<div>
+								@if($this->isPinned($note->id))
+									<x-button
+											color="amber"
+											flat="true"
+											icon="star"
+											wire:click="unpinNote({{ $note->id }})"
+											title="Unpin note" />
+								@else
+									<x-button
+											flat="true"
+											icon="star"
+											wire:click="pinNote({{ $note->id }})"
+											title="Pin note" />
+								@endif
 								<x-button
 										flat="true"
 										icon="pencil-square"
