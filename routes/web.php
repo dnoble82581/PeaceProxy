@@ -29,6 +29,7 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
 
         Volt::route('/settings', 'pages.dashboard.settings')
             ->name('dashboard.settings');
+
         Volt::route('/users', 'pages.dashboard.users')
             ->name('dashboard.users');
     });
