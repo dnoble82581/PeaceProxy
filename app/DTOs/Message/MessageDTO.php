@@ -15,7 +15,8 @@ class MessageDTO
         public readonly ?bool $is_whisper = false,
         public readonly ?string $created_at = null,
         public readonly ?string $updated_at = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a DTO from an array.

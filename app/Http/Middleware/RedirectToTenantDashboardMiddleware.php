@@ -16,8 +16,10 @@ class RedirectToTenantDashboardMiddleware
                 // Redirect only if user visits the root route
                 if ($user->tenant && $user->tenant->subdomain && $request->path() === '/') {
                     $subdomain = $user->tenant->subdomain;
+                    $domain = config('app.domain');
+                    $protocol = $request->secure() ? 'https://' : 'http://';
 
-                    return redirect()->to("http://{$subdomain}.peaceproxypro_2.test/dashboard");
+                    return redirect()->to("{$protocol}{$subdomain}.{$domain}/dashboard");
                 }
 
                 // If no tenant is found, log out or redirect

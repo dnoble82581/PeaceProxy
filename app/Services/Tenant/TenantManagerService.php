@@ -31,7 +31,8 @@ class TenantManagerService
 
     public function isCentralDomain(string $host): bool
     {
-        return in_array($host, ['peaceproxypro_2.test', 'www.peaceproxypro_2.test']);
+        $domain = config('app.domain');
+        return in_array($host, [$domain, "www.{$domain}"]);
     }
 
     public function get(): ?Tenant

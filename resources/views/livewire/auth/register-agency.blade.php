@@ -19,15 +19,39 @@
 				->createTenant($validatedTenant);
 			$newUser = app(CreateUserService::class)
 				->createUserFromTenant($newTenant, $validatedUser);
+
+			// Redirect to the tenant dashboard after successful creation
+			$tenantSubdomain = $newTenant->subdomain;
+			$dashboardUrl = "http://{$tenantSubdomain}.".config('app.domain')."/dashboard";
+			$this->redirect($dashboardUrl);
 		}
 	}
 
 ?>
 
 <div>
+	@if (session()->has('csrf_debug'))
+		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+			<h3 class="font-bold">CSRF Debug Information</h3>
+			<ul class="list-disc pl-5">
+				<li>Session Token: {{ session('csrf_debug.session_token') }}</li>
+				<li>Header Token: {{ session('csrf_debug.header_token') }}</li>
+				<li>XSRF Token: {{ session('csrf_debug.xsrf_token') }}</li>
+				<li>Input Token: {{ session('csrf_debug.input_token') }}</li>
+				<li>Session ID: {{ session('csrf_debug.session_id') }}</li>
+				<li>Session Domain: {{ session('csrf_debug.session_domain') ?: 'Not configured' }}</li>
+				<li>App Domain: {{ session('csrf_debug.app_domain') }}</li>
+			</ul>
+		</div>
+	@endif
+
 	<form
 			wire:submit.prevent="saveTenant"
 			class="space-y-4">
+		<input
+				type="hidden"
+				name="_token"
+				value="{{ csrf_token() }}">
 		<!-- Core Identification -->
 		<div class="mb-6">
 			<h2 class="text-lg font-semibold">Agency Information</h2>

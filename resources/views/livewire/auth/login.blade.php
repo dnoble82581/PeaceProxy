@@ -10,6 +10,7 @@
 
 		public function login()
 		{
+
 			$this->validate([
 				'email' => 'required|email',
 				'password' => 'required',
@@ -32,7 +33,9 @@
 
 				// Redirect to tenant-specific dashboard
 				$subdomain = $user->tenant->subdomain;
-				return redirect()->to("http://{$subdomain}.peaceproxypro_2.test/dashboard");
+				$domain = config('app.domain');
+				$protocol = 'http://';
+				return redirect()->to("{$protocol}{$subdomain}.{$domain}/dashboard");
 			}
 			$this->addError('email', 'Invalid login credentials.');
 		}
@@ -42,8 +45,12 @@
 
 <div>
 	<form
-			wire:submit="login"
+			wire:submit.prevent="login"
 			class="space-y-4">
+		<input
+				type="hidden"
+				name="_token"
+				value="{{ csrf_token() }}">
 		<x-input
 				wire:model.lazy="email"
 				placeholder="Email"
