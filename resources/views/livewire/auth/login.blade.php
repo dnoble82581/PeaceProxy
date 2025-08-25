@@ -33,9 +33,8 @@
 
 				// Redirect to tenant-specific dashboard
 				$subdomain = $user->tenant->subdomain;
-				$domain = config('app.domain');
-				$protocol = 'http://';
-				return redirect()->to("{$protocol}{$subdomain}.{$domain}/dashboard");
+
+				return redirect()->to(route('dashboard', ['tenantSubdomain' => $subdomain,]));
 			}
 			$this->addError('email', 'Invalid login credentials.');
 		}
