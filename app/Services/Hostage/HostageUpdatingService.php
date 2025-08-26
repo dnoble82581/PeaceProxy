@@ -4,6 +4,7 @@ namespace App\Services\Hostage;
 
 use App\Contracts\HostageRepositoryInterface;
 use App\DTOs\Hostage\HostageDTO;
+use App\Events\Hostage\HostageDestroyedEvent;
 use App\Models\Hostage;
 
 class HostageUpdatingService
@@ -17,6 +18,8 @@ class HostageUpdatingService
      */
     public function updateHostage(HostageDTO $hostageDTO, $hostageId): ?Hostage
     {
-        return $this->hostageRepository->updateHostage($hostageId, $hostageDTO->toArray());
+        $hostage = $this->hostageRepository->updateHostage($hostageId, $hostageDTO->toArray());
+        event(new HostageDestroyedEvent($hostage));
+        return $hostage;
     }
 }

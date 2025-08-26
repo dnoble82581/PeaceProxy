@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\General\ConfidenceScore;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,17 @@ class Trigger extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the confidence score attribute.
+     *
+     * @param mixed $value
+     * @return \App\Enums\General\ConfidenceScore|null
+     */
+    public function getConfidenceScoreAttribute($value)
+    {
+        return ConfidenceScore::fromMixed($value);
+    }
 
     public function subject(): BelongsTo
     {

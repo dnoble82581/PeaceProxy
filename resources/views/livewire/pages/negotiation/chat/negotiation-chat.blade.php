@@ -859,7 +859,7 @@
 												@endif
 											</div>
 											<div class="text-xs text-gray-500 dark:text-dark-300">
-												{{ $message->created_at->format('g:i A') }}
+												{{ $message->created_at->setTimezone(auth()->user()->timezone)->format('g:i A') }}
 											</div>
 										</div>
 										<div class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm {{ $message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') : ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500') }}">

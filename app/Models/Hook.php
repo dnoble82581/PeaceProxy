@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\General\ConfidenceScore;
 use App\Enums\Hook\HookCategories;
 use App\Enums\Hook\HookSensitivityLevels;
 use App\Traits\BelongsToTenant;
@@ -23,6 +24,17 @@ class Hook extends Model
         'sensitivity_level' => HookSensitivityLevels::class,
         'category' => HookCategories::class,
     ];
+
+    /**
+     * Get the confidence score attribute.
+     *
+     * @param mixed $value
+     * @return \App\Enums\General\ConfidenceScore|null
+     */
+    public function getConfidenceScoreAttribute($value)
+    {
+        return ConfidenceScore::fromMixed($value);
+    }
 
     public function subject(): BelongsTo
     {

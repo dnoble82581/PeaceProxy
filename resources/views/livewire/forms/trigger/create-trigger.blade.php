@@ -2,8 +2,9 @@
 
 	use App\Events\Trigger\TriggerCreatedEvent;
 	use App\Livewire\Forms\CreateTriggerForm;
-	use App\Enums\Trigger\TriggerCategories;
-	use App\Enums\Trigger\TriggerSensitivityLevels;
+ use App\Enums\General\ConfidenceScore;
+ use App\Enums\Trigger\TriggerCategories;
+ use App\Enums\Trigger\TriggerSensitivityLevels;
 	use App\Models\Trigger;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
@@ -93,15 +94,15 @@
 						wire:model="form.source"
 						placeholder="Enter the source of this trigger" />
 
-				<x-input
-						type="number"
-						step="0.01"
-						min="0"
-						max="1"
+				<x-select.styled
 						icon="chart-bar"
 						label="Confidence Score"
+						placeholder="Enter confidence score (0-1)"
 						wire:model="form.confidence_score"
-						placeholder="Enter confidence score (0-1)" />
+						:options="collect(App\Enums\General\ConfidenceScore::cases())->map(fn($score) => [
+						'label' => $score->label(),
+						'value' => $score->value])
+						->toArray()" />
 
 				<input
 						type="hidden"

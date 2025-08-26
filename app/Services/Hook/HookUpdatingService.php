@@ -16,7 +16,7 @@ class HookUpdatingService
     {
         $hook = $this->hookRepository->updateHook($hookId, $hookDTO->toArray());
 
-        if (!$hook) {
+        if (! $hook) {
             return null;
         }
 

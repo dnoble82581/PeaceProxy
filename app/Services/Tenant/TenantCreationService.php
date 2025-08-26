@@ -9,5 +9,6 @@ class TenantCreationService
     public function createTenant(array $data): Tenant
     {
         return Tenant::create($data);
+
     }
 }

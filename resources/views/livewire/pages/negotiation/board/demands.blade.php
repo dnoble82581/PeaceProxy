@@ -63,10 +63,12 @@
 		 */
 		public function getListeners():array
 		{
+			$tenantId = auth()->user()->tenant_id;
 			return [
-				"echo-private:negotiation.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
-				"echo-private:negotiation.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
-				"echo-private:negotiation.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
+				'refresh' => '$refresh',
 			];
 		}
 
@@ -79,8 +81,14 @@
 		 */
 		public function handleDemandCreated(array $data):void
 		{
-			// Eager load demands with their relationships to prevent N+1 queries
-			$this->primarySubject->load(['demands']);
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+
+			// Force a refresh of the component
+			$this->dispatch('refresh');
+
+			// Ensure the component is re-rendered
+			$this->render();
 		}
 
 		/**
@@ -92,8 +100,8 @@
 		 */
 		public function handleDemandUpdated(array $data):void
 		{
-			// Eager load demands with their relationships to prevent N+1 queries
-			$this->primarySubject->load(['demands']);
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands']);
 		}
 
 		/**
@@ -129,7 +137,7 @@
 		}
 
 		/**
-		 * Close all modal dialogs
+		 * Close all modal dialogs and refresh the component
 		 *
 		 * This method is triggered by the 'close-modal' event
 		 *
@@ -141,6 +149,14 @@
 			$this->showCreateDemandModal = false;
 			$this->showEditDemandModal = false;
 
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+
+			// Force a refresh of the component
+			$this->dispatch('refresh');
+
+			// Ensure the component is re-rendered
+			$this->render();
 		}
 
 	}
@@ -177,8 +193,7 @@
 		@if($primarySubject->demands->isNotEmpty())
 			@foreach($primarySubject->demands as $demand)
 				<div
-						wire:key="tsui-card-{{ $demand->id }}"
-						wire:ignore>
+						wire:key="tsui-card-{{ $demand->id }}">
 					<x-card color="secondary">
 						<x-slot:header>
 							<div class="p-3 flex items-center justify-between">

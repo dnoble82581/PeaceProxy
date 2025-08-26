@@ -21,7 +21,7 @@ class DemandCreatedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('negotiation.'.$this->demand->negotiation_id);
+        return new PrivateChannel("private.negotiation.{$this->demand->tenant_id}.{$this->demand->negotiation_id}");
     }
 
     public function broadcastAs(): string

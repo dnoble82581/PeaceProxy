@@ -58,14 +58,15 @@
 		 *
 		 * @return array Array of event listeners mapped to handler methods
 		 */
-		public function getListeners()
-		{
-			return [
-				"echo-private:negotiation.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
-				"echo-private:negotiation.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
-				"echo-private:negotiation.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
-			];
-		}
+ 	public function getListeners()
+ 	{
+ 		$tenantId = auth()->user()->tenant_id;
+ 		return [
+ 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
+ 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
+ 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
+ 		];
+ 	}
 
 		/**
 		 * Handle the TriggerCreated event by refreshing the triggers collection
@@ -80,18 +81,17 @@
 			$this->primarySubject->load('triggers');
 		}
 
-		/**
-		 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
-		 */
-		public function handleTriggerUpdated(array $data)
-		{
-			// Eager load triggers with their relationships to prevent N+1 queries
-			$this->primarySubject->load('triggers');
-		}
+ 	/**
+ 	 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
+ 	 *
+ 	 * @param  array  $data  Event data
+ 	 *
+ 	 * @return void
+ 	 */
+ 	public function handleTriggerUpdated(array $data)
+ 	{
+ 		$this->primarySubject->load('triggers');
+ 	}
 
 		/**
 		 * Prepare a trigger for editing and show the edit modal
@@ -172,18 +172,17 @@
 		@if($primarySubject->triggers->isNotEmpty())
 			@foreach($primarySubject->triggers as $trigger)
 				<div
-						wire:key="tsui-card-{{ $trigger->id }}"
-						wire:ignore>
+						wire:key="tsui-card-{{ $trigger->id }}">
 					<x-card color="secondary">
 						<x-slot:header>
-							<div class="p-3 flex items-center justify-between">
+							<div class="p-3 flex items-center justify-between bg-rose-500 rounded-t-lg">
 								<div>
 									<p class="capitalize font-semibold text-lg">{{ $trigger->title }}</p>
-									<p class="text-gray-300 text-xs">{{ $trigger->source }}</p>
+									<p class="text-white text-xs">{{ $trigger->source }}</p>
 								</div>
 								<div class="text-right">
 									<x-subject.confidence-badge :confidence-score="$trigger->confidence_score" />
-									<p class="text-gray-300 text-xs mt-1">{{ $trigger->user->name }}</p>
+									<p class="text-white text-xs mt-1">{{ $trigger->user->name }}</p>
 								</div>
 							</div>
 						</x-slot:header>

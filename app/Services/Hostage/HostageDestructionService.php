@@ -3,6 +3,7 @@
 namespace App\Services\Hostage;
 
 use App\Contracts\HostageRepositoryInterface;
+use App\Events\Hostage\HostageDestroyedEvent;
 use App\Models\Hostage;
 
 class HostageDestructionService
@@ -16,6 +17,9 @@ class HostageDestructionService
      */
     public function deleteHostage($id): ?Hostage
     {
-        return $this->hostageRepository->deleteHostage($id);
+        $hostage = $this->hostageRepository->deleteHostage($id);
+        event(new HostageDestroyedEvent($hostage));
+
+        return $hostage;
     }
 }

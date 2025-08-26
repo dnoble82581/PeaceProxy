@@ -158,6 +158,13 @@
 						<div class="text-center py-8">
 							<p class="text-gray-500 dark:text-white">No negotiations found.</p>
 							<p class="mt-2">Create your first negotiation to get started.</p>
+							<div class="mt-4">
+								<x-button
+									wire:navigate
+									href="{{route('negotiation.create', tenant()->subdomain)}}"
+									sm>Create Negotiation
+								</x-button>
+							</div>
 						</div>
 					@else
 						<div class="overflow-x-auto">

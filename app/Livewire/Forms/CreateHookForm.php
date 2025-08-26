@@ -34,7 +34,7 @@ class CreateHookForm extends Form
     #[Validate(['nullable'])]
     public $source = '';
 
-    #[Validate(['nullable', 'numeric'])]
+    #[Validate(['nullable'])]
     public $confidence_score = '';
 
     #[Validate(['nullable', 'date'])]

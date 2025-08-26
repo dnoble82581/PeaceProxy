@@ -32,10 +32,16 @@
 		@forelse($this->negotiation->hostages as $hostage)
 			<li class="col-span-1 flex rounded-md shadow-xs dark:shadow-none dark:bg-dark-600 overflow-visible">
 				<div class="flex w-16 shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white overflow-visible">
-					<img
+					@if($hostage->getPrimaryImage())
+						<img
 							class="object-cover rounded-l-lg"
 							src="{{ $hostage->getPrimaryImage()->url }}"
-							alt="">
+							alt="{{ $hostage->name }}">
+					@else
+						<div class="w-full h-full bg-gray-300 dark:bg-gray-700 rounded-l-lg flex items-center justify-center">
+							<span class="text-xs text-gray-600 dark:text-gray-400">No image</span>
+						</div>
+					@endif
 				</div>
 				<div class="flex flex-1 items-center justify-between overflow-visible rounded-r-md border-t border-r border-b border-gray-200 bg-white dark:border-white/10 dark:bg-gray-800/50">
 					<div class="flex-1 truncate px-4 py-2 text-sm">

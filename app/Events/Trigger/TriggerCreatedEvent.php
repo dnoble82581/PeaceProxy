@@ -22,7 +22,7 @@ class TriggerCreatedEvent implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('negotiation.'.$this->trigger->negotiation_id)
+            new PrivateChannel("private.negotiation.{$this->trigger->tenant_id}.{$this->trigger->negotiation_id}")
         ];
     }
 

@@ -19,11 +19,9 @@ class HookCreatedEvent implements ShouldBroadcastNow
     {
     }
 
-    public function broadcastOn(): array
+    public function broadcastOn(): PrivateChannel
     {
-        return [
-            new PrivateChannel('negotiation.'.$this->hook->negotiation_id),
-        ];
+        return new PrivateChannel("private.negotiation.{$this->hook->tenant_id}.{$this->hook->negotiation_id}");
     }
 
     public function broadcastAs(): string

@@ -133,7 +133,7 @@
 			class="mt-4"
 			x-show="tab === 'notes'">
 		<div class="p-4 text-gray-500 dark:text-dark-300">
-			<livewire:pages.negotiation.board.notes />
+			<livewire:pages.negotiation.board.notes :negotiationId="$this->negotiationId" />
 		</div>
 	</div>
 

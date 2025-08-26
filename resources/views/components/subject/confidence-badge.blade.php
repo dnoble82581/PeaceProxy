@@ -1,10 +1,12 @@
 @props(['confidenceScore'])
 
 @php
-	if ($confidenceScore >= 0.7) {
+	use App\Enums\General\ConfidenceScore;
+	
+	if ($confidenceScore == ConfidenceScore::High || $confidenceScore == ConfidenceScore::VeryHigh) {
 		$color = 'teal';
 		$icon = 'presentation-chart-line';
-	} elseif ($confidenceScore >= 0.3) {
+	} elseif ($confidenceScore == ConfidenceScore::Medium) {
 		$color = 'blue';
 		$icon = 'tag';
 	} else {
@@ -18,5 +20,5 @@
 		xs
 		round
 		:icon="$icon">
-	{{ $confidenceScore }}
+	{{ $confidenceScore->label() }}
 </x-badge>

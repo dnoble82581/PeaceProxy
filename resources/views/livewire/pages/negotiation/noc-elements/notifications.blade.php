@@ -73,24 +73,26 @@
 	<!-- Toggle button - always positioned on the right -->
 	<div class="flex justify-end mb-2">
 		<x-button
-				color=""
+				color="sky"
 				flat
 				@click="open = !open"
 				sm
-				primary />
+				icon="bell">
+			<span x-text="open ? 'Hide' : 'Show'"></span> Notifications
+		</x-button>
 	</div>
 
 	<!-- Notifications container -->
 	<div
-			class="p-2 mt-2 bg-dark-800 rounded-md"
+			class="p-2 mt-2 bg-white dark:bg-dark-800 rounded-md shadow"
 			x-show="open"
 			x-transition>
-		<h2 class="text-xl font-semibold mb-4">Notifications</h2>
+		<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Notifications</h2>
 
 		@if(count($this->pinnedNotes) > 0)
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-4 md:grid-cols-6">
 				@foreach($this->pinnedNotes as $note)
-					<div class="bg-dark-700 rounded-md p-3 flex items-start group">
+					<div class="bg-gray-100 dark:bg-dark-700 rounded-md p-3 flex items-start group shadow-sm">
 						<div class="text-amber-500 mr-2 flex-shrink-0">
 							<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -103,8 +105,8 @@
 						<div
 								class="flex-1 cursor-pointer"
 								wire:click="showNote({{ $note->id }})">
-							<h3 class="font-medium dark:text-dark-100 text-dark-800">{{ $note->title }}</h3>
-							<p class="text-xs text-dark-300">Pinned
+							<h3 class="font-medium text-gray-900 dark:text-dark-100">{{ $note->title }}</h3>
+							<p class="text-xs text-gray-500 dark:text-dark-300">Pinned
 							                                 by {{ $note->author->name }} {{ $note->created_at->diffForHumans() }}</p>
 						</div>
 						<div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -120,7 +122,7 @@
 				@endforeach
 			</div>
 		@else
-			<div class="text-center py-4 text-gray-500">
+			<div class="text-center py-4 text-gray-500 dark:text-gray-400">
 				No pinned notes found.
 			</div>
 		@endif
@@ -132,7 +134,7 @@
 			<x-card header="{{ $selectedNote->title }}">
 				<div class="p-4">
 					<div class="mb-4">
-						<p class="text-sm text-dark-800 dark:text-dark-100">By {{ $selectedNote->author->name }}
+						<p class="text-sm text-gray-700 dark:text-gray-300">By {{ $selectedNote->author->name }}
 						                                                    · {{ $selectedNote->created_at->format('M d, Y') }}</p>
 					</div>
 					<div class="prose dark:prose-invert max-w-none">

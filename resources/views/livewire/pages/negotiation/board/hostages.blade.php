@@ -23,7 +23,7 @@
 			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
 		}
 
-		public function loadHostages()
+		public function loadHostages():void
 		{
 			$negotiation = $this->negotiation ?? null;
 
@@ -58,6 +58,7 @@
 				'tenantSubdomain' => $tenant->subdomain
 			]));
 		}
+
 
 		public function viewHostage($hostageId)
 		{
@@ -101,13 +102,13 @@
 			}
 		}
 
-		public function confirmDeleteHostage($hostageId)
+		public function confirmDeleteHostage($hostageId):void
 		{
 			$this->currentHostageId = $hostageId;
 			$this->showDeleteHostageModal = true;
 		}
 
-		public function deleteHostage()
+		public function deleteHostage():void
 		{
 			if ($this->currentHostageId) {
 				$hostage = Hostage::find($this->currentHostageId);
@@ -124,6 +125,58 @@
 					$this->loadHostages();
 				}
 			}
+		}
+
+		/**
+		 * Define the event listeners for this component
+		 *
+		 * @return array Array of event listeners mapped to handler methods
+		 */
+		public function getListeners()
+		{
+			$tenantId = tenant()->id;
+			$negotiationId = $this->negotiation->id;
+			return [
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageCreated" => 'handleHostageCreated',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageUpdated" => 'handleHostageUpdated',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageDestroyed" => 'handleHostageDestroyed',
+			];
+		}
+
+		/**
+		 * Handle the HostageCreated event by refreshing the hostages collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleHostageCreated(array $data):void
+		{
+			$this->loadHostages();
+		}
+
+		/**
+		 * Handle the HostageUpdated event by refreshing the hostages collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleHostageUpdated(array $data):void
+		{
+			$this->loadHostages();
+		}
+
+		/**
+		 * Handle the HostageDestroyed event by refreshing the hostages collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleHostageDestroyed(array $data):void
+		{
+			$this->loadHostages();
 		}
 	}
 
@@ -159,8 +212,7 @@
 		@if(count($hostages) > 0)
 			@foreach($hostages as $hostage)
 				<div
-						wire:key="tsui-card-{{ $hostage->id }}"
-						wire:ignore>
+						wire:key="tsui-card-{{ $hostage->id }}">
 					<x-card
 							x-data="{
 					currentImageIndex: 0,

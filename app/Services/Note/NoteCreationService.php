@@ -4,6 +4,7 @@ namespace App\Services\Note;
 
 use App\Contracts\NoteRepositoryInterface;
 use App\DTOs\Note\NoteDTO;
+use App\Events\Note\NoteCreatedEvent;
 use App\Models\Note;
 
 class NoteCreationService
@@ -17,6 +18,8 @@ class NoteCreationService
 
     public function createNote(NoteDTO $noteDTO): Note
     {
-        return $this->noteRepository->createNote($noteDTO->toArray());
+        $newNote = $this->noteRepository->createNote($noteDTO->toArray());
+        event(new NoteCreatedEvent($newNote->id, $newNote->negotiation_id));
+        return $newNote;
     }
 }

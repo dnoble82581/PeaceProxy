@@ -32,6 +32,29 @@ class Hostage extends Model
         return $this->belongsTo(Negotiation::class);
     }
 
+    public function contacts(): MorphMany
+    {
+        return $this->morphMany(ContactPoint::class, 'contactable')->orderBy('created_at', 'desc');
+    }
+
+    public function avatarUrl(): string
+    {
+        // Check for primary image
+        $primaryImage = $this->getPrimaryImage();
+        if ($primaryImage) {
+            return $primaryImage->url;
+        }
+
+        // Check for first image
+        $firstImage = $this->images()->first();
+        if ($firstImage) {
+            return $firstImage->url;
+        }
+
+        // Fall back to initials
+        return 'https://ui-avatars.com/api/?name='.$this->initials();
+    }
+
     public function getPrimaryImage()
     {
         return $this->images()->where('is_primary', true)->first();
@@ -42,8 +65,11 @@ class Hostage extends Model
         return $this->morphMany(Image::class, 'imageable');
     }
 
-    public function contacts(): MorphMany
+    public function initials(): string
     {
-        return $this->morphMany(ContactPoint::class, 'contactable')->orderBy('created_at', 'desc');
+        $nameParts = explode(' ', $this->name);
+        $initials = array_map(fn ($part) => $part[0] ?? '', $nameParts);
+
+        return strtoupper(implode('', $initials));
     }
 }

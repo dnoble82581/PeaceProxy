@@ -60,10 +60,12 @@
 		 */
 		public function getListeners()
 		{
+			$tenantId = tenant()->id;
 			return [
-				"echo-private:negotiation.$this->negotiationId,.HookCreated" => 'handleHookCreated',
-				"echo-private:negotiation.$this->negotiationId,.HookUpdated" => 'handleHookUpdated',
-				"echo-private:negotiation.$this->negotiationId,.HookDestroyed" => 'handleHookUpdated',
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookCreated" => 'handleHookCreated',
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookUpdated" => 'handleHookUpdated',
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookDestroyed" => 'handleHookUpdated',
+				'refresh' => '$refresh',
 			];
 		}
 
@@ -87,10 +89,9 @@
 		 *
 		 * @return void
 		 */
-		public function handleHookUpdated(array $data)
+		public function handleHookUpdated(array $data):void
 		{
-			// Eager load hooks with their relationships to prevent N+1 queries
-			$this->primarySubject->load(['hooks']);
+			$this->dispatch('refresh');
 		}
 
 		/**
@@ -100,7 +101,7 @@
 		 *
 		 * @return void
 		 */
-		public function editHook($hookId)
+		public function editHook($hookId):void
 		{
 			// Reset the hook being edited before setting a new one
 			$this->hookToEdit = null;
@@ -119,7 +120,7 @@
 		 *
 		 * @return void
 		 */
-		public function deleteHook($hookId)
+		public function deleteHook($hookId):void
 		{
 			app(HookDestructionService::class)->deleteHook($hookId);
 		}
@@ -147,7 +148,7 @@
 		class=""
 		x-data="{ showHooks: true }">
 	<div class="bg-primary-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm">Hooks <span
+		<h3 class="text-sm font-semibold">Hooks <span
 					x-show="!showHooks"
 					x-transition>({{ $primarySubject->hooks->count() }})</span></h3>
 		<div>
@@ -173,13 +174,12 @@
 		@if($primarySubject->hooks->isNotEmpty())
 			@foreach($primarySubject->hooks as $hook)
 				<div
-						wire:key="tsui-card-{{ $hook->id }}"
-						wire:ignore>
-					<x-card color="secondary">
+						wire:key="tsui-card-{{ $hook->id }}">
+					<x-card>
 						<x-slot:header>
-							<div class="p-3 flex items-center justify-between">
+							<div class="p-3 flex items-center justify-between bg-primary-500 text-dark-100 rounded-t-lg">
 								<div>
-									<p class="capitalize font-semibold text-lg">{{ $hook->title }}</p>
+									<p class="capitalize font-semibold">{{ $hook->title }}</p>
 									<p class="text-gray-300 text-xs">{{ $hook->source }}</p>
 								</div>
 								<div class="text-right">

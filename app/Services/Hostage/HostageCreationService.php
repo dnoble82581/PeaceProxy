@@ -4,6 +4,7 @@ namespace App\Services\Hostage;
 
 use App\Contracts\HostageRepositoryInterface;
 use App\DTOs\Hostage\HostageDTO;
+use App\Events\Hostage\HostageCreatedEvent;
 use App\Models\Hostage;
 
 class HostageCreationService
@@ -17,6 +18,8 @@ class HostageCreationService
      */
     public function createHostage(HostageDTO $hostageDTO): Hostage
     {
-        return $this->hostageRepository->createHostage($hostageDTO->toArray());
+        $hostage = $this->hostageRepository->createHostage($hostageDTO->toArray());
+        event(new HostageCreatedEvent($hostage));
+        return $hostage;
     }
 }

@@ -16,8 +16,8 @@ class HookCreationService
     {
         $hook = $this->hookRepository->createHook($hookDTO->toArray());
 
-        // Dispatch event if needed
-        // event(new HookCreatedEvent($hook));
+        // Dispatch event on private.negotiation channel
+        event(new HookCreatedEvent($hook));
 
         return $hook;
     }

@@ -145,7 +145,14 @@
 			return [
 				"echo-private:tenants.$this->tenantId.notifications,.NotePinned" => 'loadNotes',
 				"echo-private:tenants.$this->tenantId.notifications,.NoteUnpinned" => 'loadNotes',
+				"echo-presence:negotiation.$this->negotiationId,.NoteCreated" => 'handleNoteCreated',
 			];
+		}
+
+		public function handleNoteCreated(array $data)
+		{
+			logger($data);
+			$this->loadNotes();
 		}
 
 		public function pinNote($noteId):void

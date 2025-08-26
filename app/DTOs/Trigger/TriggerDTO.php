@@ -2,6 +2,7 @@
 
 namespace App\DTOs\Trigger;
 
+use App\Enums\General\ConfidenceScore;
 use App\Enums\Trigger\TriggerCategories;
 use App\Enums\Trigger\TriggerSensitivityLevels;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class TriggerDTO
         public ?TriggerCategories $category = null,
         public ?TriggerSensitivityLevels $sensitivity_level = null,
         public ?string $source = null,
-        public ?float $confidence_score = null,
+        public ?ConfidenceScore $confidence_score = null,
         public ?Carbon $created_at = null,
         public ?Carbon $updated_at = null,
     ) {
@@ -40,7 +41,11 @@ class TriggerDTO
             isset($data['category']) ? TriggerCategories::from($data['category']) : null,
             isset($data['sensitivity_level']) ? TriggerSensitivityLevels::from($data['sensitivity_level']) : null,
             $data['source'] ?? null,
-            $data['confidence_score'] ?? null,
+            isset($data['confidence_score'])
+                ? ($data['confidence_score'] instanceof ConfidenceScore
+                    ? $data['confidence_score']
+                    : ConfidenceScore::fromMixed($data['confidence_score']))
+                : null,
             isset($data['created_at']) ? Carbon::parse($data['created_at']) : null,
             isset($data['updated_at']) ? Carbon::parse($data['updated_at']) : null,
         );
