@@ -81,26 +81,6 @@
 			}
 		}
 
-		public function editHostage($hostageId)
-		{
-			$negotiation = $this->negotiation ?? null;
-			$hostage = Hostage::find($hostageId);
-			$tenant = tenant();
-
-			if (!$tenant) {
-				// Handle the case where tenant is null
-				session()->flash('error', 'Unable to determine tenant. Please try again or contact support.');
-				return;
-			}
-
-			if ($hostage) {
-				return $this->redirect(route('hostage.edit', [
-					'hostage' => $hostage,
-					'negotiation' => $negotiation,
-					'tenantSubdomain' => $tenant->subdomain
-				]));
-			}
-		}
 
 		public function confirmDeleteHostage($hostageId):void
 		{
@@ -164,7 +144,7 @@
 		 */
 		public function handleHostageUpdated(array $data):void
 		{
-			$this->loadHostages();
+			$this->dispatch('refresh');
 		}
 
 		/**
@@ -219,7 +199,9 @@
 					images: {{ json_encode($hostage->images->map->url()) }},
 					totalImages: {{ $hostage->images->count() }},
 					getCurrentImage() {
-						return this.totalImages > 0 ? this.images[this.currentImageIndex] : 'https://i.pravatar.cc/300';
+						return this.totalImages > 0
+						? this.images[this.currentImageIndex]
+						: `https://ui-avatars.com/api/?name=${encodeURIComponent('{{ $hostage->name }}')}`;
 					},
 					nextImage() {
 						if (this.totalImages > 0) {
@@ -283,31 +265,34 @@
 							</div>
 							<div class="text-sm">
 								<h5 class="font-semibold">Details</h5>
-								<p>{{ $hostage->relation_to_subject ?? 'Unknown Relation' }}</p>
-								<p>{{ $hostage->location ?? 'Unknown Location' }}</p>
-								<p>{{ $hostage->injury_status ?? 'Unknown Injury Status' }}</p>
-								<p>Last
-								   Contact {{ $hostage->last_seen_at ? $hostage->last_seen_at->diffForHumans() : 'Unknown' }}</p>
+								<p class="capitalize">
+									<span class="italic">Relation:</span> {{ $hostage->relation_to_subject ?? 'Unknown Relation' }}
+								</p>
+								<p><span class="italic">Location:</span> {{ $hostage->location ?? 'Unknown Location' }}
+								</p>
+								<p>
+									<span class="italic">Last Contact:</span> {{ $hostage->last_seen_at ? $hostage->last_seen_at->diffForHumans() : 'Unknown' }}
+								</p>
 							</div>
-							<div class="space-x-2 space-y-2">
+							<div class="flex flex-col items-center gap-2">
 								@if($hostage->risk_level)
 									<x-badge
 											xs
-											text="{{ $hostage->risk_level }}"
+											text="Risk: {{ $hostage->risk_level->label() }}"
 											round />
 								@endif
 								@if($hostage->injury_status)
 									<x-badge
 											xs
-											color="{{ $hostage->injury_status === 'Uninjured' ? 'green' : 'red' }}"
-											text="{{ $hostage->injury_status }}"
+											color="{{ $hostage->injury_status === 'none' ? 'green' : 'red' }}"
+											text="Injuries: {{ $hostage->injury_status->label() }}"
 											round />
 								@endif
 								@if($hostage->status)
 									<x-badge
 											xs
 											color="blue"
-											text="{{ $hostage->status }}"
+											text="Status: {{ $hostage->status }}"
 											round />
 								@endif
 							</div>

@@ -100,8 +100,12 @@
 		 */
 		public function handleDemandUpdated(array $data):void
 		{
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+			$this->dispatch('refresh');
+		}
+
+		public function handleDemandDestroyed(array $data)
+		{
+			$this->primarySubject = $this->primarySubject->fresh('demands');
 		}
 
 		/**

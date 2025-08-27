@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\General\Genders;
+use App\Enums\General\RiskLevels;
+use App\Enums\Hostage\HostageInjuryStatus;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +27,8 @@ class Hostage extends Model
         'risk_factors' => 'array',
         'is_primary_hostage' => 'boolean',
         'gender' => Genders::class,
+        'risk_level' => RiskLevels::class,
+        'injury_status' => HostageInjuryStatus::class
     ];
 
     public function negotiation(): BelongsTo
@@ -57,7 +61,14 @@ class Hostage extends Model
 
     public function getPrimaryImage()
     {
-        return $this->images()->where('is_primary', true)->first();
+        $image = '';
+        if ($this->images()->where('is_primary', true)->count() > 0) {
+            $image = $this->images()->where('is_primary', true)->first()->url;
+        } else {
+            $image = 'https://ui-avatars.com/api/?name='.$this->name;
+        }
+
+        return $image;
     }
 
     public function images(): MorphMany

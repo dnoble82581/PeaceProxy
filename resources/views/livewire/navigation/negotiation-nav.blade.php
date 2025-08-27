@@ -71,13 +71,17 @@
 					text="Settings" />
 			<x-dropdown.items
 					wire:click="leaveNegotiation"
-					icon="arrow-left-start-on-rectangle"
+					icon="arrow-long-left"
 					text="Dashboard" />
+			<x-dropdown.items
+					icon="archive-box-arrow-down"
+					text="End Negotiation" />
 			<form
 					method="POST"
 					action="{{ route('logout') }}">
 				@csrf
 				<x-dropdown.items
+						separator
 						icon="arrow-left-start-on-rectangle"
 						text="Logout"
 						onclick="event.preventDefault(); this.closest('form').submit();" />

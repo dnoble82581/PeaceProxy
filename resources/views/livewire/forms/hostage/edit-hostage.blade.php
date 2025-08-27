@@ -126,8 +126,10 @@
 			// Set updated_at timestamp
 			$validated['updated_at'] = now();
 
+			$hostageDTO = \App\DTOs\Hostage\HostageDTO::fromArray($validated);
+
 			// Update the hostage
-			$this->hostage->update($validated);
+//			$this->hostage->update($validated);
 
 			// Handle image uploads using ImageService
 			if (!empty($this->newImages)) {
@@ -139,6 +141,9 @@
 					's3_public'
 				);
 			}
+
+			app(\App\Services\Hostage\HostageUpdatingService::class)->updateHostage($hostageDTO, $this->hostage->id);
+
 
 			// Redirect back to the negotiation page or dashboard
 			if ($this->negotiation) {
@@ -167,7 +172,7 @@
 
 ?>
 
-<div class="max-w-7xl mx-auto dark:bg-dark-700 bg-white shadow-lg p-8 mt-4 rounded-lg">
+<div class="max-w-7xl mx-auto dark:bg-dark-800 bg-white shadow-lg p-8 mt-4 rounded-lg">
 	<div class="px-4 sm:px-8 text-center space-y-3">
 		<h1 class="text-2xl text-gray-400 font-semibold uppercase">{{ isset($hostage->id) ? 'Update Hostage' : 'Create Hostage' }}</h1>
 		<p class="text-xs">{{ isset($hostage->id) ? 'Updating hostage: ' : 'Creating new hostage' }}

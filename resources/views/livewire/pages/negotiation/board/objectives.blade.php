@@ -4,11 +4,16 @@
 	use App\Enums\Objective\Status;
 	use App\Models\Objective;
 	use App\Models\User;
+	use App\DTOs\Pin\PinDTO;
+	use App\Services\Pin\PinCreationService;
+	use App\Services\Pin\PinDeletionService;
+	use App\Services\Pin\PinFetchingService;
 	use Illuminate\Support\Collection;
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\Layout;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
+	use Illuminate\Support\Facades\Auth;
 
 	new class extends Component {
 		public ?int $negotiation_id = null;
@@ -16,11 +21,66 @@
 		public string $priority = Priority::medium->value;
 		public ?int $editingId = null;
 		public bool $showForm = false;
+		public $pinnedObjectives = [];
+		public int $tenantId;
 
-		public function mount(int $negotiationId = null):void
-		{
-			$this->negotiation_id = $negotiationId;
-		}
+ 	public function mount(int $negotiationId = null):void
+ 	{
+ 		$this->negotiation_id = $negotiationId;
+ 		$this->tenantId = tenant()->id;
+ 		$this->loadPinnedObjectives();
+ 	}
+	
+ 	public function loadPinnedObjectives():void
+ 	{
+ 		$this->pinnedObjectives = [];
+ 		$pins = app(PinFetchingService::class)->getPins();
+		
+ 		foreach ($pins as $pin) {
+ 			if ($pin->pinnable_type === 'App\\Models\\Objective') {
+ 				$this->pinnedObjectives[$pin->pinnable_id] = true;
+ 			}
+ 		}
+ 	}
+	
+ 	public function pinObjective($objectiveId):void
+ 	{
+ 		$objective = Objective::findOrFail($objectiveId);
+		
+ 		if ($objective) {
+ 			$pinDTO = new PinDTO(
+ 				null,
+ 				auth()->user()->tenant_id,
+ 				auth()->id(),
+ 				'App\\Models\\Objective',
+ 				$objectiveId
+ 			);
+			
+ 			app(PinCreationService::class)->createPin($pinDTO);
+ 			event(new \App\Events\Pin\ObjectivePinnedEvent(tenant()->id, $objectiveId));
+ 			$this->loadPinnedObjectives();
+ 		}
+ 	}
+	
+ 	public function unpinObjective($objectiveId):void
+ 	{
+ 		app(PinDeletionService::class)->deletePinByPinnable('App\\Models\\Objective', $objectiveId);
+ 		event(new \App\Events\Pin\ObjectiveUnpinnedEvent(tenant()->id, $objectiveId));
+ 		$this->loadPinnedObjectives();
+ 	}
+	
+ 	public function isPinned($objectiveId):bool
+ 	{
+ 		return isset($this->pinnedObjectives[$objectiveId]);
+ 	}
+	
+ 	public function getListeners()
+ 	{
+ 		return [
+ 			"echo-private:tenants.$this->tenantId.notifications,.ObjectivePinned" => 'loadPinnedObjectives',
+ 			"echo-private:tenants.$this->tenantId.notifications,.ObjectiveUnpinned" => 'loadPinnedObjectives',
+ 		];
+ 	}
 
 		#[Computed]
 		public function objectives():Collection
@@ -143,7 +203,7 @@
 	</div>
 
 	@if($showForm)
-		<div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+		<div class="bg-white dark:bg-dark-700 p-4 rounded-lg shadow mb-6">
 			<form wire:submit="save">
 				<div class="space-y-4">
 					<div>
@@ -254,6 +314,18 @@
 								<x-dropdown.items
 										wire:click="complete({{ $objective->id }})"
 										icon="check">Complete
+								</x-dropdown.items>
+							@endif
+							@if($this->isPinned($objective->id))
+								<x-dropdown.items
+										wire:click="unpinObjective({{ $objective->id }})"
+										icon="star"
+										color="amber">Unpin
+								</x-dropdown.items>
+							@else
+								<x-dropdown.items
+										wire:click="pinObjective({{ $objective->id }})"
+										icon="star">Pin
 								</x-dropdown.items>
 							@endif
 							<x-dropdown.items

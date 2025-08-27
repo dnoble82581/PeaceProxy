@@ -15,8 +15,8 @@
 
 ?>
 
-<div class="dark:bg-dark-800 p-4 overflow-visible">
-	<div class="text-right px-4 pt-1">
+<div class="dark:bg-dark-800 p-2 overflow-visible">
+	<div class="text-right px-4">
 		<x-button
 				wire:navigate.hover
 				href="{{ route('hostage.create', ['negotiation' => $negotiation->id, 'tenantSubdomain' => tenant()->subdomain]) }}"
@@ -28,15 +28,15 @@
 	</div>
 	<ul
 			role="list"
-			class="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 overflow-visible">
+			class="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3 overflow-visible">
 		@forelse($this->negotiation->hostages as $hostage)
 			<li class="col-span-1 flex rounded-md shadow-xs dark:shadow-none dark:bg-dark-600 overflow-visible">
 				<div class="flex w-16 shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white overflow-visible">
 					@if($hostage->getPrimaryImage())
 						<img
-							class="object-cover rounded-l-lg"
-							src="{{ $hostage->getPrimaryImage()->url }}"
-							alt="{{ $hostage->name }}">
+								class="object-cover rounded-l-lg"
+								src="{{ $hostage->getPrimaryImage() }}"
+								alt="{{ $hostage->name }}">
 					@else
 						<div class="w-full h-full bg-gray-300 dark:bg-gray-700 rounded-l-lg flex items-center justify-center">
 							<span class="text-xs text-gray-600 dark:text-gray-400">No image</span>
@@ -72,7 +72,9 @@
 			<li class="col-span-2 text-center p-4 text-gray-500">
 				No hostages found for this negotiation.
 				<p class="mt-2">
-					<a href="{{ route('hostage.create', ['negotiation' => $negotiation->id, 'tenantSubdomain' => tenant()->subdomain]) }}" class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+					<a
+							href="{{ route('hostage.create', ['negotiation' => $negotiation->id, 'tenantSubdomain' => tenant()->subdomain]) }}"
+							class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
 						Click here to add a new hostage.
 					</a>
 				</p>

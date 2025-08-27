@@ -7,7 +7,7 @@
 	new class extends Component {
 		public Negotiation $negotiation;
 
-		public function mount($negotiationId)
+		public function mount($negotiationId):void
 		{
 			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
 		}
@@ -16,9 +16,9 @@
 ?>
 
 <div
-		class="h-[13rem] border border-gray-300 rounded-lg text-dark-800 dark:text-primary-50 dark:bg-dark-800 px-2 pb-2"
+		class="h-[13rem] border border-gray-300 rounded-lg text-dark-800 dark:text-primary-50 dark:bg-dark-800 px-2 pb-2 overflow-y-auto"
 		x-data="{tab: 'hostages'}">
-	<div>
+	<div class="sticky top-0 z-10 bg-white dark:bg-dark-800">
 		<div class="grid grid-cols-1 sm:hidden">
 			<!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
 			<select
@@ -105,20 +105,22 @@
 
 	<div
 			x-show="tab === 'hostages'"
-			class="">
+			class="overflow-visible">
 		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-card-hostages :negotiationId="$this->negotiation->id" />
 	</div>
 	<div
-			class="p-4"
+			class="p-4 pt-6"
 			x-show="tab === 'initial_complaint'">
 		<p class="text-sm">{{ $this->negotiation->initial_complaint ?? 'No Initial Complaint Available. To add an initial complaint, please edit the negotiation details from the negotiation management page.' }}</p>
 	</div>
 	<div
-			class="p-4"
+			class="p-4 pt-6"
 			x-show="tab === 'summary'">
 		<p class="text-sm">{{ $this->negotiation->summary ?? 'No Summary Information Available. To add a summary, please edit the negotiation details from the negotiation management page.' }}</p>
 	</div>
-	<div x-show="tab === 'documents'">
+	<div
+			x-show="tab === 'documents'"
+			class="pt-2">
 		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-documents :negotiationId="$this->negotiation->id" />
 	</div>
 </div>
