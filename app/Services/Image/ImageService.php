@@ -11,54 +11,6 @@ use Illuminate\Support\Facades\Storage;
 class ImageService
 {
     /**
-     * Upload an image to S3 and create an Image record.
-     *
-     * @param  UploadedFile  $file  The uploaded file
-     * @param  string  $path  The path to store the file (e.g., 'subjects/1/images')
-     * @param  string  $disk  The disk to store the file on (default: 's3_public')
-     * @param  int  $tenantId  The tenant ID
-     * @param  bool  $isPrimary  Whether this is the primary image
-     * @param  string|null  $imageableType  The type of the model this image belongs to
-     * @param  int|null  $imageableId  The ID of the model this image belongs to
-     * @return Image|null The created Image model or null if upload failed
-     */
-    public function uploadImage(
-        UploadedFile $file,
-        string $path,
-        string $disk = 's3_public',
-        ?int $tenantId = null,
-        bool $isPrimary = false,
-        ?string $imageableType = null,
-        ?int $imageableId = null
-    ): ?Image {
-        try {
-            // Store the image in the specified disk
-            $filePath = $file->store($path, $disk);
-            $url = Storage::disk($disk)->url($filePath);
-
-            // Create a new Image record
-            return Image::create([
-                'path' => $filePath,
-                'url' => $url,
-                'disk' => $disk,
-                'original_filename' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'tenant_id' => $tenantId,
-                'is_primary' => $isPrimary,
-                'imageable_type' => $imageableType,
-                'imageable_id' => $imageableId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (Exception $e) {
-            Log::error('Failed to upload image: '.$e->getMessage());
-
-            return null;
-        }
-    }
-
-    /**
      * Delete an image from storage and the database.
      *
      * @param  Image  $image  The image to delete
@@ -151,5 +103,54 @@ class ImageService
         }
 
         return $images;
+    }
+
+    /**
+     * Upload an image to S3 and create an Image record.
+     *
+     * @param  UploadedFile  $file  The uploaded file
+     * @param  string  $path  The path to store the file (e.g., 'subjects/1/images')
+     * @param  string  $disk  The disk to store the file on (default: 's3_public')
+     * @param  int|null  $tenantId  The tenant ID
+     * @param  bool  $isPrimary  Whether this is the primary image
+     * @param  string|null  $imageableType  The type of the model this image belongs to
+     * @param  int|null  $imageableId  The ID of the model this image belongs to
+     *
+     * @return Image|null The created Image model or null if upload failed
+     */
+    public function uploadImage(
+        UploadedFile $file,
+        string $path,
+        string $disk = 's3_public',
+        ?int $tenantId = null,
+        bool $isPrimary = false,
+        ?string $imageableType = null,
+        ?int $imageableId = null
+    ): ?Image {
+        try {
+            // Store the image in the specified disk
+            $filePath = $file->store($path, $disk);
+            $url = Storage::disk($disk)->url($filePath);
+
+            // Create a new Image record
+            return Image::create([
+                'path' => $filePath,
+                'url' => $url,
+                'disk' => $disk,
+                'original_filename' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'tenant_id' => $tenantId,
+                'is_primary' => $isPrimary,
+                'imageable_type' => $imageableType,
+                'imageable_id' => $imageableId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to upload image: '.$e->getMessage());
+
+            return null;
+        }
     }
 }

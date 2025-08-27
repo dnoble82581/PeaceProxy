@@ -19,8 +19,9 @@
 
 		public function mount($negotiationId)
 		{
-			$this->loadHostages();
 			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
+			$this->loadHostages();
+
 		}
 
 		public function loadHostages():void
@@ -144,7 +145,8 @@
 		 */
 		public function handleHostageUpdated(array $data):void
 		{
-			$this->dispatch('refresh');
+			$this->loadHostages();
+//			$this->dispatch('refresh');
 		}
 
 		/**
@@ -192,7 +194,7 @@
 		@if(count($hostages) > 0)
 			@foreach($hostages as $hostage)
 				<div
-						wire:key="tsui-card-{{ $hostage->id }}">
+						wire:key="tsui-card-{{ $hostage->id }}-{{ optional($hostage->updated_at)->timestamp }}">
 					<x-card
 							x-data="{
 					currentImageIndex: 0,

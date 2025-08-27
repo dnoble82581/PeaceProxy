@@ -11,6 +11,20 @@
 		{
 			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
 		}
+
+		public function getListeners()
+		{
+			$tenantId = tenant()->id;
+			$negotiationId = $this->negotiation->id;
+			return [
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageUpdated" => 'handleHostageUpdated',
+			];
+		}
+
+		public function handleHostageUpdated(array $data)
+		{
+			$this->negotiation->load('hostages');
+		}
 	}
 
 ?>

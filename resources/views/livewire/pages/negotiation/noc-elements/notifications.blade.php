@@ -21,28 +21,56 @@
 			$this->tenantId = tenant()->id;
 		}
 
-		public function loadPinnedNotes()
-		{
-			$this->pinnedNotes = [];
-			$this->pinnedObjectives = [];
-			$pins = app(PinFetchingService::class)->getPins();
+ 	public $previousPinnedNoteIds = [];
+ 	public $previousPinnedObjectiveIds = [];
 
-			foreach ($pins as $pin) {
-				if ($pin->pinnable_type === 'App\\Models\\Note') {
-					// Eager load the note with its relationships
-					$note = Note::with('author')->find($pin->pinnable_id);
-					if ($note) {
-						$this->pinnedNotes[] = $note;
-					}
-				} elseif ($pin->pinnable_type === 'App\\Models\\Objective') {
-					// Eager load the objective with its relationships
-					$objective = Objective::with(['createdBy', 'completedBy'])->find($pin->pinnable_id);
-					if ($objective) {
-						$this->pinnedObjectives[] = $objective;
-					}
-				}
-			}
-		}
+ 	public function loadPinnedNotes()
+ 	{
+ 		$this->pinnedNotes = [];
+ 		$this->pinnedObjectives = [];
+ 		$pins = app(PinFetchingService::class)->getPins();
+		
+ 		$currentPinnedNoteIds = [];
+ 		$currentPinnedObjectiveIds = [];
+
+ 		foreach ($pins as $pin) {
+ 			if ($pin->pinnable_type === 'App\\Models\\Note') {
+ 				// Eager load the note with its relationships
+ 				$note = Note::with('author')->find($pin->pinnable_id);
+ 				if ($note) {
+ 					$this->pinnedNotes[] = $note;
+ 					$currentPinnedNoteIds[] = $note->id;
+ 				}
+ 			} elseif ($pin->pinnable_type === 'App\\Models\\Objective') {
+ 				// Eager load the objective with its relationships
+ 				$objective = Objective::with(['createdBy', 'completedBy'])->find($pin->pinnable_id);
+ 				if ($objective) {
+ 					$this->pinnedObjectives[] = $objective;
+ 					$currentPinnedObjectiveIds[] = $objective->id;
+ 				}
+ 			}
+ 		}
+		
+ 		// Check for new pinned notes
+ 		foreach ($currentPinnedNoteIds as $noteId) {
+ 			if (!in_array($noteId, $this->previousPinnedNoteIds)) {
+ 				$this->dispatch('notePinned');
+ 				break;
+ 			}
+ 		}
+		
+ 		// Check for new pinned objectives
+ 		foreach ($currentPinnedObjectiveIds as $objectiveId) {
+ 			if (!in_array($objectiveId, $this->previousPinnedObjectiveIds)) {
+ 				$this->dispatch('objectivePinned');
+ 				break;
+ 			}
+ 		}
+		
+ 		// Update previous IDs for next comparison
+ 		$this->previousPinnedNoteIds = $currentPinnedNoteIds;
+ 		$this->previousPinnedObjectiveIds = $currentPinnedObjectiveIds;
+ 	}
 
 		public function showNote($noteId)
 		{
@@ -105,16 +133,28 @@
 
 <div
 		class="relative mt-2 mb-2"
-		x-data="{ open: true }">
+		x-data="{ open: false, hasNewNotifications: false }"
+		x-init="
+			$wire.on('notePinned', () => { if (!open) hasNewNotifications = true; });
+			$wire.on('objectivePinned', () => { if (!open) hasNewNotifications = true; });
+		">
 	<!-- Toggle button - always positioned on the right -->
 	<div class="flex justify-end mb-2">
 		<x-button
 				color="sky"
 				flat
-				@click="open = !open"
+				@click="open = !open; if (open) hasNewNotifications = false;"
 				sm
-				icon="bell">
+				icon="bell"
+				class="relative">
 			<span x-text="open ? 'Hide' : 'Show'"></span> Notifications
+			<!-- Alert indicator for new notifications -->
+			<span 
+				x-show="!open && hasNewNotifications" 
+				class="absolute -top-1 -right-1 flex h-3 w-3">
+				<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+				<span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+			</span>
 		</x-button>
 	</div>
 

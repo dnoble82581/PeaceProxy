@@ -86,6 +86,7 @@
 						// Use ImageService to delete the image
 						$imageService = app(ImageService::class);
 						$imageService->deleteImage($existingImage);
+						event(new \App\Events\Hostage\HostageUpdatedEvent($this->hostage));
 					}
 				}
 
@@ -116,6 +117,8 @@
 					}
 				}
 			}
+			event(new \App\Events\Hostage\HostageUpdatedEvent($this->hostage));
+			
 		}
 
 		public function updateHostage()
