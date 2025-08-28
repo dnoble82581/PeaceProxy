@@ -22,7 +22,7 @@
 			$this->negotiationId = $this->negotiation->id;
 			$this->loadMoodLogs();
 		}
-		
+
 		public function refreshChart()
 		{
 			$this->loadMoodLogs();
@@ -99,12 +99,21 @@
 >
 	<div class="flex justify-between items-center mb-2">
 		<h3 class="text-lg font-medium">Mood Chart</h3>
-		<button 
-			wire:click="refreshChart"
-			class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+		<button
+				wire:click="refreshChart"
+				class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
 		>
-			<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+			<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-4 w-4 mr-1.5"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor">
+				<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
 			</svg>
 			Refresh Chart
 		</button>
@@ -113,47 +122,49 @@
 			id="chart"
 			class="w-full h-80">
 	</div>
-	<div class="flex items-center justify-evenly">
-		@foreach(App\Enums\Subject\MoodLevels::cases() as $index => $mood)
-			<div class="relative group">
-				<!-- Button -->
-				<button
-						wire:click="createMood({{ $mood->value }})"
-						class="text-3xl">
-					{{ $mood->icon() }}
-				</button>
+	@if(authUser()->can('create', App\Models\MoodLog::class))
+		<div class="flex items-center justify-evenly">
+			@foreach(App\Enums\Subject\MoodLevels::cases() as $index => $mood)
+				<div class="relative group">
+					<!-- Button -->
+					<button
+							wire:click="createMood({{ $mood->value }})"
+							class="text-3xl">
+						{{ $mood->icon() }}
+					</button>
 
-				<!-- Tooltip -->
-				<span
-						class="absolute
+					<!-- Tooltip -->
+					<span
+							class="absolute
 						{{ $loop->first ? 'translate-x-2 left-0':($loop->last || $loop->iteration > count(App\Enums\Subject\MoodLevels::cases()) - 3 ? '-translate-x-4 right-0' : '-translate-x-1/2 left-1/2') }}
                     bottom-full mb-2 opacity-0 group-hover:opacity-100 bg-gray-900 text-white text-xs rounded-md px-2 py-1 transition duration-150 ease-in-out z-10 whitespace-nowrap">
                 {{ $mood->description() }}
             </span>
 
-			</div>
-		@endforeach
-	</div>
+				</div>
+			@endforeach
+		</div>
+	@endif
 </div>
 
 @push('scripts')
 	<!-- CDN Fallback for ApexCharts in case the npm package doesn't load properly -->
 	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-	
+
 	<style>
-		/* Custom styling for ApexCharts dropdown menu in dark mode */
-		.dark .apexcharts-menu {
-			background-color: #1F2937 !important; /* dark-800 */
-			border-color: #374151 !important; /* dark-700 */
-		}
-		
-		.dark .apexcharts-menu-item {
-			color: #F9FAFB !important; /* gray-50 */
-		}
-		
-		.dark .apexcharts-menu-item:hover {
-			background-color: #374151 !important; /* dark-700 */
-		}
+        /* Custom styling for ApexCharts dropdown menu in dark mode */
+        .dark .apexcharts-menu {
+            background-color: #1F2937 !important; /* dark-800 */
+            border-color: #374151 !important; /* dark-700 */
+        }
+
+        .dark .apexcharts-menu-item {
+            color: #F9FAFB !important; /* gray-50 */
+        }
+
+        .dark .apexcharts-menu-item:hover {
+            background-color: #374151 !important; /* dark-700 */
+        }
 	</style>
 
 	<script>
@@ -199,7 +210,7 @@
 							type: 'line',
 							height: 350,
 							background: 'transparent',
-							toolbar: { 
+							toolbar: {
 								show: true // Keeps the top right menu intact
 							},
 							animations: {
@@ -264,15 +275,15 @@
 								fontFamily: 'inherit',
 							},
 							// Custom background and text colors based on theme
-							custom: function({ series, seriesIndex, dataPointIndex, w }) {
-								const isDark = w.config.tooltip.theme === 'dark';
+							custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+								const isDark = w.config.tooltip.theme === 'dark'
 								// Define colors based on theme
-								const bgColor = isDark ? '#374151' : '#F3F4F6'; // Dark: gray-700, Light: gray-100
-								const textColor = isDark ? '#F9FAFB' : '#1F2937'; // Dark: gray-50, Light: gray-800
-								const borderColor = isDark ? '#4B5563' : '#D1D5DB'; // Dark: gray-600, Light: gray-300
-								
+								const bgColor = isDark ? '#374151' : '#F3F4F6' // Dark: gray-700, Light: gray-100
+								const textColor = isDark ? '#F9FAFB' : '#1F2937' // Dark: gray-50, Light: gray-800
+								const borderColor = isDark ? '#4B5563' : '#D1D5DB' // Dark: gray-600, Light: gray-300
+
 								// Get the value and corresponding mood label
-								const value = series[seriesIndex][dataPointIndex];
+								const value = series[seriesIndex][dataPointIndex]
 								const moodLabels = {
 									1: 'Suicidal',
 									2: 'Severely Depressed',
@@ -285,9 +296,9 @@
 									9: 'Euphoric',
 									10: 'Hypomanic',
 									11: 'Manic'
-								};
-								const moodLabel = moodLabels[value] || '';
-								
+								}
+								const moodLabel = moodLabels[value] || ''
+
 								// Return custom HTML for tooltip
 								return '<div class="custom-tooltip" style="' +
 									'background: ' + bgColor + '; ' +
@@ -297,7 +308,7 @@
 									'border-radius: 4px; ' +
 									'box-shadow: 0 2px 5px rgba(0,0,0,0.15);">' +
 									'<span><strong>Mood Level:</strong> ' + value + ' - ' + moodLabel + '</span>' +
-									'</div>';
+									'</div>'
 							}
 						},
 					})

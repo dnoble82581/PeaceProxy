@@ -18,17 +18,23 @@
 				</p>
 			</x-slot:left>
 			<x-slot:right>
-				<x-theme-switch only-icons />
-				<x-dropdown text="Hello, {{ authUser()->name }}!">
-					<form
-							method="POST"
-							action="{{ route('logout') }}">
-						@csrf
-						<x-dropdown.items
-								text="Logout"
-								onclick="event.preventDefault(); this.closest('form').submit();" />
-					</form>
-				</x-dropdown>
+				<div class="flex items-center gap-4">
+					<x-theme-switch only-icons />
+					<x-dropdown text="{{ authUser()->name }}">
+						<x-slot:header>
+							<p class="text-xs text-dark-300 ml-3">{{ authUser()->permissions ?? 'User' }}</p>
+						</x-slot:header>
+						<form
+								method="POST"
+								action="{{ route('logout') }}">
+							@csrf
+							<x-dropdown.items
+									text="Logout"
+									onclick="event.preventDefault(); this.closest('form').submit();" />
+						</form>
+					</x-dropdown>
+				</div>
+
 			</x-slot:right>
 		</x-layout.header>
 	</x-slot:header>

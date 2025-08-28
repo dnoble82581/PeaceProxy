@@ -22,7 +22,7 @@ class moodLogPolicy
     {
         // Check if the user is currently in any negotiation with the 'recorder' role
         return $user->negotiations()
-            ->wherePivot('status', 'active')
+            ->wherePivotNull('left_at')
             ->wherePivot('role', 'recorder')
             ->exists();
     }

@@ -13,11 +13,12 @@
 	use Carbon\Carbon;
 
 	new #[Layout('layouts.app')] class extends Component {
-		public $stats;
-		public $negotiationStatusData;
-		public $negotiationTrendsData;
-		public $userRolesData;
-		public $tenantInfo;
+ 	public $stats;
+ 	public $negotiationStatusData;
+ 	public $negotiationTrendsData;
+ 	public $userRolesData;
+ 	public $userActivityData;
+ 	public $tenantInfo;
 
 		public function mount()
 		{
@@ -101,6 +102,31 @@
 				'labels' => $roleLabels,
 				'counts' => $roleCounts
 			];
+			
+			// Get user registration trends (last 6 months)
+			$sixMonthsAgo = Carbon::now()->subMonths(6);
+			$userActivityTrends = User::where('tenant_id', $tenantId)
+				->where('created_at', '>=', $sixMonthsAgo)
+				->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+				->groupBy('month')
+				->orderBy('month')
+				->get()
+				->pluck('count', 'month')
+				->toArray();
+				
+			// Fill in missing months with zero counts
+			$userMonths = [];
+			$userCounts = [];
+			for ($i = 0; $i < 6; $i++) {
+				$month = Carbon::now()->subMonths(5 - $i)->format('Y-m');
+				$userMonths[] = Carbon::now()->subMonths(5 - $i)->format('M Y');
+				$userCounts[] = $userActivityTrends[$month] ?? 0;
+			}
+			
+			$this->userActivityData = [
+				'months' => $userMonths,
+				'counts' => $userCounts
+			];
 
 			// Prepare negotiation status data for chart
 			$this->negotiationStatusData = [
@@ -152,7 +178,7 @@
 	It directly toggles the 'dark' class on the HTML element and dispatches
 	the appropriate events to update all components.
 	-->
-	
+
 
 	<!-- 
 	Alpine.js component script for dashboard charts
@@ -167,6 +193,7 @@
 				statusChart: null,  // Donut chart for negotiation status distribution
 				trendsChart: null,  // Area chart for negotiation trends
 				rolesChart: null,   // Bar chart for user roles
+				activityChart: null, // Area chart for user activity/growth
 
 				// Track whether charts have been initialized
 				chartsInitialized: false,
@@ -317,6 +344,37 @@
 							}
 						})
 					}
+					
+					if (this.activityChart) {
+						this.activityChart.updateOptions({
+							chart: {
+								foreColor: this.dark ? '#D1D5DB' : '#4B5563',
+							},
+							theme: {
+								mode: this.dark ? 'dark' : 'light',
+							},
+							grid: {
+								borderColor: gridLineColor,
+							},
+							xaxis: {
+								labels: {
+									style: {
+										colors: labelColor,
+									}
+								}
+							},
+							yaxis: {
+								labels: {
+									style: {
+										colors: labelColor,
+									}
+								}
+							},
+							tooltip: {
+								theme: this.dark ? 'dark' : 'light',
+							}
+						})
+					}
 				},
 
 				// Main initialization function
@@ -334,6 +392,7 @@
 					this.initNegotiationStatusChart()
 					this.initNegotiationTrendsChart()
 					this.initUserRolesChart()
+					this.initUserActivityChart()
 
 					this.chartsInitialized = true
 				},
@@ -353,6 +412,11 @@
 					if (this.rolesChart) {
 						this.rolesChart.destroy()
 						this.rolesChart = null
+					}
+					
+					if (this.activityChart) {
+						this.activityChart.destroy()
+						this.activityChart = null
 					}
 				},
 
@@ -598,6 +662,82 @@
 
 					this.rolesChart = new ApexCharts(document.querySelector('#user-roles-chart'), options)
 					this.rolesChart.render()
+				},
+				
+				// Initialize user activity chart
+				initUserActivityChart () {
+					const data = @json($userActivityData['counts']);
+
+					// Check if there's data to display
+					if (!data.some(function (value) { return value > 0 })) {
+						this.showEmptyState('#user-activity-chart', 'No user activity data available')
+						return
+					}
+
+					// Define label colors based on theme
+					const labelColorLight = '#4B5563' // Tailwind's gray-700
+					const labelColorDark = '#FFFFFF'  // Pure white for maximum visibility in dark mode
+					const labelColor = this.dark ? labelColorDark : labelColorLight
+					const gridLineColor = this.dark ? '#374151' : '#E5E7EB'
+
+					const options = {
+						series: [{
+							name: 'New Users',
+							data: data
+						}],
+						chart: {
+							type: 'area',
+							height: 240,
+							background: 'transparent',
+							foreColor: this.dark ? '#D1D5DB' : '#4B5563',
+							toolbar: {
+								show: false
+							}
+						},
+						dataLabels: {
+							enabled: false
+						},
+						stroke: {
+							curve: 'smooth',
+							width: 3
+						},
+						grid: {
+							borderColor: gridLineColor,
+						},
+						xaxis: {
+							categories: @json($userActivityData['months']),
+							labels: {
+								style: {
+									colors: labelColor,
+								}
+							}
+						},
+						yaxis: {
+							labels: {
+								style: {
+									colors: labelColor,
+								}
+							}
+						},
+						tooltip: {
+							theme: this.dark ? 'dark' : 'light',
+						},
+						colors: ['#8B5CF6'], // purple
+						fill: {
+							type: 'gradient',
+							gradient: {
+								shade: 'dark',
+								type: 'vertical',
+								shadeIntensity: 0.3,
+								opacityFrom: 0.7,
+								opacityTo: 0.2,
+								stops: [0, 100]
+							}
+						}
+					}
+
+					this.activityChart = new ApexCharts(document.querySelector('#user-activity-chart'), options)
+					this.activityChart.render()
 				}
 			}
 		}
@@ -615,13 +755,13 @@
 			</x-card>
 			<x-card class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
 				<div class="p-4">
-					<div class="text-sm opacity-80">Total Users</div>
+					<div class="text-sm">Total Users</div>
 					<div class="text-xl font-bold">{{ $tenantInfo['users_count'] }}</div>
 				</div>
 			</x-card>
 			<x-card class="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
 				<div class="p-4">
-					<div class="text-sm opacity-80">Total Negotiations</div>
+					<div class="text-sm">Total Negotiations</div>
 					<div class="text-xl font-bold">{{ $tenantInfo['negotiations_count'] }}</div>
 				</div>
 			</x-card>
@@ -692,6 +832,14 @@
 				</x-slot:header>
 				<div class="p-4">
 					<div id="user-roles-chart"></div>
+				</div>
+			</x-card>
+			<x-card class="md:col-span-3">
+				<x-slot:header>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">User Growth (6-Month Trend)</h4>
+				</x-slot:header>
+				<div class="p-4">
+					<div id="user-activity-chart"></div>
 				</div>
 			</x-card>
 		</div>
@@ -810,20 +958,20 @@
             border: 1px solid #E5E7EB !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .apexcharts-tooltip-title {
             background-color: #F3F4F6 !important;
             border-bottom: 1px solid #E5E7EB !important;
             font-weight: 600 !important;
             color: #111827 !important;
         }
-        
+
         .dark .apexcharts-tooltip {
             background-color: rgba(31, 41, 55, 0.95) !important;
             color: #F9FAFB !important;
             border: 1px solid #374151 !important;
         }
-        
+
         .dark .apexcharts-tooltip-title {
             background-color: #111827 !important;
             border-bottom: 1px solid #374151 !important;

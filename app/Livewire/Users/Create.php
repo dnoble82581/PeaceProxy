@@ -36,7 +36,7 @@ class Create extends Component
             'user.name' => [
                 'required',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'user.email' => [
                 'required',
@@ -49,8 +49,8 @@ class Create extends Component
                 'nullable',
                 'string',
                 'min:8',
-                'confirmed'
-            ]
+                'confirmed',
+            ],
         ];
     }
 
@@ -61,6 +61,7 @@ class Create extends Component
         $this->user->password = bcrypt($this->password);
         $this->user->email_verified_at = now();
         $this->user->tenant_id = tenant()->id;
+        $this->user->permissions = 'user';
         $this->user->save();
 
         $this->dispatch('created');

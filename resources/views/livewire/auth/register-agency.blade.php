@@ -20,6 +20,8 @@
 			$newUser = app(CreateUserService::class)
 				->createUserFromTenant($newTenant, $validatedUser);
 
+			$newUser->update(['permissions' => 'admin']);
+
 			// Redirect to the tenant dashboard after successful creation
 			$tenantSubdomain = $newTenant->subdomain;
 			$dashboardUrl = "http://{$tenantSubdomain}.".config('app.domain')."/dashboard";

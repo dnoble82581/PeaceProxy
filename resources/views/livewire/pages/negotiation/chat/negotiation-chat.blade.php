@@ -58,6 +58,20 @@
 		 * @var bool
 		 */
 		public bool $isWhisper = false;
+		
+		/**
+		 * Whether the message is urgent (alert)
+		 *
+		 * @var bool
+		 */
+		public bool $isUrgent = false;
+		
+		/**
+		 * Whether the message is an emergency (danger)
+		 *
+		 * @var bool
+		 */
+		public bool $isEmergency = false;
 
 		/**
 		 * Whether to show the new conversation modal
@@ -281,7 +295,7 @@
 			return app(ChatService::class)->getActiveUsersCount($conversation);
 		}
 
-		/**
+ 	/**
 		 * Send a message in the current conversation
 		 *
 		 * @return void
@@ -292,12 +306,20 @@
 				return;
 			}
 
+			// Prepare message content with status indicators if needed
+			$content = $this->messageInput;
+			if ($this->isUrgent) {
+				$content = '[URGENT] ' . $content;
+			} elseif ($this->isEmergency) {
+				$content = '[EMERGENCY] ' . $content;
+			}
+
 			$messageData = [
 				'conversation_id' => $this->currentConversation()->id,
 				'negotiation_id' => $this->negotiationId,
 				'tenant_id' => tenant()->id,
 				'user_id' => auth()->id(),
-				'content' => $this->messageInput,
+				'content' => $content,
 				'is_whisper' => $this->isWhisper,
 			];
 
@@ -308,7 +330,7 @@
 			$messageDTO = MessageDTO::fromArray($messageData);
 			app(MessageCreationService::class)->createMessage($messageDTO);
 
-			$this->reset('messageInput', 'isWhisper', 'whisperToUserId');
+			$this->reset('messageInput', 'isWhisper', 'whisperToUserId', 'isUrgent', 'isEmergency');
 
 			// Dispatch event to trigger scroll
 			$this->dispatch('new-message');
@@ -841,6 +863,16 @@
 							$msgs = $this->messages();
 						@endphp
 						@foreach($msgs as $message)
+							@php
+								$isUrgent = str_starts_with($message->content, '[URGENT] ');
+								$isEmergency = str_starts_with($message->content, '[EMERGENCY] ');
+								$displayContent = $message->content;
+								if ($isUrgent) {
+									$displayContent = substr($message->content, 9); // Remove [URGENT] prefix
+								} elseif ($isEmergency) {
+									$displayContent = substr($message->content, 12); // Remove [EMERGENCY] prefix
+								}
+							@endphp
 							<div class="flex {{ $message->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
 								<div class="flex items-center max-w-xs md:max-w-md space-x-2 {{ $message->user_id === auth()->id() ? 'flex-row-reverse space-x-reverse' : '' }}">
 									<div class="flex-shrink-0">
@@ -857,13 +889,27 @@
                                                         whispered to {{ $message->whisperRecipient->name }}
                                                     </span>
 												@endif
+												@if($isUrgent)
+													<span class="text-yellow-500 dark:text-yellow-400 text-xs ml-1">
+														<x-icon name="exclamation-triangle" class="w-3 h-3 inline" />
+													</span>
+												@endif
+												@if($isEmergency)
+													<span class="text-red-500 dark:text-red-400 text-xs ml-1">
+														<x-icon name="exclamation-circle" class="w-3 h-3 inline" />
+													</span>
+												@endif
 											</div>
 											<div class="text-xs text-gray-500 dark:text-dark-300">
 												{{ $message->created_at->setTimezone(auth()->user()->timezone)->format('g:i A') }}
 											</div>
 										</div>
-										<div class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm {{ $message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') : ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500') }}">
-											{{ $message->content }}
+										<div class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm 
+											{{ $isUrgent ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' : 
+											   ($isEmergency ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' : 
+											   ($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') : 
+											   ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">
+											{{ $displayContent }}
 										</div>
 									</div>
 								</div>
@@ -873,14 +919,14 @@
 
 					<!-- Message input -->
 
-					<div
+    	<div
 							class="px-3 border-t border-gray-200 dark:border-dark-400"
 							x-data="{ selectedButton: null }"
 							@click.away="whisperTo = false">
 						<div class="py-2 flex items-center gap-2">
 							<!-- Urgent Button -->
 							<button
-									@click="selectedButton = selectedButton === 'isUrgent' ? null : 'isUrgent'"
+									@click="selectedButton = selectedButton === 'isUrgent' ? null : 'isUrgent'; $wire.isUrgent = selectedButton === 'isUrgent'; $wire.isEmergency = false;"
 									:class="{ 'text-yellow-500': selectedButton === 'isUrgent', 'text-gray-400': selectedButton !== 'isUrgent' }"
 									class="hover:cursor-pointer transition-colors duration-300 ease-in-out">
 								<x-icon
@@ -890,7 +936,7 @@
 
 							<!-- Emergency Button -->
 							<button
-									@click="selectedButton = selectedButton === 'isEmergency' ? null : 'isEmergency'"
+									@click="selectedButton = selectedButton === 'isEmergency' ? null : 'isEmergency'; $wire.isEmergency = selectedButton === 'isEmergency'; $wire.isUrgent = false;"
 									:class="{ 'text-red-500': selectedButton === 'isEmergency', 'text-gray-400': selectedButton !== 'isEmergency' }"
 									class="hover:cursor-pointer transition-colors duration-300 ease-in-out">
 								<x-icon
@@ -900,7 +946,7 @@
 
 							<!-- Whisper Button -->
 							<button
-									@click="selectedButton = selectedButton === 'whisperTo' ? null : 'whisperTo'"
+									@click="selectedButton = selectedButton === 'whisperTo' ? null : 'whisperTo'; $wire.isUrgent = false; $wire.isEmergency = false;"
 									:class="{ 'text-indigo-500': selectedButton === 'whisperTo', 'text-gray-400': selectedButton !== 'whisperTo' }"
 									class="hover:cursor-pointer transition-colors duration-300 ease-in-out">
 								<x-icon

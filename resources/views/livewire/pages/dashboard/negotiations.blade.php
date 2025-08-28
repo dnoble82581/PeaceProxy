@@ -109,7 +109,7 @@
 
 			// Find the negotiation in the database
 			$negotiation = Negotiation::find($negotiationId);
-			
+
 			// Update started_at if it's empty
 			if ($negotiation && is_null($negotiation->started_at)) {
 				$negotiation->update([
@@ -121,7 +121,7 @@
 
 			// Get the negotiation title directly from the collection to avoid an extra query
 			$negotiationData = $this->negotiations->firstWhere('id', $negotiationId);
-			$title = $negotiationData ? $negotiationData->title : '';
+			$title = $negotiationData? $negotiationData->title : '';
 
 			$this->redirect(route('negotiation-noc', [
 				'tenantSubdomain' => tenant()->subdomain,
@@ -170,9 +170,9 @@
 							<p class="mt-2">Create your first negotiation to get started.</p>
 							<div class="mt-4">
 								<x-button
-									wire:navigate
-									href="{{route('negotiation.create', tenant()->subdomain)}}"
-									sm>Create Negotiation
+										wire:navigate
+										href="{{route('negotiation.create', tenant()->subdomain)}}"
+										sm>Create Negotiation
 								</x-button>
 							</div>
 						</div>
@@ -237,10 +237,10 @@
 															{{ $negotiation->location ?? 'No Location Recorded' }}
 														</td>
 														<td class="px-3 py-4 text-xs whitespace-nowrap text-gray-500 dark:text-white">
-															{{ $negotiation->status }}
+															{{ $negotiation->status->label() }}
 														</td>
 														<td class="px-3 py-4 text-xs whitespace-nowrap text-gray-500 dark:text-white">
-															{{ $negotiation->type }}
+															{{ $negotiation->type->label() }}
 														</td>
 														<td class="relative py-4 pr-4 pl-3 text-right text-xs font-medium whitespace-nowrap sm:pr-0">
 															<x-button
@@ -304,17 +304,25 @@
 																				placeholder="Enter location" />
 																	</div>
 																	<div>
-																		<x-input
+																		<x-select.styled
 																				label="Status"
 																				wire:model="status"
 																				placeholder="Enter status"
+																				:options="collect(\App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
+																				'label' => $status->label(),
+																				'value' => $status->value,
+																				])->toArray()"
 																				required />
 																	</div>
 																	<div>
-																		<x-input
+																		<x-select.styled
 																				label="Type"
 																				wire:model="type"
 																				placeholder="Enter type"
+																				:options="collect(\App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
+																				'label' => $type->label(),
+																				'value' => $type->value,
+																				])->toArray()"
 																				required />
 																	</div>
 																	<div class="space-x-2">

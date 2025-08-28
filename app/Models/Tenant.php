@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Tenant extends Model
 {
@@ -20,5 +21,13 @@ class Tenant extends Model
     public function negotiations(): HasMany
     {
         return $this->hasMany(Negotiation::class);
+    }
+
+    /**
+     * Get the images for the tenant.
+     */
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 }

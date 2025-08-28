@@ -1,5 +1,6 @@
 <?php
 
+	use App\Enums\Tenant\TenantTypes;
 	use App\Models\Tenant;
 	use App\Models\User;
 	use App\Services\Image\ImageService;
@@ -13,23 +14,33 @@
 	new #[Layout('layouts.app')] class extends Component {
 		use WithFileUploads;
 
-		// Tenant settings properties
-		public $tenant;
-		public $agencyName;
-		public $agencyEmail;
-		public $agencyPhone;
-		public $agencyWebsite;
-		public $primaryColor;
-		public $secondaryColor;
+ 	// Tenant settings properties
+ 	public $tenant;
+ 	public $agencyName;
+ 	public $agencyEmail;
+ 	public $agencyPhone;
+ 	public $agencyWebsite;
+ 	public $agencyType;
+ 	public $primaryColor;
+ 	public $secondaryColor;
+ 	public $logo = null;
 
-		// User settings properties
-		public User $user;
-		public ?string $password = null;
-		public ?string $password_confirmation = null;
-		public $avatar = null;
-		
-		// UI state
-		public $activeTab = 'agency'; // 'agency' or 'profile'
+  // User settings properties
+ 	public User $user;
+ 	public $userName;
+ 	public $userEmail;
+ 	public $permissions;
+ 	public $rank_or_title;
+ 	public $badge_number;
+ 	public $license_number;
+ 	public $department;
+ 	public $phone;
+ 	public ?string $password = null;
+ 	public ?string $password_confirmation = null;
+ 	public $avatar = null;
+	
+ 	// UI state
+ 	public $activeTab = 'agency'; // 'agency' or 'profile'
 
 		public function mount()
 		{
@@ -38,17 +49,26 @@
 				$this->activeTab = request()->tab;
 			}
 			
-			// Initialize tenant settings
-			$this->tenant = auth()->user()->tenant;
-			$this->agencyName = $this->tenant->agency_name;
-			$this->agencyEmail = $this->tenant->agency_email;
-			$this->agencyPhone = $this->tenant->agency_phone;
-			$this->agencyWebsite = $this->tenant->agency_website;
-			$this->primaryColor = $this->tenant->primary_color;
-			$this->secondaryColor = $this->tenant->secondary_color;
+ 		// Initialize tenant settings
+ 		$this->tenant = auth()->user()->tenant;
+ 		$this->agencyName = $this->tenant->agency_name;
+ 		$this->agencyEmail = $this->tenant->agency_email;
+ 		$this->agencyPhone = $this->tenant->agency_phone;
+ 		$this->agencyWebsite = $this->tenant->agency_website;
+ 		$this->agencyType = $this->tenant->agency_type;
+ 		$this->primaryColor = $this->tenant->primary_color;
+ 		$this->secondaryColor = $this->tenant->secondary_color;
 
-			// Initialize user settings
-			$this->user = Auth::user();
+  	// Initialize user settings
+  	$this->user = Auth::user();
+  	$this->userName = $this->user->name;
+  	$this->userEmail = $this->user->email;
+  	$this->permissions = $this->user->permissions;
+  	$this->rank_or_title = $this->user->rank_or_title;
+  	$this->badge_number = $this->user->badge_number;
+  	$this->license_number = $this->user->license_number;
+  	$this->department = $this->user->department;
+  	$this->phone = $this->user->phone;
 		}
 
 		public function setActiveTab($tab)
@@ -56,45 +76,95 @@
 			$this->activeTab = $tab;
 		}
 
-		public function updateAgencySettings()
-		{
-			$this->validate([
-				'agencyName' => 'required|string|max:255',
-				'agencyEmail' => 'required|email|max:255',
-				'agencyPhone' => 'nullable|string|max:20',
-				'agencyWebsite' => 'nullable|url|max:255',
-				'primaryColor' => 'nullable|string|max:20',
-				'secondaryColor' => 'nullable|string|max:20',
-			]);
+ 	public function updateAgencySettings()
+ 	{
+ 		$this->validate([
+ 			'agencyName' => 'required|string|max:255',
+ 			'agencyEmail' => 'required|email|max:255',
+ 			'agencyPhone' => 'nullable|string|max:20',
+ 			'agencyWebsite' => 'nullable|url|max:255',
+ 			'agencyType' => 'required|string|in:' . implode(',', array_column(TenantTypes::toArray(), 'value')),
+ 			'primaryColor' => 'nullable|string|max:20',
+ 			'secondaryColor' => 'nullable|string|max:20',
+ 			'logo' => 'nullable|image|max:1024', // 1MB max
+ 		]);
 
-			$this->tenant->update([
-				'agency_name' => $this->agencyName,
-				'agency_email' => $this->agencyEmail,
-				'agency_phone' => $this->agencyPhone,
-				'agency_website' => $this->agencyWebsite,
-				'primary_color' => $this->primaryColor,
-				'secondary_color' => $this->secondaryColor,
-			]);
+ 		$this->tenant->update([
+ 			'agency_name' => $this->agencyName,
+ 			'agency_email' => $this->agencyEmail,
+ 			'agency_phone' => $this->agencyPhone,
+ 			'agency_website' => $this->agencyWebsite,
+ 			'agency_type' => $this->agencyType,
+ 			'primary_color' => $this->primaryColor,
+ 			'secondary_color' => $this->secondaryColor,
+ 		]);
 
-			session()->flash('message', 'Agency settings updated successfully.');
+ 		// Handle logo upload if provided
+ 		if ($this->logo) {
+ 			$imageService = app(ImageService::class);
+
+ 			// Delete existing logo images if any
+ 			$existingImages = $this->tenant->images()->get();
+ 			foreach ($existingImages as $image) {
+ 				$imageService->deleteImage($image);
+ 			}
+
+ 			// Upload new logo
+ 			$images = $imageService->uploadImagesForModel(
+ 				[$this->logo],
+ 				$this->tenant,
+ 				'tenants',
+ 				's3_public'
+ 			);
+
+ 			// Set the first image as primary
+ 			if (count($images) > 0) {
+ 				$imageService->setPrimaryImage($images[0]);
+
+ 				// Update tenant's logo_path
+ 				$this->tenant->logo_path = $images[0]->url();
+ 				$this->tenant->save();
+ 			}
+ 		}
+
+ 		// Reset form fields
+ 		$this->reset(['logo']);
+
+ 		session()->flash('message', 'Agency settings updated successfully.');
 		}
 
-		public function updateUserProfile()
-		{
-			$this->validate([
-				'user.name' => ['required', 'string', 'max:255'],
-				'user.email' => ['required', 'email', 'max:255', 'unique:users,email,'.$this->user->id],
-				'password' => ['nullable', 'string', 'confirmed', Rules\Password::defaults()],
-				'avatar' => ['nullable', 'image', 'max:1024'], // 1MB max
-			]);
+ 	public function updateUserProfile()
+ 	{
+ 		$this->validate([
+ 			'userName' => ['required', 'string', 'max:255'],
+ 			'userEmail' => ['required', 'email', 'max:255', 'unique:users,email,'.$this->user->id],
+ 			'permissions' => ['nullable', 'string', 'max:255'],
+ 			'rank_or_title' => ['nullable', 'string', 'max:255'],
+ 			'badge_number' => ['nullable', 'string', 'max:255'],
+ 			'license_number' => ['nullable', 'string', 'max:255'],
+ 			'department' => ['nullable', 'string', 'max:255'],
+ 			'phone' => ['nullable', 'string', 'max:255'],
+ 			'password' => ['nullable', 'string', 'confirmed', Rules\Password::defaults()],
+ 			'avatar' => ['nullable', 'image', 'max:1024'], // 1MB max
+ 		]);
 
-			// Update password if provided
-			if ($this->password) {
-				$this->user->password = Hash::make($this->password);
-			}
+ 		// Update user properties
+ 		$this->user->name = $this->userName;
+ 		$this->user->email = $this->userEmail;
+ 		$this->user->permissions = $this->permissions;
+ 		$this->user->rank_or_title = $this->rank_or_title;
+ 		$this->user->badge_number = $this->badge_number;
+ 		$this->user->license_number = $this->license_number;
+ 		$this->user->department = $this->department;
+ 		$this->user->phone = $this->phone;
 
-			// Save user changes
-			$this->user->save();
+ 		// Update password if provided
+ 		if ($this->password) {
+ 			$this->user->password = Hash::make($this->password);
+ 		}
+
+ 		// Save user changes
+ 		$this->user->save();
 
 			// Handle avatar upload if provided
 			if ($this->avatar) {
@@ -126,6 +196,10 @@
 
 			// Reset form fields
 			$this->reset(['password', 'password_confirmation', 'avatar']);
+			
+			// Refresh user properties
+			$this->userName = $this->user->name;
+			$this->userEmail = $this->user->email;
 
 			// Show success message
 			session()->flash('message', 'Profile updated successfully.');
@@ -233,6 +307,58 @@
 									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
 								</div>
 
+								<div>
+									<label
+											for="agencyType"
+											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency Type</label>
+									<select
+											id="agencyType"
+											wire:model="agencyType"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+										<option value="">Select Agency Type</option>
+										@foreach(TenantTypes::toArray() as $type)
+											<option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
+										@endforeach
+									</select>
+									@error('agencyType')
+									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Logo Upload -->
+								<div class="col-span-1 md:col-span-2 mt-6">
+									<h2 class="text-lg font-medium mb-4 border-b pb-2">Agency Logo</h2>
+									<div class="flex items-center">
+										<div class="mr-4">
+											@if ($logo)
+												<img
+														src="{{ $logo->temporaryUrl() }}"
+														alt="Logo Preview"
+														class="w-32 h-32 object-contain">
+											@elseif ($tenant->logo_path)
+												<img
+														src="{{ $tenant->logo_path }}"
+														alt="{{ $tenant->agency_name }} Logo"
+														class="w-32 h-32 object-contain">
+											@else
+												<div class="w-32 h-32 flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-300 dark:border-gray-600">
+													<span>No Logo</span>
+												</div>
+											@endif
+										</div>
+										<div>
+											<x-upload
+													type="file"
+													wire:model="logo"
+													id="logo"
+													class="mt-1 block w-full"
+													accept="image/*" />
+											<p class="text-sm text-gray-500 mt-1">Upload a new agency logo (max 1MB).</p>
+											@error('logo')
+											<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+										</div>
+									</div>
+								</div>
+
 								<!-- Appearance Settings -->
 								<div class="col-span-1 md:col-span-2 mt-6">
 									<h2 class="text-lg font-medium mb-4 border-b pb-2">Appearance Settings</h2>
@@ -325,24 +451,90 @@
 
 								<!-- Name -->
 								<div>
-									<x-input
-											wire:model="user.name"
-											label="Name"
+									<label for="name" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Name</label>
+									<input
+											type="text"
 											id="name"
-											class="block mt-1 w-full"
-											type="text" />
-									@error('user.name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											wire:model="userName"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('userName') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
 								</div>
 
 								<!-- Email -->
 								<div>
-									<x-input
-											wire:model="user.email"
-											label="Email"
+									<label for="email" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Email</label>
+									<input
+											type="email"
 											id="email"
-											class="block mt-1 w-full"
-											type="email" />
-									@error('user.email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											wire:model="userEmail"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('userEmail') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Permissions -->
+								<div>
+									<label for="permissions" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Permissions</label>
+									<input
+											type="text"
+											id="permissions"
+											wire:model="permissions"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('permissions') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Rank or Title -->
+								<div>
+									<label for="rank_or_title" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Rank or Title</label>
+									<input
+											type="text"
+											id="rank_or_title"
+											wire:model="rank_or_title"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('rank_or_title') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Badge Number -->
+								<div>
+									<label for="badge_number" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Badge Number</label>
+									<input
+											type="text"
+											id="badge_number"
+											wire:model="badge_number"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('badge_number') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- License Number -->
+								<div>
+									<label for="license_number" class="block text-sm font-medium text-dark-800 dark:text-gray-100">License Number</label>
+									<input
+											type="text"
+											id="license_number"
+											wire:model="license_number"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('license_number') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Department -->
+								<div>
+									<label for="department" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Department</label>
+									<input
+											type="text"
+											id="department"
+											wire:model="department"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('department') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+								</div>
+
+								<!-- Phone -->
+								<div>
+									<label for="phone" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Phone</label>
+									<input
+											type="text"
+											id="phone"
+											wire:model="phone"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									@error('phone') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
 								</div>
 
 								<!-- Password Section -->
@@ -353,23 +545,23 @@
 
 								<!-- Password -->
 								<div>
-									<x-input
-											wire:model="password"
-											label="New Password"
+									<label for="password" class="block text-sm font-medium text-dark-800 dark:text-gray-100">New Password</label>
+									<input
+											type="password"
 											id="password"
-											class="block mt-1 w-full"
-											type="password" />
+											wire:model="password"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
 									@error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
 								</div>
 
 								<!-- Password Confirmation -->
 								<div>
-									<x-input
-											wire:model="password_confirmation"
-											label="Confirm Password"
+									<label for="password_confirmation" class="block text-sm font-medium text-dark-800 dark:text-gray-100">Confirm Password</label>
+									<input
+											type="password"
 											id="password_confirmation"
-											class="block mt-1 w-full"
-											type="password" />
+											wire:model="password_confirmation"
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
 								</div>
 
 								<!-- Submit and Cancel Buttons -->
