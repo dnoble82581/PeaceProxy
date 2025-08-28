@@ -58,7 +58,7 @@
 						sm
 						icon="arrow-long-left"
 						:href="route('negotiation-noc', ['tenantSubdomain' => tenant()->subdomain, 'negotiation' => $negotiation])"
-						wire:navigate>
+						wire:navigate.hover>
 					Back
 				</x-button>
 			</div>

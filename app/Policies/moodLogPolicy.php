@@ -20,6 +20,11 @@ class moodLogPolicy
 
     public function create(User $user): bool
     {
+        // Check if the user is currently in any negotiation with the 'recorder' role
+        return $user->negotiations()
+            ->wherePivot('status', 'active')
+            ->wherePivot('role', 'recorder')
+            ->exists();
     }
 
     public function update(User $user, moodLog $moodLog): bool

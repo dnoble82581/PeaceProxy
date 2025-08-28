@@ -4,6 +4,7 @@
 	use App\Models\Negotiation;
 	use App\Models\Subject;
 	use App\Services\Image\ImageService;
+	use Illuminate\Routing\Redirector;
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
@@ -165,7 +166,7 @@
 			}
 		}
 
-		public function updateSubject()
+		public function updateSubject():Redirector
 		{
 			// Validate the form
 			$validated = $this->createSubjectForm->validate();
@@ -205,7 +206,7 @@
 		/**
 		 * Update or create contact information for the subject
 		 */
-		protected function updateContactInformation()
+		protected function updateContactInformation():void
 		{
 			// Handle phone number
 			if (!empty($this->contactPhone)) {

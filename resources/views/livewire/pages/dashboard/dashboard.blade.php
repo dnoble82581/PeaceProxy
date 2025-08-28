@@ -803,6 +803,33 @@
             color: #FFFFFF !important;
         }
 
+        /* Enhanced tooltip styling for better readability */
+        .apexcharts-tooltip {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            color: #1F2937 !important;
+            border: 1px solid #E5E7EB !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .apexcharts-tooltip-title {
+            background-color: #F3F4F6 !important;
+            border-bottom: 1px solid #E5E7EB !important;
+            font-weight: 600 !important;
+            color: #111827 !important;
+        }
+        
+        .dark .apexcharts-tooltip {
+            background-color: rgba(31, 41, 55, 0.95) !important;
+            color: #F9FAFB !important;
+            border: 1px solid #374151 !important;
+        }
+        
+        .dark .apexcharts-tooltip-title {
+            background-color: #111827 !important;
+            border-bottom: 1px solid #374151 !important;
+            color: #F3F4F6 !important;
+        }
+
         /* Empty state styling */
         .chart-empty-state {
             display: flex;

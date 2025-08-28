@@ -5,7 +5,7 @@ use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
 use Livewire\Volt\Volt;
 
 Broadcast::routes([
-    'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
+'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
 ]);
 
 Route::middleware([
