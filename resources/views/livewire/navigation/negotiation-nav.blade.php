@@ -4,6 +4,7 @@
 	use App\Services\NegotiationUser\NegotiationUserUpdatingService;
 	use Illuminate\Routing\Redirector;
 	use Livewire\Volt\Component;
+	use Carbon\Carbon;
 
 	new class extends Component {
 		public ?Negotiation $negotiation = null;
@@ -31,6 +32,46 @@
 				}
 			}
 
+			return redirect(route('dashboard.negotiations', tenant()->subdomain));
+		}
+		
+		public function endNegotiation():Redirector
+		{
+			if ($this->negotiation) {
+				try {
+					// Update ended_at if it's not already set
+					if (is_null($this->negotiation->ended_at)) {
+						$now = now();
+						
+						// Calculate duration in minutes if started_at is set
+						$durationInMinutes = null;
+						if ($this->negotiation->started_at) {
+							$startedAt = Carbon::parse($this->negotiation->started_at);
+							$durationInMinutes = $startedAt->diffInMinutes($now);
+						}
+						
+						// Update the negotiation
+						$this->negotiation->update([
+							'ended_at' => $now,
+							'duration' => $durationInMinutes
+						]);
+					}
+					
+					// Also mark all users as having left the negotiation
+					$this->negotiation->users()
+						->wherePivot('left_at', null)
+						->each(function ($user) {
+							if ($user->pivot) {
+								app(NegotiationUserUpdatingService::class)->updateLeftAtForUser(
+									$this->negotiation->id, $user->pivot->role->value
+								);
+							}
+						});
+				} catch (Exception $e) {
+					// Log the error or handle it as needed
+				}
+			}
+			
 			return redirect(route('dashboard.negotiations', tenant()->subdomain));
 		}
 	}
@@ -74,6 +115,7 @@
 					icon="arrow-long-left"
 					text="Dashboard" />
 			<x-dropdown.items
+					wire:click="endNegotiation"
 					icon="archive-box-arrow-down"
 					text="End Negotiation" />
 			<form

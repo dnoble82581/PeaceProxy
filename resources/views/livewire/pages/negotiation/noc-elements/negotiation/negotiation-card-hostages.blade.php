@@ -83,7 +83,7 @@
 				</div>
 			</li>
 		@empty
-			<li class="col-span-2 text-center p-4 text-gray-500">
+			<li class="col-span-3 text-center p-4 text-gray-500">
 				No hostages found for this negotiation.
 				<p class="mt-2">
 					<a

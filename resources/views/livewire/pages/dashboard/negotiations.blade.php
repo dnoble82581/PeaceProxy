@@ -107,11 +107,21 @@
 		{
 			$this->validateOnly('choseRole', ['choseRole' => 'required|string']);
 
+			// Find the negotiation in the database
+			$negotiation = Negotiation::find($negotiationId);
+			
+			// Update started_at if it's empty
+			if ($negotiation && is_null($negotiation->started_at)) {
+				$negotiation->update([
+					'started_at' => now()
+				]);
+			}
+
 			$this->addUserToNegotiation($negotiationId);
 
 			// Get the negotiation title directly from the collection to avoid an extra query
-			$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
-			$title = $negotiation? $negotiation->title : '';
+			$negotiationData = $this->negotiations->firstWhere('id', $negotiationId);
+			$title = $negotiationData ? $negotiationData->title : '';
 
 			$this->redirect(route('negotiation-noc', [
 				'tenantSubdomain' => tenant()->subdomain,

@@ -22,6 +22,12 @@
 			$this->negotiationId = $this->negotiation->id;
 			$this->loadMoodLogs();
 		}
+		
+		public function refreshChart()
+		{
+			$this->loadMoodLogs();
+			$this->dispatch('mood-logs-updated', $this->formatMoodLogsForChart());
+		}
 
 		public function createMood(int $value):void
 		{
@@ -91,6 +97,18 @@
 		@theme-changed.window="onThemeChanged($event.detail.theme)"
 		@mood-logs-updated.window="updateChartData($event.detail)"
 >
+	<div class="flex justify-between items-center mb-2">
+		<h3 class="text-lg font-medium">Mood Chart</h3>
+		<button 
+			wire:click="refreshChart"
+			class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+			</svg>
+			Refresh Chart
+		</button>
+	</div>
 	<div
 			id="chart"
 			class="w-full h-80">
