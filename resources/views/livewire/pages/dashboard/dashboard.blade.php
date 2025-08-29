@@ -13,12 +13,12 @@
 	use Carbon\Carbon;
 
 	new #[Layout('layouts.app')] class extends Component {
- 	public $stats;
- 	public $negotiationStatusData;
- 	public $negotiationTrendsData;
- 	public $userRolesData;
- 	public $userActivityData;
- 	public $tenantInfo;
+		public $stats;
+		public $negotiationStatusData;
+		public $negotiationTrendsData;
+		public $userRolesData;
+		public $userActivityData;
+		public $tenantInfo;
 
 		public function mount()
 		{
@@ -28,7 +28,7 @@
 			// Get tenant information
 			$tenant = Tenant::find($tenantId);
 			$this->tenantInfo = [
-				'name' => $tenant->name ?? 'Unknown',
+				'name' => $tenant->agency_name ?? 'Unknown',
 				'created_at' => $tenant->created_at? $tenant->created_at->format('M d, Y') : 'Unknown',
 				'users_count' => $tenant->users()->count(),
 				'negotiations_count' => $tenant->negotiations()->count(),
@@ -102,7 +102,7 @@
 				'labels' => $roleLabels,
 				'counts' => $roleCounts
 			];
-			
+
 			// Get user registration trends (last 6 months)
 			$sixMonthsAgo = Carbon::now()->subMonths(6);
 			$userActivityTrends = User::where('tenant_id', $tenantId)
@@ -113,7 +113,7 @@
 				->get()
 				->pluck('count', 'month')
 				->toArray();
-				
+
 			// Fill in missing months with zero counts
 			$userMonths = [];
 			$userCounts = [];
@@ -122,7 +122,7 @@
 				$userMonths[] = Carbon::now()->subMonths(5 - $i)->format('M Y');
 				$userCounts[] = $userActivityTrends[$month] ?? 0;
 			}
-			
+
 			$this->userActivityData = [
 				'months' => $userMonths,
 				'counts' => $userCounts
@@ -344,7 +344,7 @@
 							}
 						})
 					}
-					
+
 					if (this.activityChart) {
 						this.activityChart.updateOptions({
 							chart: {
@@ -413,7 +413,7 @@
 						this.rolesChart.destroy()
 						this.rolesChart = null
 					}
-					
+
 					if (this.activityChart) {
 						this.activityChart.destroy()
 						this.activityChart = null
@@ -663,7 +663,7 @@
 					this.rolesChart = new ApexCharts(document.querySelector('#user-roles-chart'), options)
 					this.rolesChart.render()
 				},
-				
+
 				// Initialize user activity chart
 				initUserActivityChart () {
 					const data = @json($userActivityData['counts']);
@@ -836,7 +836,8 @@
 			</x-card>
 			<x-card class="md:col-span-3">
 				<x-slot:header>
-					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">User Growth (6-Month Trend)</h4>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">User Growth (6-Month
+					                                                                        Trend)</h4>
 				</x-slot:header>
 				<div class="p-4">
 					<div id="user-activity-chart"></div>
