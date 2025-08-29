@@ -37,7 +37,7 @@
 					class="hidden w-full md:hidden mt-2 py-2 space-y-2">
 				<a
 						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
-						href="#">Products</a>
+						href="#">Docs</a>
 				<a
 						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
 						href="#">About</a>
@@ -62,7 +62,7 @@
 			<div class="hidden md:flex uppercase space-x-4">
 				<a
 						class="hover:text-gray-500"
-						href="#">Products</a>
+						href="{{ route('documentation') }}">Docs</a>
 				<a
 						class="hover:text-gray-500"
 						href="#">About</a>

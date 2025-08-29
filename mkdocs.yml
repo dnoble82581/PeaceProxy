@@ -1,0 +1,29 @@
+site_name: PeaceProxy Docs
+site_description: Documentation site for the PeaceProxy Laravel 12 + TALL + Reverb app
+site_url: https://docs.peaceproxy.com
+repo_url: https://github.com/dnoble82581/PeaceProxy
+repo_name: dnoble82581/PeaceProxy
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Home: index.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.highlight
