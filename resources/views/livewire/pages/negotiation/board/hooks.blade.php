@@ -36,6 +36,9 @@
 		/** @var Hook|null The hook being edited */
 		public $hookToEdit;
 
+		/** @var string The field to sort hooks by */
+		public string $sortBy = 'created_at';
+
 		/**
 		 * Initialize the component with the negotiation data
 		 *
@@ -140,6 +143,28 @@
 			$this->hookToEdit = null; // Reset the hook being edited
 		}
 
+		/**
+		 * Update the sort field and refresh the hooks
+		 *
+		 * @param  string  $field  The field to sort by
+		 *
+		 * @return void
+		 */
+		public function updateSort(string $field):void
+		{
+			$this->sortBy = $field;
+		}
+
+		/**
+		 * Get the sorted hooks collection
+		 *
+		 * @return \Illuminate\Support\Collection
+		 */
+		public function getSortedHooks():\Illuminate\Support\Collection
+		{
+			return $this->primarySubject->hooks->sortBy($this->sortBy);
+		}
+
 	}
 
 ?>
@@ -151,7 +176,15 @@
 		<h3 class="text-sm font-semibold">Hooks <span
 					x-show="!showHooks"
 					x-transition>({{ $primarySubject->hooks->count() }})</span></h3>
-		<div>
+		<div class="flex items-center gap-2">
+			<select
+					wire:model.live="sortBy"
+					wire:change="updateSort($event.target.value)"
+					class="text-xs py-1 px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
+				<option value="created_at">Sort by Date</option>
+				<option value="title">Sort by Name</option>
+				<option value="source">Sort by Source</option>
+			</select>
 			<x-button
 					wire:click="$toggle('showCreateHookModal')"
 					color="white"
@@ -172,7 +205,7 @@
 			x-show="showHooks"
 			x-transition>
 		@if($primarySubject->hooks->isNotEmpty())
-			@foreach($primarySubject->hooks as $hook)
+			@foreach($this->getSortedHooks() as $hook)
 				<div
 						wire:key="tsui-card-{{ $hook->id }}">
 					<x-card>
@@ -183,7 +216,9 @@
 									<p class="text-gray-300 text-xs">{{ $hook->source }}</p>
 								</div>
 								<div class="text-right">
-									<x-subject.confidence-badge :confidence-score="$hook->confidence_score" />
+									<div class="flex items-end gap-1">
+										<x-subject.confidence-badge :confidence-score="$hook->confidence_score" />
+									</div>
 									<p class="text-gray-300 text-xs mt-1">{{ $hook->createdBy->name }}</p>
 								</div>
 							</div>

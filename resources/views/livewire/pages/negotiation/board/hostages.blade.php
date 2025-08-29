@@ -166,7 +166,9 @@
 
 <div x-data="{showHostages: true}">
 	<div class="bg-teal-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm">Hostages</h3>
+		<h3 class="text-sm font-semibold">Hostages <span
+					x-show="!showHostages"
+					x-transition>({{ $negotiation->hostages->count() }})</span></h3>
 		<div>
 			<x-button
 					wire:navigate.hover

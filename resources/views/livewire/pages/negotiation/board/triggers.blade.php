@@ -58,15 +58,15 @@
 		 *
 		 * @return array Array of event listeners mapped to handler methods
 		 */
- 	public function getListeners()
- 	{
- 		$tenantId = auth()->user()->tenant_id;
- 		return [
- 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
- 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
- 			"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
- 		];
- 	}
+		public function getListeners()
+		{
+			$tenantId = auth()->user()->tenant_id;
+			return [
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
+			];
+		}
 
 		/**
 		 * Handle the TriggerCreated event by refreshing the triggers collection
@@ -81,17 +81,17 @@
 			$this->primarySubject->load('triggers');
 		}
 
- 	/**
- 	 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
- 	 *
- 	 * @param  array  $data  Event data
- 	 *
- 	 * @return void
- 	 */
- 	public function handleTriggerUpdated(array $data)
- 	{
- 		$this->primarySubject->load('triggers');
- 	}
+		/**
+		 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleTriggerUpdated(array $data)
+		{
+			$this->primarySubject->load('triggers');
+		}
 
 		/**
 		 * Prepare a trigger for editing and show the edit modal
@@ -147,7 +147,7 @@
 		class=""
 		x-data="{ showTriggers: true }">
 	<div class="bg-rose-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm">Triggers <span
+		<h3 class="text-sm font-semibold">Triggers <span
 					x-show="!showTriggers"
 					x-transition>({{ $primarySubject->triggers->count() }})</span></h3>
 		<div>

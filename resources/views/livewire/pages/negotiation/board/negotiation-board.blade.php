@@ -81,7 +81,7 @@
 					<button
 							@click="tab = 'objectives'"
 							class="group inline-flex gap-1 items-center border-b-2 px-1 py-2 text-sm font-medium hover:cursor-pointer text-gray-700 hover:text-gray-900 hover:border-gray-300 dark:text-dark-300 dark:hover:border-dark-400 dark:hover:text-dark-400"
-							:class="{'border-b-primary-500 text-primary-600 dark:text-primary-400': tab === 'team', 'border-transparent': tab !== 'objectives'}"
+							:class="{'border-b-primary-500 text-primary-600 dark:text-primary-400': tab === 'objectives', 'border-transparent': tab !== 'objectives'}"
 					>
 						<x-icon
 								name="exclamation-triangle"

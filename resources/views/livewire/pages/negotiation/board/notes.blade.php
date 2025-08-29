@@ -195,7 +195,8 @@
 		<h2 class="text-xl font-semibold">Notes</h2>
 		<x-button
 				icon="plus"
-				wire:click="openCreateModal">Add Note
+				wire:click="openCreateModal"
+				sm>Add Note
 		</x-button>
 	</div>
 

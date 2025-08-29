@@ -42,11 +42,16 @@
 				->findOrFail($negotiationId);
 		}
 
-		public function deleteDocument($documentId):void
-		{
-			app(DocumentDestructionService::class)->deleteDocument($documentId);
-			$this->negotiation = $this->fetchNegotiation($this->negotiation->id);
-		}
+ 	public function deleteDocument($documentId):void
+ 	{
+ 		app(DocumentDestructionService::class)->deleteDocument($documentId);
+ 		$this->negotiation = $this->fetchNegotiation($this->negotiation->id);
+		
+ 		// Reset document-related properties to prevent errors when accessing deleted documents
+ 		$this->currentDocument = null;
+ 		$this->documentUrl = null;
+ 		$this->showViewModal = false;
+ 	}
 
 		public function uploadDocument():void
 		{

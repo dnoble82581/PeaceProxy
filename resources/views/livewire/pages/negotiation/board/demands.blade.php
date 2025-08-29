@@ -171,7 +171,7 @@
 		class=""
 		x-data="{ showDemands: true }">
 	<div class="bg-indigo-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm">Demands <span
+		<h3 class="text-sm font-semibold">Demands <span
 					x-show="!showDemands"
 					x-transition>({{ $primarySubject->demands->count() }})</span></h3>
 		<div>
