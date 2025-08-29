@@ -60,27 +60,27 @@
 			$this->editModal = true;
 		}
 
-		public function saveNegotiation():void
-		{
-			$this->validate();
+ 	public function saveNegotiation():void
+ 	{
+ 		$this->validate();
 
-			// Find the negotiation in the database
-			$negotiation = Negotiation::find($this->selectedNegotiation);
+ 		// Find the negotiation in the database
+ 		$negotiation = Negotiation::find($this->selectedNegotiation);
 
-			// Update the negotiation
-			$negotiation->update([
-				'title' => $this->title,
-				'location' => $this->location,
-				'status' => $this->status,
-				'type' => $this->type,
-			]);
+ 		// Update the negotiation
+ 		$negotiation->update([
+ 			'title' => $this->title,
+ 			'location' => $this->location,
+ 			'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
+ 			'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+ 		]);
 
-			// Close the modal
-			$this->editModal = false;
+ 		// Close the modal
+ 		$this->editModal = false;
 
-			// Refresh the negotiations list
-			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
-		}
+ 		// Refresh the negotiations list
+ 		$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+ 	}
 
 		public function openDeleteModal(int $negotiationId):void
 		{
