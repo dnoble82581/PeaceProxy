@@ -1,7 +1,9 @@
-<picture>
-  <source srcset="assets/PeaceProxyLogoDark.png" media="(prefers-color-scheme: dark)">
-  <img src="assets/PeaceProxyLogo.png" alt="Logo">
-</picture>
+<div align="center">
+  <picture>
+    <source srcset="assets/PeaceProxyLogoDark.png" media="(prefers-color-scheme: dark)">
+    <img src="assets/PeaceProxyLogo.png" alt="Logo">
+  </picture>
+</div>
 
 # 🚨 Crisis Negotiation & Incident Management Platform
 
