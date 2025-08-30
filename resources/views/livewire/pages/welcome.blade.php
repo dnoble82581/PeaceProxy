@@ -535,7 +535,7 @@
 			<div class="w-full lg:w-1/2 flex justify-center lg:justify-start order-1 lg:order-1">
 				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[800px] rounded-lg flex items-center justify-center">
 					<img
-							src="{{ Vite::asset('resources/images/phone-example.png') }}"
+							src="{{ Vite::asset('resources/images/phone-example.webp') }}"
 							alt="Phone Integration"
 							onerror="this.onerror=null; this.src=''; this.alt='Phone Integration Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
 					>
