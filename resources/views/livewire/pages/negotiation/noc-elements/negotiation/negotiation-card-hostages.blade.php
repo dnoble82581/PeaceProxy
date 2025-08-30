@@ -18,6 +18,8 @@
 			$negotiationId = $this->negotiation->id;
 			return [
 				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageUpdated" => 'handleHostageUpdated',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageDestroyed" => 'handleHostageUpdated',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageCreated" => 'handleHostageUpdated',
 			];
 		}
 
