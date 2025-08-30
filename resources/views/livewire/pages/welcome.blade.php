@@ -62,7 +62,7 @@
 			<div class="hidden md:flex uppercase space-x-4">
 				<a
 						class="hover:text-gray-500"
-						href="{{ route('documentation') }}">Docs</a>
+						href="#">Docs</a>
 				<a
 						class="hover:text-gray-500"
 						href="#">About</a>
@@ -493,6 +493,50 @@
 							onerror="this.onerror=null; this.src=''; this.alt='Negotiation Tracking Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
 					>
 					<span class="hidden text-xl sm:text-2xl md:text-3xl text-zinc-100">Negotiation Tracking Image Placeholder</span>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section
+			id="phone-integration"
+			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 flex items-center justify-between">
+		<div class="flex flex-col lg:flex-row items-center w-full px-4 sm:px-8 md:px-12 lg:px-20 gap-8">
+			<div class="w-full lg:w-1/2 order-2 lg:order-2">
+				<div class="space-y-4 md:space-y-8">
+					<h2 class="text-3xl md:text-4xl font-bold">
+						<span class="text-zinc-900">Phone</span>
+						<span class="text-primary-500">Integration</span>
+					</h2>
+					<p class="">Seamlessly integrate phone communications into your crisis management workflow. Our platform provides robust telephony features designed specifically for high-stakes negotiations and emergency response scenarios.</p>
+				</div>
+
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8">
+					<li class="list-disc">
+						<span class="font-semibold">Secure Call Routing:</span>
+						<span>Direct incoming calls to the appropriate team members with role-based routing and call queuing capabilities.</span>
+					</li>
+					<li class="list-disc">
+						<span class="font-semibold">Call Recording & Transcription:</span>
+						<span>Automatically record and transcribe all communications for documentation, analysis, and training purposes.</span>
+					</li>
+					<li class="list-disc">
+						<span class="font-semibold">Multi-line Management:</span>
+						<span>Handle multiple communication channels simultaneously with integrated call management tools.</span>
+					</li>
+					<li class="list-disc">
+						<span class="font-semibold">Voice Analysis:</span>
+						<span>Leverage advanced voice analysis to detect emotional cues and stress indicators during critical conversations.</span>
+					</li>
+				</ul>
+			</div>
+			<div class="w-full lg:w-1/2 flex justify-center lg:justify-start order-1 lg:order-1">
+				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[800px] rounded-lg flex items-center justify-center">
+					<img
+							src="{{ Vite::asset('resources/images/call.png') }}"
+							alt="Phone Integration"
+							onerror="this.onerror=null; this.src=''; this.alt='Phone Integration Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
+					>
 				</div>
 			</div>
 		</div>

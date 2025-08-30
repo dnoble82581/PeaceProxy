@@ -9,10 +9,10 @@
 	new class extends Component {
 		use WithPagination;
 
-		public $showCreateHostageModal = false;
-		public $showViewHostageModal = false;
-		public $showEditHostageModal = false;
-		public $showDeleteHostageModal = false;
+ 	public bool $showCreateHostageModal = false;
+ 	public bool $showViewHostageModal = false;
+ 	public bool $showEditHostageModal = false;
+ 	public bool $showDeleteHostageModal = false;
 		public $currentHostageId = null;
 		public $hostages = [];
 		public $negotiation;
@@ -89,24 +89,25 @@
 			$this->showDeleteHostageModal = true;
 		}
 
-		public function deleteHostage():void
-		{
-			if ($this->currentHostageId) {
-				$hostage = Hostage::find($this->currentHostageId);
+ 	public function deleteHostage():void
+ 	{
+ 		if ($this->currentHostageId) {
+ 			$hostage = Hostage::find($this->currentHostageId);
 
-				if ($hostage) {
-					// Use the service to delete the hostage
-					$hostageDestructionService = app(HostageDestructionService::class);
-					$hostageDestructionService->deleteHostage($hostage->id);
+ 			if ($hostage) {
+ 				// Use the service to delete the hostage
+ 				$hostageDestructionService = app(HostageDestructionService::class);
+ 				$hostageDestructionService->deleteHostage($hostage->id);
 
-					$this->showDeleteHostageModal = false;
-					$this->currentHostageId = null;
+ 				// Close the modal and reset currentHostageId
+ 				$this->showDeleteHostageModal = false;
+ 				$this->currentHostageId = null;
 
-					// Reload hostages
-					$this->loadHostages();
-				}
-			}
-		}
+ 				// Reload hostages
+ 				$this->loadHostages();
+ 			}
+ 		}
+ 	}
 
 		/**
 		 * Define the event listeners for this component
@@ -302,8 +303,7 @@
 							</div>
 							<div class="">
 								<x-dropdown
-										icon="ellipsis-vertical"
-										static>
+										icon="ellipsis-vertical">
 									<x-dropdown.items
 											wire:click="viewHostage({{ $hostage->id }})"
 											icon="eye"
@@ -336,13 +336,16 @@
 	</div>
 
 	<!-- Delete Confirmation Modal -->
-	<x-modal wire="showDeleteHostageModal">
+	<x-modal
+			persistent
+			center
+			wire="showDeleteHostageModal">
 		<x-card title="Confirm Delete">
 			<p class="mb-4">Are you sure you want to delete this hostage? This action cannot be undone.</p>
 
 			<div class="flex justify-end space-x-2">
 				<x-button
-						wire:click="$set('showDeleteHostageModal', false)"
+						wire:click="$toggle('showDeleteHostageModal')"
 						color="secondary">Cancel
 				</x-button>
 				<x-button

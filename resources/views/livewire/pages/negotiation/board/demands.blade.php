@@ -200,7 +200,7 @@
 						wire:key="tsui-card-{{ $demand->id }}">
 					<x-card color="secondary">
 						<x-slot:header>
-							<div class="p-3 flex items-center justify-between">
+							<div class="p-3 flex items-center justify-between bg-indigo-500">
 								<div>
 									<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
 									<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
