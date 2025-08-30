@@ -37,7 +37,7 @@
 					class="hidden w-full md:hidden mt-2 py-2 space-y-2">
 				<a
 						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
-						href="#">Docs</a>
+						href="https://docs.peaceproxy.com">Docs</a>
 				<a
 						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
 						href="#">About</a>
@@ -62,7 +62,7 @@
 			<div class="hidden md:flex uppercase space-x-4">
 				<a
 						class="hover:text-gray-500"
-						href="#">Docs</a>
+						href="https://docs.peaceproxy.com">Docs</a>
 				<a
 						class="hover:text-gray-500"
 						href="#">About</a>
@@ -560,7 +560,7 @@
 					<h3 class="text-lg font-bold text-zinc-900">Resources</h3>
 					<ul class="space-y-2 text-center md:text-left">
 						<li><a
-									href="/docs"
+									href="https://docs.peaceproxy.com"
 									class="text-primary-600 hover:text-primary-800 transition-colors">Documentation</a>
 						</li>
 						<li><a
