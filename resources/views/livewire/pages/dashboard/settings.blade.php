@@ -637,7 +637,11 @@
 
 					<!-- Billing Tab -->
 					<div class="{{ $activeTab === 'billing' ? 'block' : 'hidden' }}">
-						<livewire:billing.index />
+						@if ($tenant->subscribed('default'))
+							<livewire:billing.index />
+						@else
+							<livewire:billing.pricing />
+						@endif
 					</div>
 				</div>
 			</div>
