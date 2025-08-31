@@ -29,4 +29,5 @@ Route::get(
     [EnumController::class, 'genders']
 )->name('enums.genders');
 
+
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
