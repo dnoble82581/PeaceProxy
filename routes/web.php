@@ -19,6 +19,9 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
     'web', 'auth', App\Http\Middleware\IdentifyTenantMiddleware::class,
 ])->group(function () {
 
+    Volt::route('/pricing', 'billing.pricing')->name('tenant.pricing');
+    Volt::route('/billing', 'billing.index')->name('billing.index');
+
     //	DASHBOARD ROUTES
     Route::prefix('/dashboard')->group(function () {
         Volt::route('', 'pages.dashboard.dashboard')

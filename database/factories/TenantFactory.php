@@ -24,13 +24,16 @@ class TenantFactory extends Factory
             'agency_phone' => $this->faker->phoneNumber(),
             'agency_website' => $this->faker->url(),
 
-            // Address
-            'address_line_1' => $this->faker->streetAddress(),
-            'address_line_2' => $this->faker->streetAddress(),
-            'city' => $this->faker->city(),
-            'state' => $this->faker->stateAbbr(),
-            'postal_code' => $this->faker->postcode(),
-            'country' => 'US',
+            // Address and Billing
+            'billing_email' => $this->faker->safeEmail(),
+            'billing_phone' => $this->faker->phoneNumber(),
+            'tax_id' => $this->faker->numerify('##-#######'),
+            'address_line1' => $this->faker->streetAddress(),
+            'address_line2' => $this->faker->streetAddress(),
+            'address_city' => $this->faker->city(),
+            'address_state' => $this->faker->stateAbbr(),
+            'address_postal' => $this->faker->postcode(),
+            'address_country' => 'US',
 
             // Agency Identifiers
             'agency_identifier' => $this->faker->regexify('[A-Z]{3}[0-9]{4}'),
@@ -43,8 +46,11 @@ class TenantFactory extends Factory
             // Feature Toggles / Subscription
             'is_active' => true,
             'onboarding_complete' => $this->faker->boolean(30),
+            'stripe_id' => $this->faker->optional(0.7)->regexify('cus_[A-Za-z0-9]{14}'),
+            'pm_type' => $this->faker->optional(0.7)->randomElement(['card', 'bank']),
+            'pm_last_four' => $this->faker->optional(0.7)->numerify('####'),
             'trial_ends_at' => $this->faker->optional(0.7)->dateTimeBetween('+1 week', '+1 month'),
-            'subscription_ends_at' => $this->faker->dateTimeBetween('+1 month', '+1 year'),
+            'billing_owner_id' => $this->faker->optional(0.5)->numberBetween(1, 10),
 
             // Branding
             'logo_path' => $this->faker->imageUrl(200, 50, 'business'),
