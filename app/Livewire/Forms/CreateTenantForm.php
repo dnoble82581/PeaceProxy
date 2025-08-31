@@ -27,24 +27,34 @@ class CreateTenantForm extends Form
     #[Validate(['nullable', 'url'])]
     public $agency_website = '';
 
+    // Billing Info
+    #[Validate(['nullable', 'email'])]
+    public $billing_email = '';
+
+    #[Validate(['nullable'])]
+    public $billing_phone = '';
+
+    #[Validate(['nullable'])]
+    public $tax_id = '';
+
     // Address
     #[Validate(['nullable'])]
-    public $address_line_1 = '';
+    public $address_line1 = '';
 
     #[Validate(['nullable'])]
-    public $address_line_2 = '';
+    public $address_line2 = '';
 
     #[Validate(['nullable'])]
-    public $city = '';
+    public $address_city = '';
 
     #[Validate(['nullable', 'size:2'])]
-    public $state = '';
+    public $address_state = '';
 
     #[Validate(['nullable'])]
-    public $postal_code = '';
+    public $address_postal = '';
 
     #[Validate(['nullable'])]
-    public $country = 'US';
+    public $address_country = 'US';
 
     // Agency Identifiers
     #[Validate(['nullable'])]
@@ -60,6 +70,10 @@ class CreateTenantForm extends Form
     #[Validate(['nullable'])]
     public $locale = 'en';
 
+    // Billing Owner
+    #[Validate(['nullable', 'exists:users,id'])]
+    public $billing_owner_id = null;
+
     public function toArray()
     {
         return [
@@ -69,16 +83,20 @@ class CreateTenantForm extends Form
             'agency_email' => $this->agency_email,
             'agency_phone' => $this->agency_phone,
             'agency_website' => $this->agency_website,
-            'address_line_1' => $this->address_line_1,
-            'address_line_2' => $this->address_line_2,
-            'city' => $this->city,
-            'state' => $this->state,
-            'postal_code' => $this->postal_code,
-            'country' => $this->country,
+            'billing_email' => $this->billing_email,
+            'billing_phone' => $this->billing_phone,
+            'tax_id' => $this->tax_id,
+            'address_line1' => $this->address_line1,
+            'address_line2' => $this->address_line2,
+            'address_city' => $this->address_city,
+            'address_state' => $this->address_state,
+            'address_postal' => $this->address_postal,
+            'address_country' => $this->address_country,
             'agency_identifier' => $this->agency_identifier,
             'federal_agency_code' => $this->federal_agency_code,
             'timezone' => $this->timezone,
             'locale' => $this->locale,
+            'billing_owner_id' => $this->billing_owner_id,
         ];
     }
 }

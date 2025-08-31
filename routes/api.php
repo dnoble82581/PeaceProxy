@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\EnumController;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::get(
     'enums/user-negotiation-roles',
@@ -27,3 +28,5 @@ Route::get(
     'enums/genders',
     [EnumController::class, 'genders']
 )->name('enums.genders');
+
+Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);

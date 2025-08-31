@@ -10,7 +10,7 @@ return new class () extends Migration {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             // Tenant Relationship
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
+            $table->foreignId('tenant_id');
 
             // Authentication
             $table->string('name');
