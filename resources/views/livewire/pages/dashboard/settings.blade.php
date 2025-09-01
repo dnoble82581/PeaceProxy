@@ -24,6 +24,17 @@
 		public $primaryColor;
 		public $secondaryColor;
 		public $logo = null;
+		public $addressLine1;
+		public $addressLine2;
+		public $addressCity;
+		public $addressState;
+		public $addressPostal;
+		public $addressCountry;
+		public $billingEmail;
+		public $billingPhone;
+		public $tax_id;
+		public $agency_identifier;
+		public $federal_agency_code;
 
 		// User settings properties
 		public User $user;
@@ -58,6 +69,17 @@
 			$this->agencyType = $this->tenant->agency_type;
 			$this->primaryColor = $this->tenant->primary_color;
 			$this->secondaryColor = $this->tenant->secondary_color;
+			$this->addressLine1 = $this->tenant->address_line1;
+			$this->addressLine2 = $this->tenant->address_line2;
+			$this->addressCity = $this->tenant->address_city;
+			$this->addressState = $this->tenant->address_state;
+			$this->addressPostal = $this->tenant->address_postal;
+			$this->addressCountry = $this->tenant->address_country;
+			$this->billingEmail = $this->tenant->billing_email;
+			$this->billingPhone = $this->tenant->billing_phone;
+			$this->tax_id = $this->tenant->tax_id;
+			$this->agency_identifier = $this->tenant->agency_identifier;
+			$this->federal_agency_code = $this->tenant->federal_agency_code;
 
 			// Initialize user settings
 			$this->user = Auth::user();
@@ -71,12 +93,12 @@
 			$this->phone = $this->user->phone;
 		}
 
-		public function setActiveTab($tab)
+		public function setActiveTab($tab):void
 		{
 			$this->activeTab = $tab;
 		}
 
-		public function updateAgencySettings()
+		public function updateAgencySettings():void
 		{
 			$this->validate([
 				'agencyName' => 'required|string|max:255',
@@ -87,6 +109,17 @@
 				'primaryColor' => 'nullable|string|max:20',
 				'secondaryColor' => 'nullable|string|max:20',
 				'logo' => 'nullable|image|max:1024', // 1MB max
+				'addressLine1' => 'nullable|string|max:255',
+				'addressLine2' => 'nullable|string|max:255',
+				'addressCity' => 'nullable|string|max:255',
+				'addressState' => 'nullable|string|max:255',
+				'addressPostal' => 'nullable|string|max:255',
+				'addressCountry' => 'nullable|string|max:2',
+				'billingEmail' => 'nullable|email|max:255',
+				'billingPhone' => 'nullable|string|max:20',
+				'tax_id' => 'nullable|string|max:255',
+				'agency_identifier' => 'nullable|string|max:255',
+				'federal_agency_code' => 'nullable|string|max:255',
 			]);
 
 			$this->tenant->update([
@@ -97,6 +130,17 @@
 				'agency_type' => $this->agencyType,
 				'primary_color' => $this->primaryColor,
 				'secondary_color' => $this->secondaryColor,
+				'address_line1' => $this->addressLine1,
+				'address_line2' => $this->addressLine2,
+				'address_city' => $this->addressCity,
+				'address_state' => $this->addressState,
+				'address_postal' => $this->addressPostal,
+				'address_country' => $this->addressCountry,
+				'billing_email' => $this->billingEmail,
+				'billing_phone' => $this->billingPhone,
+				'tax_id' => $this->tax_id,
+				'agency_identifier' => $this->agency_identifier,
+				'federal_agency_code' => $this->federal_agency_code,
 			]);
 
 			// Handle logo upload if provided
@@ -133,7 +177,7 @@
 			session()->flash('message', 'Agency settings updated successfully.');
 		}
 
-		public function updateUserProfile()
+		public function updateUserProfile():void
 		{
 			$this->validate([
 				'userName' => ['required', 'string', 'max:255'],
@@ -205,6 +249,12 @@
 			session()->flash('message', 'Profile updated successfully.');
 		}
 
+		#[\Livewire\Attributes\On('userSubscribed')]
+		public function userSubscribed()
+		{
+			$this->dispatch('refresh');
+		}
+
 		public function cancel()
 		{
 			// Redirect to the dashboard
@@ -221,9 +271,15 @@
 				<div class="p-6 text-dark-800 dark:text-white">
 					<h4 class="text-lg p-2 bg-gray-200/50 dark:text-white dark:bg-dark-800/50 rounded-t-lg mb-4">
 						Settings</h4>
-
 					@if (session('message'))
-						<div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
+						<div
+								x-data="{ show: true }"
+								x-init="setTimeout(() => { show = false }, 3000)"
+								x-show="show"
+								x-transition:leave="transition ease-in duration-300"
+								x-transition:leave-start="opacity-100"
+								x-transition:leave-end="opacity-0"
+								class="mb-4 p-4 bg-green-100 text-green-700 rounded">
 							{{ session('message') }}
 						</div>
 					@endif
@@ -260,85 +316,180 @@
 
 					<!-- Agency Settings Tab -->
 					<div class="{{ $activeTab === 'agency' ? 'block' : 'hidden' }}">
-						<form wire:submit.prevent="updateAgencySettings">
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<form
+								wire:submit.prevent="updateAgencySettings"
+								x-data="{ billing: false, identifiers: false }">
+							<div
+									class="grid grid-cols-1 md:grid-cols-2 gap-6">
 								<!-- Agency Information -->
 								<div class="col-span-1 md:col-span-2">
-									<h2 class="text-lg font-medium mb-4 border-b pb-2">Agency Information</h2>
+									<h2 class="text-lg mb-4 font-semibold">Agency Information</h2>
 								</div>
 
 								<div>
-									<label
-											for="agencyName"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency
-									                                                                           Name</label>
-									<input
-											type="text"
-											id="agencyName"
+									<x-input
+											label="Agency Name *"
 											wire:model="agencyName"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('agencyName')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<div>
-									<label
-											for="agencyEmail"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency
-									                                                                           Email</label>
-									<input
-											type="email"
-											id="agencyEmail"
+									<x-input
+											label="Agency Email *"
 											wire:model="agencyEmail"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('agencyEmail')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<div>
-									<label
-											for="agencyPhone"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency
-									                                                                           Phone</label>
-									<input
-											type="text"
-											id="agencyPhone"
+									<x-input
+											label="Agency Phone"
 											wire:model="agencyPhone"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('agencyPhone')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<div>
-									<label
-											for="agencyWebsite"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency
-									                                                                           Website</label>
-									<input
-											type="url"
-											id="agencyWebsite"
-											wire:model="agencyWebsite"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('agencyWebsite')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									<x-input
+											label="Agency Website"
+											wire:model="agencyWebsite" />
 								</div>
 
 								<div>
-									<label
-											for="agencyType"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Agency
-									                                                                           Type</label>
-									<select
+									<x-select.styled
+											label="Agency Type *"
 											id="agencyType"
 											wire:model="agencyType"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-										<option value="">Select Agency Type</option>
-										@foreach(TenantTypes::toArray() as $type)
-											<option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
-										@endforeach
-									</select>
-									@error('agencyType')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
+											:options="collect(\App\Enums\Tenant\TenantTypes::cases())->map(fn($type) => [
+																				'label' => $type->label(),
+																				'value' => $type->value,
+																				])->toArray()"
+									/>
+								</div>
+
+								<!-- Billing Address -->
+								<div class="col-span-1 md:col-span-2 mt-6">
+									<div class="flex justify-between items-center mb-4 border-b pb-2">
+										<h2 class="text-lg font-medium">Billing Information</h2>
+										<button
+												type="button"
+												@click="billing = !billing"
+												class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+										>
+											<span x-text="billing ? 'Hide Address' : 'Show Address'"></span>
+										</button>
+									</div>
+								</div>
+								<div
+										class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
+										x-show="billing"
+										x-transition:enter="transition ease-out duration-300"
+										x-transition:enter-start="opacity-0 transform scale-95"
+										x-transition:enter-end="opacity-100 transform scale-100"
+										x-transition:leave="transition ease-in duration-200"
+										x-transition:leave-start="opacity-100 transform scale-100"
+										x-transition:leave-end="opacity-0 transform scale-95">
+									<div>
+										<x-input
+												icon="envelope"
+												label="Billing Email"
+												type="email"
+												wire:model="billingEmail"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												icon="phone"
+												label="Billing Phone"
+												wire:model="billingPhone"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Address Line 1"
+												wire:model="addressLine1"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Address Line 2"
+												wire:model="addressLine2"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="City"
+												wire:model="addressCity"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="State/Province"
+												wire:model="addressState"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Postal/ZIP Code"
+												wire:model="addressPostal"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Country Code (2 letters)"
+												wire:model="addressCountry"
+										/>
+									</div>
+								</div>
+
+								<!-- Agency Identifiers -->
+								<div class="col-span-1 md:col-span-2 mt-6">
+									<div class="flex justify-between items-center mb-4 border-b pb-2">
+										<h2 class="text-lg font-medium">Agency Identifiers</h2>
+										<button
+												type="button"
+												@click="identifiers = !identifiers"
+												class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+										>
+											<span x-text="identifiers ? 'Hide Identifiers' : 'Show Identifiers'"></span>
+										</button>
+									</div>
+								</div>
+								<div
+										class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
+										x-show="identifiers"
+										x-transition:enter="transition ease-out duration-300"
+										x-transition:enter-start="opacity-0 transform scale-95"
+										x-transition:enter-end="opacity-100 transform scale-100"
+										x-transition:leave="transition ease-in duration-200"
+										x-transition:leave-start="opacity-100 transform scale-100"
+										x-transition:leave-end="opacity-0 transform scale-95">
+									<div>
+										<x-input
+												label="Tax ID"
+												wire:model="tax_id"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Agency Identifier"
+												wire:model="agency_identifier"
+										/>
+									</div>
+
+									<div>
+										<x-input
+												label="Federal Agency Code"
+												wire:model="federal_agency_code"
+										/>
+									</div>
 								</div>
 
 								<!-- Logo Upload -->
@@ -437,7 +588,7 @@
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 								<!-- Profile Information -->
 								<div class="col-span-1 md:col-span-2">
-									<h2 class="text-lg font-medium mb-4 border-b pb-2">Profile Information</h2>
+									<h2 class="text-lg mb-4 font-semibold">Profile Information</h2>
 								</div>
 
 								<!-- Avatar -->
@@ -473,149 +624,93 @@
 
 								<!-- Name -->
 								<div>
-									<label
-											for="name"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Name</label>
-									<input
-											type="text"
-											id="name"
+									<x-input
+											label="Name *"
 											wire:model="userName"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('userName')<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- Email -->
 								<div>
-									<label
-											for="email"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Email</label>
-									<input
-											type="email"
-											id="email"
-											wire:model="userEmail"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('userEmail')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									<x-input
+											label="Email *"
+											wire:model="userEmail" />
 								</div>
 
 								<!-- Permissions -->
 								<div>
-									<label
-											for="permissions"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Permissions</label>
-									<input
-											type="text"
-											id="permissions"
+									<x-select.styled
+											label="Permissions"
 											wire:model="permissions"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('permissions')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											:options="collect(\App\Enums\User\UserPermission::cases())->map(fn($permission) => [
+																				'label' => $permission->label(),
+																				'value' => $permission->value,
+																				])->toArray()" />
 								</div>
 
 								<!-- Rank or Title -->
 								<div>
-									<label
-											for="rank_or_title"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Rank or
-									                                                                           Title</label>
-									<input
-											type="text"
-											id="rank_or_title"
+									<x-input
+											label="Rank or Title"
 											wire:model="rank_or_title"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('rank_or_title')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
+
 								</div>
 
 								<!-- Badge Number -->
 								<div>
-									<label
-											for="badge_number"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Badge
-									                                                                           Number</label>
-									<input
-											type="text"
-											id="badge_number"
+									<x-input
+											label="Badge Number"
 											wire:model="badge_number"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('badge_number')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- License Number -->
 								<div>
-									<label
-											for="license_number"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">License
-									                                                                           Number</label>
-									<input
-											type="text"
-											id="license_number"
+									<x-input
+											label="License Number"
 											wire:model="license_number"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('license_number')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- Department -->
 								<div>
-									<label
-											for="department"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Department</label>
-									<input
-											type="text"
-											id="department"
+									<x-input
+											label="Department"
 											wire:model="department"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('department')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- Phone -->
 								<div>
-									<label
-											for="phone"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Phone</label>
-									<input
-											type="text"
-											id="phone"
+									<x-input
+											label="Phone"
 											wire:model="phone"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('phone') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- Password Section -->
 								<div class="col-span-1 md:col-span-2 mt-6">
 									<h2 class="text-lg font-medium mb-4 border-b pb-2">Change Password</h2>
-									<p class="text-sm text-gray-500 mb-4">Leave these fields empty if you don't want to
-									                                      change your password.</p>
+									<p class="text-sm text-gray-500 dark:text-dark-400 mb-4">Leave these fields empty if
+									                                                         you don't want to
+									                                                         change your password.</p>
 								</div>
 
 								<!-- Password -->
 								<div>
-									<label
-											for="password"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">New
-									                                                                           Password</label>
-									<input
-											type="password"
-											id="password"
+									<x-password
+											label="Password"
 											wire:model="password"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
-									@error('password')<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									/>
 								</div>
 
 								<!-- Password Confirmation -->
 								<div>
-									<label
-											for="password_confirmation"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Confirm
-									                                                                           Password</label>
-									<input
-											type="password"
-											id="password_confirmation"
+									<x-password
+											label="Confirm Password"
 											wire:model="password_confirmation"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									/>
 								</div>
 
 								<!-- Submit and Cancel Buttons -->

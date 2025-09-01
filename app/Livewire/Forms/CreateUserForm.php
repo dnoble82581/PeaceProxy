@@ -44,7 +44,7 @@ class CreateUserForm extends Form
     public $alternate_email = '';
 
     #[Validate(['nullable', 'date'])]
-    public $last_login_at = '';
+    public $last_login_at = null;
 
     #[Validate(['nullable'])]
     public $last_login_ip = '';
@@ -59,10 +59,10 @@ class CreateUserForm extends Form
     public $timezone = 'America/Chicago';
 
     #[Validate(['boolean'])]
-    public $dark_mode = '';
+    public $dark_mode = false;
 
     #[Validate(['boolean'])]
-    public $is_active = '';
+    public $is_active = true;
 
     #[Validate(['nullable'])]
     public $two_factor_secret = '';

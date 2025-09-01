@@ -29,16 +29,22 @@
 		}
 
 		// Livewire action invoked from JS after collecting a PM with Elements
-		public function startSubscription(string $priceId, string $paymentMethodId)
+		public function startSubscription(string $priceId, string $paymentMethodId):void
 		{
 			$tenant = Auth::user()->tenant;
 
 			$tenant->updateDefaultPaymentMethod($paymentMethodId);
-			$tenant->newSubscription('default', $priceId)->create($paymentMethodId);
+			$subscription = $tenant->newSubscription('default', $priceId)
+				->trialDays(30) // Add a 30-day free trial
+				->create($paymentMethodId);
+			
+			// Save the trial end date to the tenant model
+			$tenant->trial_ends_at = $subscription->trial_ends_at;
+			$tenant->save();
 
-			session()->flash('ok', 'Subscribed successfully.');
-			return $this->redirectRoute('billing.index',
-				['tenantSubdomain' => tenant()->subdomain]); // define this route to your billing dashboard
+			session()->flash('ok', 'Subscribed successfully. Your 30-day free trial has started.');
+			$this->dispatch('userSubscribed');
+			// define this route to your billing dashboard
 		}
 
 		// Optional: open Stripe Customer Portal
@@ -56,7 +62,7 @@
 				report($e);
 				session()->flash('error',
 					'Customer Portal isn’t configured for this Stripe mode. In Stripe, go to Settings → Billing → Customer portal and click Save.');
-				return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
+				return $this->redirectRoute('dashboard', ['tenantSubdomain' => tenant()->subdomain]);
 			}
 		}
 	};
