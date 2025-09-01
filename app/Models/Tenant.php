@@ -30,6 +30,11 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    public function riskAssessments(): HasMany
+    {
+        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'tenant_id');
+    }
+
     public function negotiations(): HasMany
     {
         return $this->hasMany(Negotiation::class);

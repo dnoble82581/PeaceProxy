@@ -87,6 +87,11 @@ class Subject extends Model
         return 0;
     }
 
+    public function riskAssessments(): HasMany
+    {
+        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'subject_id');
+    }
+
     public function demands(): HasMany
     {
         return $this->hasMany(Demand::class);
@@ -133,5 +138,10 @@ class Subject extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(Document::class, 'documentable');
+    }
+
+    public function riskAssessment(): HasMany
+    {
+        return $this->hasMany(RiskAssessment::class);
     }
 }
