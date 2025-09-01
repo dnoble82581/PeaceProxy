@@ -88,4 +88,9 @@ class Negotiation extends Model
     {
         return $this->morphMany(Document::class, 'documentable');
     }
+
+    public function riskAssessments(): HasMany
+    {
+        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'negotiation_id');
+    }
 }

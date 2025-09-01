@@ -16,6 +16,9 @@ use App\Contracts\NegotiationRepositoryInterface;
 use App\Contracts\NoteRepositoryInterface;
 use App\Contracts\ObjectiveRepositoryInterface;
 use App\Contracts\PinRepositoryInterface;
+use App\Contracts\RiskAssessmentQuestionResponseRepositoryInterface;
+use App\Contracts\RiskAssessmentQuestionsRepositoryInterface;
+use App\Contracts\RiskAssessmentRepositoryInterface;
 use App\Contracts\TriggerRepositoryInterface;
 use App\Contracts\WarningRepositoryInterface;
 use App\Contracts\WarrantRepositoryInterface;
@@ -33,6 +36,9 @@ use App\Repositories\Negotiation\NegotiationRepository;
 use App\Repositories\Note\NoteRepository;
 use App\Repositories\Objective\ObjectiveRepository;
 use App\Repositories\Pin\PinRepository;
+use App\Repositories\RiskAssessment\RiskAssessmentQuestionResponseRepository;
+use App\Repositories\RiskAssessment\RiskAssessmentQuestionsRepository;
+use App\Repositories\RiskAssessment\RiskAssessmentRepository;
 use App\Repositories\Trigger\TriggerRepository;
 use App\Repositories\Warning\WarningRepository;
 use App\Repositories\Warrant\WarrantRepository;
@@ -148,6 +154,24 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             PinRepositoryInterface::class,
             PinRepository::class
+        );
+
+        // Bind RiskAssessmentQuestion repository
+        $this->app->bind(
+            RiskAssessmentQuestionsRepositoryInterface::class,
+            RiskAssessmentQuestionsRepository::class
+        );
+
+        // Bind RiskAssessmentQuestionResponse repository
+        $this->app->bind(
+            RiskAssessmentQuestionResponseRepositoryInterface::class,
+            RiskAssessmentQuestionResponseRepository::class
+        );
+
+        // Bind RiskAssessment repository
+        $this->app->bind(
+            RiskAssessmentRepositoryInterface::class,
+            RiskAssessmentRepository::class
         );
     }
 
