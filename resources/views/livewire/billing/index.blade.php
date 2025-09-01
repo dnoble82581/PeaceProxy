@@ -109,7 +109,41 @@
 			$tenant = Auth::user()->tenant;
 			$tenant->subscription('default')?->swap($price);
 			session()->flash('ok', 'Plan updated.');
-			return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
+
+			// Refresh subscription data after swap to update UI without page reload
+			$this->refreshSubscription();
+//			return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
+		}
+
+		// Refresh subscription data
+		public function refreshSubscription()
+		{
+			$tenant = Auth::user()->tenant;
+			$sub = $tenant->subscription('default');
+
+			if ($sub) {
+				$this->subscription = [
+					'id' => $sub->id,
+					'name' => $sub->name,
+					'stripe_status' => $sub->stripe_status,
+					'stripe_price' => $sub->stripe_price,
+					'quantity' => $sub->quantity,
+					'on_grace_period' => $sub->onGracePeriod(),
+					'ends_at' => optional($sub->ends_at)?->toDateTimeString(),
+					'trial_ends_at' => optional($sub->trial_ends_at)?->toDateTimeString(),
+				];
+
+				try {
+					\Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+					$price = Price::retrieve($sub->stripe_price);
+
+					$this->subscription['price_display'] =
+						'$'.number_format($price->unit_amount / 100, 2).
+						' / '.$price->recurring->interval;
+				} catch (\Exception $e) {
+					$this->subscription['price_display'] = 'Unknown';
+				}
+			}
 		}
 
 		// Optional: Update seat quantity
@@ -126,21 +160,28 @@
 	};
 ?>
 
-<div class="max-w-6xl mx-auto px-4 py-10">
-	<h1 class="text-2xl font-bold">Billing</h1>
+<div class="dark:bg-dark-800">
+	<h1 class="text-lg mb-4 font-semibold">Billing</h1>
 
 	@if (session('ok'))
-		<div class="mt-4 rounded-xl bg-emerald-50 text-emerald-900 px-4 py-3 text-sm">{{ session('ok') }}</div>
+		<div
+				x-data="{ show: true }"
+				x-init="setTimeout(() => show = false, 3000)"
+				x-show="show"
+				x-transition:leave="transition ease-in duration-300"
+				x-transition:leave-start="opacity-100"
+				x-transition:leave-end="opacity-0"
+				class="mt-4 rounded-xl bg-emerald-50 text-emerald-900 px-4 py-3 text-sm">{{ session('ok') }}</div>
 	@endif
 
 	<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 		<!-- Subscription card -->
-		<div class="md:col-span-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+		<div class="md:col-span-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-800">
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-semibold">Subscription</h2>
 				@if($subscription)
 					<span class="text-xs px-2 py-0.5 rounded-full {{ $subscription['on_grace_period'] ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900' }}">
-                        {{ strtoupper($subscription['stripe_status']) }}
+							{{ strtoupper($subscription['stripe_status']) }}
                     </span>
 				@else
 					<span class="text-xs px-2 py-0.5 rounded-full bg-neutral-100">Not subscribed</span>
@@ -154,19 +195,19 @@
 			@else
 				<dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
 					<div>
-						<dt class="text-neutral-500">Price</dt>
+						<dt class="text-neutral-500 dark:text-dark-400">Price</dt>
 						<dd class="font-medium">{{ $subscription['price_display'] ?? '—' }}</dd>
 					</div>
 					<div>
-						<dt class="text-neutral-500">Seats</dt>
+						<dt class="text-neutral-500 dark:text-dark-400">Seats</dt>
 						<dd class="font-medium">{{ $subscription['quantity'] ?? 1 }}</dd>
 					</div>
 					<div>
-						<dt class="text-neutral-500">Trial ends</dt>
+						<dt class="text-neutral-500 dark:text-dark-400">Trial ends</dt>
 						<dd class="font-medium">{{ $subscription['trial_ends_at'] ?? '—' }}</dd>
 					</div>
 					<div>
-						<dt class="text-neutral-500">Cancels at</dt>
+						<dt class="text-neutral-500 dark:text-dark-400">Cancels at</dt>
 						<dd class="font-medium">{{ $subscription['ends_at'] ?? '—' }}</dd>
 					</div>
 				</dl>
@@ -185,7 +226,7 @@
 					@else
 						<button
 								wire:click="swap(@js($monthly))"
-								class="rounded-xl border px-3 py-2 text-sm hover:bg-blue-50">
+								class="rounded-xl border px-3 py-2 text-sm hover:bg-dark-600 hover:cursor-pointer">
 							Switch to Monthly
 						</button>
 					@endif
@@ -247,13 +288,15 @@
 		</div>
 
 		<!-- Payment method card -->
-		<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+		<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-800">
 			<h2 class="text-lg font-semibold">Payment method</h2>
 			@if($pm)
-				<p class="mt-3 text-sm text-neutral-700">{{ strtoupper($pm['brand'] ?? 'CARD') }}
+				<p class="mt-3 text-sm text-neutral-700 dark:text-dark-200">{{ strtoupper($pm['brand'] ?? 'CARD') }}
 					•••• {{ $pm['last4'] }}</p>
-				<p class="text-xs text-neutral-500">Exp {{ $pm['exp_month'] }}/{{ $pm['exp_year'] }}</p>
-				<p class="mt-3 text-xs text-neutral-500">Update or add methods via the Customer Portal.</p>
+				<p class="text-xs text-neutral-500 dark:text-dark-400">Exp {{ $pm['exp_month'] }}
+				                                                       /{{ $pm['exp_year'] }}</p>
+				<p class="mt-3 text-xs text-neutral-500 dark:text-dark-400">Update or add methods via the Customer
+				                                                            Portal.</p>
 				<button
 						wire:click="portal"
 						class="mt-3 w-full rounded-xl border px-3 py-2 text-sm hover:bg-neutral-50">Manage in Portal
@@ -268,14 +311,14 @@
 	</div>
 
 	<!-- Invoices -->
-	<div class="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+	<div class="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-800">
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-semibold">Invoices</h2>
-			<span class="text-xs text-neutral-500">Showing latest {{ count($invoices) }}</span>
+			<span class="text-xs text-neutral-500 dark:text-dark-400">Showing latest {{ count($invoices) }}</span>
 		</div>
 		<div class="mt-4 overflow-x-auto">
 			<table class="w-full text-sm">
-				<thead class="text-left text-neutral-500">
+				<thead class="text-left text-neutral-500 dark:text-dark-400">
 				<tr>
 					<th class="py-2">Date</th>
 					<th class="py-2">Number</th>
@@ -307,7 +350,7 @@
 				@empty
 					<tr>
 						<td
-								class="py-6 text-neutral-500"
+								class="py-6 text-neutral-500 dark:text-dark-400"
 								colspan="5">No invoices yet.
 						</td>
 					</tr>

@@ -4,6 +4,7 @@
 	use App\Livewire\Forms\CreateUserForm;
 	use App\Services\Tenant\TenantCreationService;
 	use App\Services\User\CreateUserService;
+	use Illuminate\Support\Facades\Auth;
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 
@@ -20,11 +21,23 @@
 			$newUser = app(CreateUserService::class)
 				->createUserFromTenant($newTenant, $validatedUser);
 
-			$newUser->update(['permissions' => 'admin']);
+			$newUser->update([
+				'permissions' => 'admin',
+				'last_login_ip' => request()->ip(),
+				'last_login_at' => now()
+			]);
+
+			$newTenant->update([
+				'billing_owner_id' => $newUser->id
+			]);
+
+			// Authenticate the user
+			Auth::login($newUser);
 
 			// Redirect to the tenant dashboard after successful creation
 			$tenantSubdomain = $newTenant->subdomain;
-			$dashboardUrl = "http://{$tenantSubdomain}.".config('app.domain')."/dashboard";
+			$protocol = request()->secure()? 'https://' : 'http://';
+			$dashboardUrl = "{$protocol}{$tenantSubdomain}.".config('app.domain')."/dashboard";
 			$this->redirect($dashboardUrl);
 		}
 	}
@@ -76,10 +89,10 @@
 						label="Agency Type *"
 						value=""
 						wire:model="tenantForm.agency_type"
-						:options="[
-							['label' => 'Law Enforcement', 'value' => 'law_enforcement'],
-							['label' => 'Mental Health', 'value' => 'mental_health']
-						]"
+						:options="collect(\App\Enums\Tenant\TenantTypes::cases())->map(fn($type) => [
+																				'label' => $type->label(),
+																				'value' => $type->value,
+																				])->toArray()"
 				/>
 				<x-input
 						icon="envelope"
