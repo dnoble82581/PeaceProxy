@@ -864,19 +864,13 @@
 						@endphp
 						@foreach($msgs as $message)
 							@php
-								// First decrypt the message content
-								$decryptedContent = decrypt($message->content);
-								
-								// Then check for special prefixes in the decrypted content
-								$isUrgent = str_starts_with($decryptedContent, '[URGENT] ');
-								$isEmergency = str_starts_with($decryptedContent, '[EMERGENCY] ');
-								
-								// Remove the prefixes from the decrypted content if needed
-								$displayContent = $decryptedContent;
+								$isUrgent = str_starts_with($message->content, '[URGENT] ');
+								$isEmergency = str_starts_with($message->content, '[EMERGENCY] ');
+								$displayContent = $message->content;
 								if ($isUrgent) {
-									$displayContent = substr($decryptedContent, 9); // Remove [URGENT] prefix
+									$displayContent = substr($message->content, 9); // Remove [URGENT] prefix
 								} elseif ($isEmergency) {
-									$displayContent = substr($decryptedContent, 12); // Remove [EMERGENCY] prefix
+									$displayContent = substr($message->content, 12); // Remove [EMERGENCY] prefix
 								}
 							@endphp
 							<div class="flex {{ $message->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
