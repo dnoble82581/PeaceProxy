@@ -3,7 +3,7 @@
 namespace App\Services\RiskAssessment;
 
 use App\Contracts\RiskAssessmentRepositoryInterface;
-use App\Models\RiskAssessment;
+use App\Models\Assessment;
 use Illuminate\Database\Eloquent\Collection;
 
 class RiskAssessmentFetchingService
@@ -15,7 +15,7 @@ class RiskAssessmentFetchingService
         $this->riskAssessmentRepository = $riskAssessmentRepository;
     }
 
-    public function getRiskAssessment(int $id): RiskAssessment
+    public function getRiskAssessment(int $id): Assessment
     {
         return $this->riskAssessmentRepository->getRiskAssessment($id);
     }

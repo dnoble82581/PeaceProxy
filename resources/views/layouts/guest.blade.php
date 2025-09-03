@@ -55,8 +55,8 @@
 	{{-- Favicon --}}
 	<link
 			rel="icon"
-			href="{{ asset('favicon.ico') }}"
-			type="image/x-icon">
+			href="{{ asset('assets/favicon.png') }}"
+			type="image/png">
 
 	<link
 			rel="stylesheet"

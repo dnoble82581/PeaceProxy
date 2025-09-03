@@ -2,13 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\RiskAssessmentQuestion;
+use App\Models\AssessmentQuestion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
 class RiskAssessmentQuestionsFactory extends Factory
 {
-    protected $model = RiskAssessmentQuestion::class;
+    protected $model = AssessmentQuestion::class;
 
     public function definition(): array
     {

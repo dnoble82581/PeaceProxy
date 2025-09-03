@@ -7,15 +7,16 @@
 	use Livewire\WithPagination;
 
 	new class extends Component {
-		use WithPagination;
+ 	use WithPagination;
 
  	public bool $showCreateHostageModal = false;
  	public bool $showViewHostageModal = false;
  	public bool $showEditHostageModal = false;
  	public bool $showDeleteHostageModal = false;
-		public $currentHostageId = null;
-		public $hostages = [];
-		public $negotiation;
+	public $currentHostageId = null;
+	public $hostages = [];
+	public $negotiation;
+	public string $sortBy = 'name';
 
 		public function mount($negotiationId)
 		{
@@ -24,18 +25,34 @@
 
 		}
 
-		public function loadHostages():void
-		{
-			$negotiation = $this->negotiation ?? null;
+ 	public function loadHostages():void
+ 	{
+ 		$negotiation = $this->negotiation ?? null;
 
-			if ($negotiation) {
-				$this->hostages = Hostage::where('negotiation_id', $negotiation->id)
-					->with(['images', 'contacts.phone', 'contacts.email'])
-					->get();
-			} else {
-				$this->hostages = Hostage::with(['images', 'contacts.phone', 'contacts.email'])->get();
-			}
-		}
+ 		if ($negotiation) {
+ 			$hostages = Hostage::where('negotiation_id', $negotiation->id)
+ 				->with(['images', 'contacts.phone', 'contacts.email'])
+ 				->get();
+ 		} else {
+ 			$hostages = Hostage::with(['images', 'contacts.phone', 'contacts.email'])->get();
+ 		}
+		
+ 		// Sort the hostages based on the sortBy property
+ 		$this->hostages = $hostages->sortBy($this->sortBy);
+ 	}
+	
+ 	/**
+ 	 * Update the sort field and refresh the hostages
+ 	 *
+ 	 * @param  string  $field  The field to sort by
+ 	 *
+ 	 * @return void
+ 	 */
+ 	public function updateSort(string $field):void
+ 	{
+ 		$this->sortBy = $field;
+ 		$this->loadHostages();
+ 	}
 
 		public function createHostage()
 		{
@@ -170,7 +187,16 @@
 		<h3 class="text-sm font-semibold">Hostages <span
 					x-show="!showHostages"
 					x-transition>({{ $negotiation->hostages->count() }})</span></h3>
-		<div>
+		<div class="flex items-center gap-2">
+			<select
+					wire:model.live="sortBy"
+					wire:change="updateSort($event.target.value)"
+					class="text-xs py-1 pl-2 pr-7 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
+				<option value="name">Sort by Name</option>
+				<option value="age">Sort by Age</option>
+				<option value="risk_level">Sort by Risk Level</option>
+				<option value="last_seen_at">Sort by Last Seen</option>
+			</select>
 			<x-button
 					wire:navigate.hover
 					href="{{ route('hostage.create', [

@@ -156,19 +156,19 @@ class RepositoryServiceProvider extends ServiceProvider
             PinRepository::class
         );
 
-        // Bind RiskAssessmentQuestion repository
+        // Bind AssessmentQuestion repository
         $this->app->bind(
             RiskAssessmentQuestionsRepositoryInterface::class,
             RiskAssessmentQuestionsRepository::class
         );
 
-        // Bind RiskAssessmentQuestionResponse repository
+        // Bind AssessmentQuestionResponse repository
         $this->app->bind(
             RiskAssessmentQuestionResponseRepositoryInterface::class,
             RiskAssessmentQuestionResponseRepository::class
         );
 
-        // Bind RiskAssessment repository
+        // Bind Assessment repository
         $this->app->bind(
             RiskAssessmentRepositoryInterface::class,
             RiskAssessmentRepository::class

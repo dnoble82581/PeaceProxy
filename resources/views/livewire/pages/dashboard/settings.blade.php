@@ -11,7 +11,7 @@
 	use Livewire\Volt\Component;
 	use Livewire\WithFileUploads;
 
-	new #[Layout('layouts.app')] class extends Component {
+	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
 		use WithFileUploads;
 
 		// Tenant settings properties

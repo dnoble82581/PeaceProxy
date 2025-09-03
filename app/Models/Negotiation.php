@@ -91,6 +91,6 @@ class Negotiation extends Model
 
     public function riskAssessments(): HasMany
     {
-        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'negotiation_id');
+        return $this->hasMany(AssessmentQuestionResponse::class, 'negotiation_id');
     }
 }

@@ -25,6 +25,11 @@
 			rel="stylesheet"
 			href="https://use.typekit.net/ccn6txi.css">
 
+	<link
+			rel="icon"
+			href="{{ asset('assets/favicon.png') }}"
+			type="image/png">
+
 	{{-- Styles --}}
 	@vite(['resources/css/app.css', 'resources/js/app.js'])
 	@livewireStyles

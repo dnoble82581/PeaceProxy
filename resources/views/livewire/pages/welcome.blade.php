@@ -36,14 +36,8 @@
 					id="mobile-menu"
 					class="hidden w-full md:hidden mt-2 py-2 space-y-2">
 				<a
-						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
-						href="https://docs.peaceproxy.com">Docs</a>
-				<a
-						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
-						href="#">About</a>
-				<a
-						class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
-						href="#">Gallery</a>
+						class="block py-2 px-4 text-center hover:text-gray-500"
+						href="https://docs.peaceproxy.com">Documentation</a>
 				@auth
 					<a
 							class="block py-2 px-4 text-center hover:text-gray-500 uppercase"
@@ -59,31 +53,39 @@
 			</div>
 
 			<!-- Desktop menu -->
-			<div class="hidden md:flex uppercase space-x-4">
-				<a
-						class="hover:text-gray-500"
-						href="https://docs.peaceproxy.com">Docs</a>
-				<a
-						class="hover:text-gray-500"
-						href="#">About</a>
-				<a
-						class="hover:text-gray-500"
-						href="#">Gallery</a>
+			<div class="hidden md:flex space-x-4">
+				<x-link
+						color="secondary"
+						class="hover:text-gray-400 font-semibold"
+						icon="arrow-top-right-on-square"
+						href="https://github.com/dnoble82581/PeaceProxy">Git Hub
+				</x-link>
+				<x-link
+						color="secondary"
+						class="hover:text-gray-400 font-semibold"
+						icon="arrow-top-right-on-square"
+						href="https://docs.peaceproxy.com">Documentation
+				</x-link>
 			</div>
 			@auth
 				<div class="hidden md:flex uppercase space-x-4">
-					<a
-							class="hover:text-gray-500"
-							href="{{ route('dashboard', ['tenantSubdomain' => tenant()->subdomain]) }}">Dashboard</a>
+					<xlink
+							class="hover:text-gray-400"
+							href="{{ route('dashboard', ['tenantSubdomain' => tenant()->subdomain]) }}">Dashboard
+					</xlink>
 				</div>
 			@else
 				<div class="hidden md:flex uppercase space-x-4">
-					<a
-							class="hover:text-gray-500"
-							href="{{ route('login') }}">Login</a>
-					<a
-							class="hover:text-gray-500"
-							href="{{ route('register') }}">Register</a>
+					<x-link
+							color="secondary"
+							class="hover:text-gray-400"
+							href="{{ route('login') }}">Login
+					</x-link>
+					<x-link
+							color="secondary"
+							class="hover:text-gray-400"
+							href="{{ route('register') }}">Register
+					</x-link>
 				</div>
 			@endauth
 		</div>
@@ -559,9 +561,12 @@
 				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
 					<h3 class="text-lg font-bold text-zinc-900">Resources</h3>
 					<ul class="space-y-2 text-center md:text-left">
-						<li><a
+						<li>
+							<x-link
+									icon="arrow-top-right-on-square"
 									href="https://docs.peaceproxy.com"
-									class="text-primary-600 hover:text-primary-800 transition-colors">Documentation</a>
+							>Documentation
+							</x-link>
 						</li>
 						<li><a
 									href="/docs/getting-started"

@@ -37,7 +37,8 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
             ->name('dashboard.users');
 
         Volt::route('/assessments', 'pages.dashboard.assessments')
-            ->name('dashboard.assessments');
+            ->name('pages.dashboard.assessments');
+
     });
 
     //	Testing Calls here. delete later
