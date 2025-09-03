@@ -180,8 +180,11 @@
 			<select
 					wire:model.live="sortBy"
 					wire:change="updateSort($event.target.value)"
-					class="text-xs py-1 px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
-				<option value="created_at">Sort by Date</option>
+					class="text-xs py-1 pl-2 pr-7 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
+				<option
+						class=""
+						value="created_at">Sort by Date
+				</option>
 				<option value="title">Sort by Name</option>
 				<option value="source">Sort by Source</option>
 			</select>

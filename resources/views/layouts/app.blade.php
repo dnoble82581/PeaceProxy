@@ -69,8 +69,8 @@
 			/>
 			<x-side-bar.item
 					wire:navigate
-					:route="route('dashboard.assessments', authUser()->tenant->subdomain)"
-					:current="request()->routeIs('dashboard.assessments')"
+					:route="route('pages.dashboard.assessments', authUser()->tenant->subdomain)"
+					:current="request()->routeIs('pages.dashboard.assessments')"
 					text="Assessments"
 					icon="chart-bar"
 			/>

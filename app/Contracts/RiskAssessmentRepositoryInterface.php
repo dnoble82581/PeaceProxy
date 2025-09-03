@@ -2,14 +2,14 @@
 
 namespace App\Contracts;
 
-use App\Models\RiskAssessment;
+use App\Models\Assessment;
 use Illuminate\Database\Eloquent\Collection;
 
 interface RiskAssessmentRepositoryInterface
 {
-    public function createRiskAssessment(array $data): RiskAssessment;
+    public function createRiskAssessment(array $data): Assessment;
 
-    public function getRiskAssessment(int $id): RiskAssessment;
+    public function getRiskAssessment(int $id): Assessment;
 
     public function getRiskAssessments(): Collection;
 
@@ -17,7 +17,7 @@ interface RiskAssessmentRepositoryInterface
 
     public function getRiskAssessmentsBySubject(int $subjectId): Collection;
 
-    public function updateRiskAssessment(int $id, array $data): RiskAssessment;
+    public function updateRiskAssessment(int $id, array $data): Assessment;
 
     public function deleteRiskAssessment(int $id): bool;
 }

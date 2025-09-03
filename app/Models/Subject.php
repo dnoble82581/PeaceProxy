@@ -47,7 +47,7 @@ class Subject extends Model
     public function primaryImage(): string
     {
         // Use eager loading to avoid N+1 query issues
-        if (!$this->relationLoaded('images')) {
+        if (! $this->relationLoaded('images')) {
             $this->load('images');
         }
 
@@ -55,7 +55,7 @@ class Subject extends Model
         $primaryImage = $this->images->first();
 
         // If no primary image, use the first image available
-        if (!$primaryImage && $this->images->isNotEmpty()) {
+        if (! $primaryImage && $this->images->isNotEmpty()) {
             $primaryImage = $this->images->first();
         }
 
@@ -89,7 +89,7 @@ class Subject extends Model
 
     public function riskAssessments(): HasMany
     {
-        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'subject_id');
+        return $this->hasMany(Assessment::class, 'subject_id');
     }
 
     public function demands(): HasMany
@@ -142,6 +142,6 @@ class Subject extends Model
 
     public function riskAssessment(): HasMany
     {
-        return $this->hasMany(RiskAssessment::class);
+        return $this->hasMany(Assessment::class);
     }
 }

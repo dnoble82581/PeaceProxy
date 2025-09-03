@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Assessment\QuestionCategories;
+use App\Enums\Assessment\QuestionResponseTypes;
 use App\Enums\General\Genders;
 use App\Enums\User\UserNegotiationRole;
 use App\Enums\Warrant\BondType;
@@ -68,7 +70,46 @@ class EnumController
             ];
         }, Genders::cases());
 
+        array_unshift($genders, [
+            'value' => '',
+            'label' => 'Select an option', // Text for the empty selection
+        ]);
+
         return response()->json($genders);
     }
 
+    public function responseTypes()
+    {
+        $responseTypes = array_map(function (QuestionResponseTypes $type) {
+            return [
+                'value' => $type->value,
+                'label' => $type->label(),
+            ];
+        }, QuestionResponseTypes::cases());
+
+        array_unshift($responseTypes, [
+            'value' => '',
+            'label' => 'Select an option', // Text for the empty selection
+        ]);
+
+
+        return response()->json($responseTypes);
+    }
+
+    public function questionCategories()
+    {
+        $questionCategories = array_map(function ($category) {
+            return [
+                'value' => $category->value,
+                'label' => $category->label(),
+            ];
+        }, QuestionCategories::cases());
+
+        array_unshift($questionCategories, [
+            'value' => '',
+            'label' => 'Select an option', // Text for the empty selection
+        ]);
+
+        return response()->json($questionCategories);
+    }
 }

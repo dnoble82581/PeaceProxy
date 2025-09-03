@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\RiskAssessment;
+use App\Models\Assessment;
 use App\Models\Subject;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 class RiskAssessmentFactory extends Factory
 {
-    protected $model = RiskAssessment::class;
+    protected $model = Assessment::class;
 
     public function definition(): array
     {

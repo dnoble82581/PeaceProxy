@@ -32,7 +32,7 @@ class Tenant extends Model
 
     public function riskAssessments(): HasMany
     {
-        return $this->hasMany(RiskAssessmentQuestionResponse::class, 'tenant_id');
+        return $this->hasMany(AssessmentQuestionResponse::class, 'tenant_id');
     }
 
     public function negotiations(): HasMany

@@ -4,7 +4,7 @@ namespace App\Services\RiskAssessment;
 
 use App\Contracts\RiskAssessmentRepositoryInterface;
 use App\DTOs\RiskAssessment\RiskAssessmentDTO;
-use App\Models\RiskAssessment;
+use App\Models\Assessment;
 
 class RiskAssessmentUpdatingService
 {
@@ -15,7 +15,7 @@ class RiskAssessmentUpdatingService
         $this->riskAssessmentRepository = $riskAssessmentRepository;
     }
 
-    public function updateRiskAssessment(int $id, RiskAssessmentDTO $riskAssessmentDTO): RiskAssessment
+    public function updateRiskAssessment(int $id, RiskAssessmentDTO $riskAssessmentDTO): Assessment
     {
         return $this->riskAssessmentRepository->updateRiskAssessment($id, $riskAssessmentDTO->toArray());
     }

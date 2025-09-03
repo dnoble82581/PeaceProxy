@@ -6,12 +6,13 @@ use App\Models\AssessmentTemplateQuestion;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class AssessmentTemplateQuestionPolicy{
+class AssessmentTemplateQuestionPolicy
+{
     use HandlesAuthorization;
 
     public function viewAny(User $user): bool
     {
-        //
+
     }
 
     public function view(User $user, AssessmentTemplateQuestion $assessmentTemplateQuestion): bool

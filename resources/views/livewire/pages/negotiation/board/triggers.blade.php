@@ -33,8 +33,11 @@
 		/** @var int The ID of the negotiation */
 		public int $negotiationId;
 
-		/** @var Trigger|null The trigger being edited */
+  /** @var Trigger|null The trigger being edited */
 		public $triggerToEdit;
+		
+		/** @var string The field to sort triggers by */
+		public string $sortBy = 'created_at';
 
 		/**
 		 * Initialize the component with the negotiation data
@@ -124,7 +127,7 @@
 			app(TriggerDestructionService::class)->deleteTrigger($triggerId);
 		}
 
-		/**
+ 	/**
 		 * Close all modal dialogs
 		 *
 		 * This method is triggered by the 'close-modal' event
@@ -138,6 +141,28 @@
 			$this->showEditTriggerModal = false;
 			$this->triggerToEdit = null; // Reset the trigger being edited
 		}
+		
+		/**
+		 * Update the sort field and refresh the triggers
+		 *
+		 * @param  string  $field  The field to sort by
+		 *
+		 * @return void
+		 */
+		public function updateSort(string $field):void
+		{
+			$this->sortBy = $field;
+		}
+
+		/**
+		 * Get the sorted triggers collection
+		 *
+		 * @return \Illuminate\Support\Collection
+		 */
+		public function getSortedTriggers():\Illuminate\Support\Collection
+		{
+			return $this->primarySubject->triggers->sortBy($this->sortBy);
+		}
 
 	}
 
@@ -150,7 +175,18 @@
 		<h3 class="text-sm font-semibold">Triggers <span
 					x-show="!showTriggers"
 					x-transition>({{ $primarySubject->triggers->count() }})</span></h3>
-		<div>
+		<div class="flex items-center gap-2">
+			<select
+					wire:model.live="sortBy"
+					wire:change="updateSort($event.target.value)"
+					class="text-xs py-1 pl-2 pr-7 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
+				<option
+						class=""
+						value="created_at">Sort by Date
+				</option>
+				<option value="title">Sort by Name</option>
+				<option value="source">Sort by Source</option>
+			</select>
 			<x-button
 					wire:click="$toggle('showCreateTriggerModal')"
 					color="white"
@@ -170,7 +206,7 @@
 			x-show="showTriggers"
 			x-transition>
 		@if($primarySubject->triggers->isNotEmpty())
-			@foreach($primarySubject->triggers as $trigger)
+			@foreach($this->getSortedTriggers() as $trigger)
 				<div
 						wire:key="tsui-card-{{ $trigger->id }}">
 					<x-card color="secondary">

@@ -7,7 +7,7 @@
 	use Livewire\Volt\Component;
 	use Livewire\WithPagination;
 
-	new #[Layout('layouts.app')] class extends Component {
+	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
 		use WithPagination;
 
 		public ?int $quantity = 10;
@@ -26,28 +26,28 @@
 			['index' => 'action', 'sortable' => false, 'label' => 'Actions'],
 		];
 
- 	#[Computed]
- 	public function rows():LengthAwarePaginator
- 	{
- 		// Cache tenant ID to avoid multiple function calls
- 		$tenantId = tenant()->id;
-		
- 		// Trim search term once if it exists
- 		$searchTerm = $this->search !== null ? trim($this->search) : null;
-		
- 		return User::query()
- 			->select(['id', 'name', 'email', 'permissions', 'created_at']) // Select only needed fields
- 			->where('tenant_id', $tenantId)
- 			->when($searchTerm, function ($query) use ($searchTerm) {
- 				$query->where(function ($q) use ($searchTerm) {
- 					$q->where('name', 'like', '%'.$searchTerm.'%')
- 						->orWhere('email', 'like', '%'.$searchTerm.'%');
- 				});
- 			})
- 			->orderBy(...array_values($this->sort))
- 			->paginate($this->quantity)
- 			->withQueryString();
- 	}
+		#[Computed]
+		public function rows():LengthAwarePaginator
+		{
+			// Cache tenant ID to avoid multiple function calls
+			$tenantId = tenant()->id;
+
+			// Trim search term once if it exists
+			$searchTerm = $this->search !== null? trim($this->search) : null;
+
+			return User::query()
+				->select(['id', 'name', 'email', 'permissions', 'created_at']) // Select only needed fields
+				->where('tenant_id', $tenantId)
+				->when($searchTerm, function ($query) use ($searchTerm) {
+					$query->where(function ($q) use ($searchTerm) {
+						$q->where('name', 'like', '%'.$searchTerm.'%')
+							->orWhere('email', 'like', '%'.$searchTerm.'%');
+					});
+				})
+				->orderBy(...array_values($this->sort))
+				->paginate($this->quantity)
+				->withQueryString();
+		}
 	}
 
 ?>

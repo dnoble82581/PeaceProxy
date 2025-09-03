@@ -34,10 +34,13 @@
 		/** @var int The ID of the negotiation */
 		public int $negotiationId;
 
-		/** @var Demand|null The demand being edited */
-		public $demandToEdit;
+ 	/** @var Demand|null The demand being edited */
+ 	public $demandToEdit;
 
-		public CreateDemandForm $form;
+ 	public CreateDemandForm $form;
+	
+ 	/** @var string The field to sort demands by */
+ 	public string $sortBy = 'created_at';
 
 		/**
 		 * Initialize the component with the negotiation data
@@ -140,30 +143,52 @@
 			app(DemandDestructionService::class)->deleteDemand($demandId);
 		}
 
-		/**
-		 * Close all modal dialogs and refresh the component
-		 *
-		 * This method is triggered by the 'close-modal' event
-		 *
-		 * @return void
-		 */
-		#[On('close-modal')]
-		public function closeModal():void
-		{
-			$this->showCreateDemandModal = false;
-			$this->showEditDemandModal = false;
+ 	/**
+ 	 * Close all modal dialogs and refresh the component
+ 	 *
+ 	 * This method is triggered by the 'close-modal' event
+ 	 *
+ 	 * @return void
+ 	 */
+ 	#[On('close-modal')]
+ 	public function closeModal():void
+ 	{
+ 		$this->showCreateDemandModal = false;
+ 		$this->showEditDemandModal = false;
 
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+ 		// Reload the primary subject with fresh demands data
+ 		$this->primarySubject = $this->primarySubject->fresh(['demands']);
 
-			// Force a refresh of the component
-			$this->dispatch('refresh');
+ 		// Force a refresh of the component
+ 		$this->dispatch('refresh');
 
-			// Ensure the component is re-rendered
-			$this->render();
-		}
+ 		// Ensure the component is re-rendered
+ 		$this->render();
+ 	}
+	
+ 	/**
+ 	 * Update the sort field and refresh the demands
+ 	 *
+ 	 * @param  string  $field  The field to sort by
+ 	 *
+ 	 * @return void
+ 	 */
+ 	public function updateSort(string $field):void
+ 	{
+ 		$this->sortBy = $field;
+ 	}
 
-	}
+ 	/**
+ 	 * Get the sorted demands collection
+ 	 *
+ 	 * @return \Illuminate\Support\Collection
+ 	 */
+ 	public function getSortedDemands():\Illuminate\Support\Collection
+ 	{
+ 		return $this->primarySubject->demands->sortBy($this->sortBy);
+ 	}
+
+ }
 
 ?>
 
@@ -174,7 +199,16 @@
 		<h3 class="text-sm font-semibold">Demands <span
 					x-show="!showDemands"
 					x-transition>({{ $primarySubject->demands->count() }})</span></h3>
-		<div>
+		<div class="flex items-center gap-2">
+			<select
+					wire:model.live="sortBy"
+					wire:change="updateSort($event.target.value)"
+					class="text-xs py-1 pl-2 pr-7 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary-500">
+				<option value="created_at">Sort by Date</option>
+				<option value="title">Sort by Title</option>
+				<option value="priority_level">Sort by Priority</option>
+				<option value="deadline_date">Sort by Deadline</option>
+			</select>
 			<x-button
 					wire:click="$toggle('showCreateDemandModal')"
 					color="white"
@@ -195,7 +229,7 @@
 			x-show="showDemands"
 			x-transition>
 		@if($primarySubject->demands->isNotEmpty())
-			@foreach($primarySubject->demands as $demand)
+			@foreach($this->getSortedDemands() as $demand)
 				<div
 						wire:key="tsui-card-{{ $demand->id }}">
 					<x-card color="secondary">
