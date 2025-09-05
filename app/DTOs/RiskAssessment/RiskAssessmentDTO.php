@@ -8,7 +8,7 @@ class RiskAssessmentDTO
 {
     public function __construct(
         public ?int $id = null,
-        public ?string $title = null,
+        public string $title = 'Risk Assessment',
         public ?int $tenant_id = null,
         public ?int $subject_id = null,
         public ?Carbon $created_at = null,
