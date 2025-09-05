@@ -51,12 +51,12 @@
 				->get();
 		}
 
-		public function loadTemplates()
-		{
-			$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
-				->orderBy('name')
-				->get();
-		}
+ 	public function loadTemplates()
+ 	{
+ 		$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
+ 			->orderBy('created_at', 'desc')
+ 			->get();
+ 	}
 
 		// Define validation rules
 		public function rules()
