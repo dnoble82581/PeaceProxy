@@ -81,6 +81,18 @@
 					text="Settings"
 					icon="cog"
 			/>
+			<x-side-bar.item
+					target="_blank"
+					href="https://docs.peaceproxy.com"
+					text="Documentation"
+					icon="arrow-top-right-on-square"
+			/>
+			<x-side-bar.item
+					target="_blank"
+					href="https://github.com/dnoble82581/PeaceProxy"
+					text="Git Hub Repository"
+					icon="arrow-top-right-on-square"
+			/>
 
 		</x-side-bar>
 	</x-slot:menu>
