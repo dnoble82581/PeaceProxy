@@ -108,15 +108,33 @@
 			class="overflow-visible">
 		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-card-hostages :negotiationId="$this->negotiation->id" />
 	</div>
-	<div
+ <div
 			class="p-4 pt-6"
 			x-show="tab === 'initial_complaint'">
-		<p class="text-sm">{{ $this->negotiation->initial_complaint ?? 'No Initial Complaint Available. To add an initial complaint, please edit the negotiation details from the negotiation management page.' }}</p>
+		@if($this->negotiation->initial_complaint)
+			<p class="text-sm">{{ $this->negotiation->initial_complaint }}</p>
+		@else
+			<div class="text-center p-4 text-gray-500">
+				No initial complaint found for this negotiation.
+				<p class="mt-2">
+					To add an initial complaint, please edit the negotiation details from the negotiation management page.
+				</p>
+			</div>
+		@endif
 	</div>
-	<div
+ <div
 			class="p-4 pt-6"
 			x-show="tab === 'summary'">
-		<p class="text-sm">{{ $this->negotiation->summary ?? 'No Summary Information Available. To add a summary, please edit the negotiation details from the negotiation management page.' }}</p>
+		@if($this->negotiation->summary)
+			<p class="text-sm">{{ $this->negotiation->summary }}</p>
+		@else
+			<div class="text-center p-4 text-gray-500">
+				No summary information found for this negotiation.
+				<p class="mt-2">
+					To add a summary, please edit the negotiation details from the negotiation management page.
+				</p>
+			</div>
+		@endif
 	</div>
 	<div
 			x-show="tab === 'documents'"
