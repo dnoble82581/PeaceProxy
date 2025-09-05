@@ -77,7 +77,7 @@
 			]);
 
 			AssessmentTemplate::create([
-				'title' => $this->templateName,
+				'name' => $this->templateName,
 				'description' => $this->templateDescription,
 				'tenant_id' => tenant()->id,
 			]);
