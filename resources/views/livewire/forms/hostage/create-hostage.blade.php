@@ -141,10 +141,10 @@
 								@break
 							@case(2)
 								Status
-								@break
+									@break
 							@case(3)
 								Images
-								@break
+									@break
 						@endswitch
 					</span>
 				</button>
@@ -320,7 +320,7 @@
 			@if(count($images) > 0)
 				<div class="mt-4">
 					<h3 class="text-md font-medium text-gray-300 mb-2">Hostage Images</h3>
-					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+					<div class="grid grid-cols-4 md:grid-cols-8 gap-4">
 						@foreach($images as $index => $image)
 							<div class="relative group">
 								<div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden bg-dark-600">
