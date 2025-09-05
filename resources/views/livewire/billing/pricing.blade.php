@@ -186,7 +186,7 @@
 				<h3 class="text-lg font-semibold">Add payment method</h3>
 				<button
 						@click="modal=false"
-						class="p-1 rounded-lg hover:bg-neutral-100">✕
+						class="p-1 rounded-lg hover:bg-neutral-100 dark:text-dark-700">✕
 				</button>
 			</div>
 			<div
