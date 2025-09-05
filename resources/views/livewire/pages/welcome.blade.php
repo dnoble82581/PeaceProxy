@@ -69,10 +69,11 @@
 			</div>
 			@auth
 				<div class="hidden md:flex uppercase space-x-4">
-					<xlink
+					<x-link
+							color="secondary"
 							class="hover:text-gray-400"
 							href="{{ route('dashboard', ['tenantSubdomain' => tenant()->subdomain]) }}">Dashboard
-					</xlink>
+					</x-link>
 				</div>
 			@else
 				<div class="hidden md:flex uppercase space-x-4">
