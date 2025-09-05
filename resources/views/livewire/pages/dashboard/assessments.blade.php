@@ -64,7 +64,7 @@
 		public function loadTemplates()
 		{
 			$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
-				->orderBy('created_at', 'desc')
+				->orderBy('name')
 				->get();
 		}
 
@@ -85,10 +85,7 @@
 			$this->reset(['templateName', 'templateDescription', 'showCreateTemplateModal']);
 			$this->loadTemplates();
 
-			$this->dispatch('notify', [
-				'message' => 'Template created successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Template created successfully!', type: 'success');
 		}
 
 		// Edit template - prepare modal
@@ -97,10 +94,7 @@
 			$this->currentTemplate = AssessmentTemplate::find($templateId);
 
 			if (!$this->currentTemplate) {
-				$this->dispatch('notify', [
-					'message' => 'Template not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Template not found!', type: 'error');
 				return;
 			}
 
@@ -118,10 +112,7 @@
 			]);
 
 			if (!$this->currentTemplate) {
-				$this->dispatch('notify', [
-					'message' => 'Template not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Template not found!', type: 'error');
 				return;
 			}
 
@@ -133,10 +124,7 @@
 			$this->reset(['templateName', 'templateDescription', 'showEditTemplateModal', 'currentTemplate']);
 			$this->loadTemplates();
 
-			$this->dispatch('notify', [
-				'message' => 'Template updated successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Template updated successfully!', type: 'success');
 		}
 
 		// Delete template - prepare modal
@@ -145,10 +133,7 @@
 			$this->currentTemplate = AssessmentTemplate::find($templateId);
 
 			if (!$this->currentTemplate) {
-				$this->dispatch('notify', [
-					'message' => 'Template not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Template not found!', type: 'error');
 				return;
 			}
 
@@ -159,10 +144,7 @@
 		public function deleteTemplate()
 		{
 			if (!$this->currentTemplate) {
-				$this->dispatch('notify', [
-					'message' => 'Template not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Template not found!', type: 'error');
 				return;
 			}
 
@@ -180,10 +162,7 @@
 			$this->reset(['showDeleteTemplateModal', 'currentTemplate']);
 			$this->loadTemplates();
 
-			$this->dispatch('notify', [
-				'message' => 'Template deleted successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Template Deleted Successfully!', type: 'success');
 		}
 
 		// View template questions
@@ -192,10 +171,7 @@
 			$this->selectedTemplate = AssessmentTemplate::with('questions')->find($templateId);
 
 			if (!$this->selectedTemplate) {
-				$this->dispatch('notify', [
-					'message' => 'Template not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Template not found!', type: 'error');
 				return;
 			}
 
@@ -258,10 +234,7 @@
 			]);
 			$this->selectedTemplate = AssessmentTemplate::with('questions')->find($this->selectedTemplate->id);
 
-			$this->dispatch('notify', [
-				'message' => 'Question added successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Question added successfully!', type: 'success');
 		}
 
 		// Edit question - prepare modal
@@ -270,10 +243,7 @@
 			$this->currentQuestion = AssessmentTemplateQuestion::find($questionId);
 
 			if (!$this->currentQuestion) {
-				$this->dispatch('notify', [
-					'message' => 'Question not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Question not found!', type: 'error');
 				return;
 			}
 
@@ -307,10 +277,7 @@
 			}
 
 			if (!$this->currentQuestion) {
-				$this->dispatch('notify', [
-					'message' => 'Question not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Question not found!', type: 'error');
 				return;
 			}
 
@@ -328,10 +295,7 @@
 			]);
 			$this->selectedTemplate = AssessmentTemplate::with('questions')->find($this->selectedTemplate->id);
 
-			$this->dispatch('notify', [
-				'message' => 'Question updated successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Question updated successfully!', type: 'success');
 		}
 
 		// Delete question - prepare modal
@@ -340,10 +304,7 @@
 			$this->currentQuestion = AssessmentTemplateQuestion::find($questionId);
 
 			if (!$this->currentQuestion) {
-				$this->dispatch('notify', [
-					'message' => 'Question not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Question not found!', type: 'error');
 				return;
 			}
 
@@ -354,10 +315,7 @@
 		public function deleteQuestion()
 		{
 			if (!$this->currentQuestion) {
-				$this->dispatch('notify', [
-					'message' => 'Question not found!',
-					'type' => 'error',
-				]);
+				$this->dispatch('notify', message: 'Question not found!', type: 'error');
 				return;
 			}
 
@@ -366,10 +324,7 @@
 			$this->reset(['showDeleteQuestionModal', 'currentQuestion']);
 			$this->selectedTemplate = AssessmentTemplate::with('questions')->find($this->selectedTemplate->id);
 
-			$this->dispatch('notify', [
-				'message' => 'Question deleted successfully!',
-				'type' => 'success',
-			]);
+			$this->dispatch('notify', message: 'Question deleted successfully!', type: 'success'); // named args
 		}
 
 		// Get question types from API
@@ -404,8 +359,13 @@
 	<div
 			class="p-4"
 			x-data="{ showNotification: false, message: '', type: '' }"
-			@notify.window="showNotification = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => showNotification = false, 3000)">
-		<!-- Notification -->
+			@notify.window="
+            showNotification = true;
+            message = $event.detail.message ?? ($event.detail[0] ?? '');
+            type = $event.detail.type ?? 'success';
+            setTimeout(() => showNotification = false, 3000);
+    "
+	>
 		<div
 				x-show="showNotification"
 				x-transition:enter="transition ease-out duration-300"
@@ -414,9 +374,13 @@
 				x-transition:leave="transition ease-in duration-300"
 				x-transition:leave-start="opacity-100 transform scale-100"
 				x-transition:leave-end="opacity-0 transform scale-90"
-				x-bind:class="{ 'bg-green-100 border-green-400 text-green-700': type === 'success', 'bg-red-100 border-red-400 text-red-700': type === 'error' }"
+				:class="{
+            'bg-green-100 border-green-400 text-green-700': type === 'success',
+            'bg-red-100 border-red-400 text-red-700': type === 'error'
+        }"
 				class="border px-4 py-3 rounded relative mb-4"
-				role="alert">
+				role="alert"
+		>
 			<span
 					class="block sm:inline"
 					x-text="message"></span>
@@ -910,7 +874,7 @@
 			</x-modal>
 
 			<!-- Delete Question Confirmation Modal -->
-			<x-modal wire:model="showDeleteQuestionModal">
+			<x-modal wire="showDeleteQuestionModal">
 				<x-slot:title>Delete Question</x-slot:title>
 
 				<div class="space-y-4">

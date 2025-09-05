@@ -14,7 +14,7 @@ class AssessmentDTO
         public ?int $subject_id = null,
         public ?Carbon $started_at = null,
         public ?Carbon $completed_at = null,
-        public string $title = 'Assessment',
+        public ?string $title = null,
         public ?Carbon $created_at = null,
         public ?Carbon $updated_at = null,
     ) {
