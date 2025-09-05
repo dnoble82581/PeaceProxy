@@ -61,12 +61,12 @@
 		}
 
 		// Load all templates for the current tenant
- 	public function loadTemplates()
- 	{
- 		$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
- 			->orderBy('created_at', 'desc')
- 			->get();
- 	}
+		public function loadTemplates()
+		{
+			$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
+				->orderBy('created_at', 'desc')
+				->get();
+		}
 
 		// Create a new template
 		public function createTemplate()
@@ -77,7 +77,7 @@
 			]);
 
 			AssessmentTemplate::create([
-				'name' => $this->templateName,
+				'title' => $this->templateName,
 				'description' => $this->templateDescription,
 				'tenant_id' => tenant()->id,
 			]);
