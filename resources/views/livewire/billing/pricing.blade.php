@@ -37,7 +37,7 @@
 			$subscription = $tenant->newSubscription('default', $priceId)
 				->trialDays(30) // Add a 30-day free trial
 				->create($paymentMethodId);
-			
+
 			// Save the trial end date to the tenant model
 			$tenant->trial_ends_at = $subscription->trial_ends_at;
 			$tenant->save();
@@ -102,26 +102,26 @@
             $wire.startSubscription(this.selectedPrice, setupIntent.payment_method);
         }
     }"
-		class="min-h-[calc(100vh-6rem)] bg-neutral-50 py-12"
+		class="min-h-[calc(100vh-6rem)] bg-neutral-50 py-12 dark:bg-dark-800"
 >
 	<div class="mx-auto max-w-6xl px-4">
 		<header class="text-center mb-10">
 			<h1 class="text-3xl font-bold tracking-tight">Choose your plan</h1>
-			<p class="mt-2 text-neutral-600">Tenant-first billing — one subscription per agency.</p>
+			<p class="mt-2 text-neutral-600 dark:text-dark-300">Tenant-first billing — one subscription per agency.</p>
 		</header>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			<!-- Monthly -->
-			<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+			<div class="rounded-2xl border border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
-					<span class="text-xs rounded-full bg-neutral-100 px-2 py-0.5">Monthly</span>
+					<span class="text-xs rounded-full bg-neutral-100 dark:text-dark-700 px-2 py-0.5">Monthly</span>
 				</div>
 				<div class="mt-4 flex items-end gap-1">
 					<span class="text-4xl font-bold">$99</span>
 					<span class="text-neutral-500">/mo</span>
 				</div>
-				<ul class="mt-6 space-y-2 text-sm text-neutral-700">
+				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
 					<li>✔ Unlimited incidents</li>
 					<li>✔ Team collaboration</li>
 					<li>✔ Real-time chat (Reverb)</li>
@@ -136,7 +136,7 @@
 			</div>
 
 			<!-- Yearly -->
-			<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+			<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-700 dark:text-dark-300">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
 					<span class="text-xs rounded-full bg-emerald-100 text-emerald-900 px-2 py-0.5">Best value</span>
@@ -145,7 +145,7 @@
 					<span class="text-4xl font-bold">$999</span>
 					<span class="text-neutral-500">/yr</span>
 				</div>
-				<ul class="mt-6 space-y-2 text-sm text-neutral-700">
+				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-dark-300">
 					<li>✔ 2 months free compared to monthly</li>
 					<li>✔ All monthly features</li>
 					<li>✔ Priority support</li>
@@ -161,7 +161,7 @@
 		<div class="mt-8 text-center">
 			<button
 					wire:click="managePortal"
-					class="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+					class="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium dark:text-dark-800 hover:bg-neutral-50"
 			>Manage billing
 			</button>
 		</div>
