@@ -118,6 +118,10 @@
 							class="relative z-10 rounded-lg shadow-xl max-w-full h-auto object-cover"
 							style="max-height: 500px;">
 				</div>
+				<div>
+					<p class="text-sm text-gray-500">Crystal Noble, Brielle Noble, Cade Noble and Dusty Noble
+					                                 (Creator)</p>
+				</div>
 			</div>
 
 			<!-- Content in cards layout -->
@@ -126,10 +130,12 @@
 				<div class="bg-white rounded-lg shadow-md p-6 mb-8">
 					<h2 class="text-2xl font-semibold text-primary-600 mb-4">The Journey</h2>
 					<div class="prose prose-lg max-w-none">
+
 						<p>
 							Hi, I'm the creator of Peace Proxy — a tool built from the front lines of crisis and
 							compassion.
 						</p>
+
 
 						<p>
 							I'm a Police Officer, Crisis Negotiator, Drone Pilot, Defensive Tactics Instructor, and
@@ -187,11 +193,11 @@
 
 				<!-- Closing Card -->
 				<div class="bg-white rounded-lg shadow-md p-6 mb-8 text-center">
-					<div class="prose prose-lg max-w-none">
-						<p class="text-xl font-medium text-primary-700">
+					<div class="prose prose-lg max-w-none space-y-4">
+						<p class="text-xl font-medium text-gray-500">
 							Thanks for being here.
 						</p>
-						<p class="text-xl font-medium text-primary-700">
+						<p class="text-xl font-semibold text-primary-600">
 							Let's do good work.
 						</p>
 					</div>
@@ -224,8 +230,8 @@
 					<a href="/">
 						<x-logos.app-logo-icon />
 					</a>
-					<p class="text-zinc-600 text-center md:text-left">Innovative solutions for high-stakes
-					                                                  conversations.</p>
+					{{--					<p class="text-zinc-600 text-center md:text-left">Innovative solutions for high-stakes--}}
+					{{--					                                                  conversations.</p>--}}
 				</div>
 
 				<!-- Quick links -->

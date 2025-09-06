@@ -56,12 +56,14 @@
 			<div class="hidden md:flex space-x-4">
 				<x-link
 						color="secondary"
+						target="_blank"
 						class="hover:text-gray-400 font-semibold"
 						icon="arrow-top-right-on-square"
 						href="https://github.com/dnoble82581/PeaceProxy">Git Hub
 				</x-link>
 				<x-link
 						color="secondary"
+						target="_blank"
 						class="hover:text-gray-400 font-semibold"
 						icon="arrow-top-right-on-square"
 						href="https://docs.peaceproxy.com">Documentation
@@ -564,8 +566,8 @@
 				<!-- Logo and tagline -->
 				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
 					<x-logos.app-logo-icon />
-					<p class="text-zinc-600 text-center md:text-left">Innovative solutions for high-stakes
-					                                                  conversations.</p>
+					{{--					<p class="text-zinc-600 text-center md:text-left">Innovative solutions for high-stakes--}}
+					{{--					                                                  conversations.</p>--}}
 				</div>
 
 				<!-- Quick links -->
