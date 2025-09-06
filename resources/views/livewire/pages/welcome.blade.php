@@ -167,8 +167,9 @@
 			<div class="w-full lg:w-1/2 flex justify-center lg:justify-end order-1 lg:order-2">
 				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[600px] bg-slate-700 rounded-lg flex items-center justify-center">
 					<img
-							src="{{ Vite::asset('resources/images/chat-light.png') }}"
-							alt="">
+							class="rounded-lg""
+					                          src="{{ Vite::asset('resources/images/chat-light.png') }}"
+					                          alt="Image of chat interface">
 				</div>
 			</div>
 		</div>
@@ -212,8 +213,9 @@
 			<div class="w-full lg:w-1/2 flex justify-center lg:justify-start order-1 lg:order-1">
 				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[800px] rounded-lg flex items-center justify-center">
 					<img
+							class="rounded-lg"
 							src="{{ Vite::asset('resources/images/mood-tracking.png') }}"
-							alt="">
+							alt="Image of Mood Tracking">
 				</div>
 			</div>
 		</div>
@@ -324,6 +326,7 @@
 				<div class="w-full rounded-lg flex items-center justify-center">
 					<img
 							src="{{ Vite::asset('resources/images/objectives.png') }}"
+							class="rounded-lg"
 							alt="Objective Tracking"
 							onerror="this.onerror=null; this.src=''; this.alt='Objective Tracking Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
 					>
@@ -498,7 +501,7 @@
 					<img
 							src="{{ Vite::asset('resources/images/negotiations.png') }}"
 							alt="Negotiation Tracking"
-							class=""
+							class="rounded-lg"
 							onerror="this.onerror=null; this.src=''; this.alt='Negotiation Tracking Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
 					>
 					<span class="hidden text-xl sm:text-2xl md:text-3xl text-zinc-100">Negotiation Tracking Image Placeholder</span>
@@ -546,6 +549,7 @@
 					<img
 							src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/phone-example.webp"
 							alt="Phone Integration"
+							class="rounded-lg"
 							onerror="this.onerror=null; this.src=''; this.alt='Phone Integration Image Placeholder'; this.parentElement.classList.add('flex', 'items-center', 'justify-center');"
 					>
 				</div>
