@@ -66,6 +66,12 @@
 						icon="arrow-top-right-on-square"
 						href="https://docs.peaceproxy.com">Documentation
 				</x-link>
+				<x-link
+						color="secondary"
+						class="hover:text-gray-400 font-semibold"
+						icon="arrow-top-right-on-square"
+						href="{{ route('about') }}">About Us
+				</x-link>
 			</div>
 			@auth
 				<div class="hidden md:flex uppercase space-x-4">
@@ -569,14 +575,6 @@
 							>Documentation
 							</x-link>
 						</li>
-						<li><a
-									href="/docs/getting-started"
-									class="text-primary-600 hover:text-primary-800 transition-colors">Getting
-						                                                                              Started</a></li>
-						<li><a
-									href="/docs/user-guide/overview"
-									class="text-primary-600 hover:text-primary-800 transition-colors">User Guide</a>
-						</li>
 					</ul>
 				</div>
 
@@ -592,9 +590,15 @@
 									href="mailto:support@peaceproxy.com"
 									class="text-primary-600 hover:text-primary-800 transition-colors">support@peaceproxy.com</a>
 						</li>
+					</ul>
+				</div>
+				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
+					<h3 class="text-lg font-bold text-zinc-900">About Us</h3>
+					<ul class="space-y-2 text-center md:text-left">
 						<li><a
-									href="tel:+18005551234"
-									class="text-primary-600 hover:text-primary-800 transition-colors">1-800-555-1234</a>
+									href="/contact"
+									class="text-primary-600 hover:text-primary-800 transition-colors">Meet The
+						                                                                              Creator</a>
 						</li>
 					</ul>
 				</div>

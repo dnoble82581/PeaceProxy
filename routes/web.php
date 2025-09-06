@@ -12,6 +12,7 @@ Route::middleware([
     'web', RedirectToTenantDashboardMiddleware::class,
 ])->group(function () {
     Volt::route('/', 'pages.welcome');
+    Volt::route('/about', 'pages.about.about-us')->name('about');
 });
 
 // TENANT AWARE ROUTES
