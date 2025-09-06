@@ -10,7 +10,7 @@
 
 <div>
 	<!-- Navigation -->
-	<div class="flex flex-col md:flex-row px-4 md:px-8 pt-4 items-center justify-between">
+	<div class="flex flex-col md:flex-row px-4 md:px-8 pt-4 items-center justify-between pb-4">
 		<a href="/">
 			<x-logos.app-logo-icon />
 		</a>
