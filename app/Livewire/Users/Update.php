@@ -49,6 +49,7 @@ class Update extends Component
                 'max:255',
                 Rule::unique('users', 'email')->ignore($this->user->id),
             ],
+            'user.permissions' => 'required',
             'password' => [
                 'nullable',
                 'string',

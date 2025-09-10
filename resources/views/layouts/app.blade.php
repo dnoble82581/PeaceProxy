@@ -34,11 +34,9 @@
 						</form>
 					</x-dropdown>
 				</div>
-
 			</x-slot:right>
 		</x-layout.header>
 	</x-slot:header>
-
 	<x-slot:menu>
 		<x-side-bar>
 			<x-slot:brand>
@@ -81,26 +79,34 @@
 					text="Settings"
 					icon="cog"
 			/>
-			<x-side-bar.item
-					target="_blank"
-					href="https://docs.peaceproxy.com"
-					text="Documentation"
-					icon="arrow-top-right-on-square"
-			/>
-			<x-side-bar.item
-					target="_blank"
-					href="https://github.com/dnoble82581/PeaceProxy"
-					text="Git Hub Repository"
-					icon="arrow-top-right-on-square"
-			/>
 
+			<div class="absolute bottom-8">
+				<x-side-bar.item
+						target="_blank"
+						href="https://docs.peaceproxy.com"
+						text="Documentation"
+						icon="arrow-top-right-on-square"
+				/>
+				<x-side-bar.item
+						target="_blank"
+						href="https://github.com/dnoble82581/PeaceProxy"
+						text="Git Hub Repository"
+						icon="arrow-top-right-on-square"
+				/>
+			</div>
 		</x-side-bar>
 	</x-slot:menu>
+	<x-slot:footer>
+		<h1 class="text-white">test</h1>
+	</x-slot:footer>
 
 	{{ $slot }}
 </x-layout>
 
 {{-- Scripts --}}
 @include('layouts.partials._tail')
+@once
+	<script src="https://js.stripe.com/v3/"></script>
+@endonce
 </body>
 </html>

@@ -49,6 +49,16 @@
     --color-dark-950: var(--color-zinc-950);
 }
 
+/* Custom styles for table search input */
+.table-search-input {
+    min-width: 250px;
+}
+
+/* Target the search input in TallStackUI table component */
+[x-data="tallstackui_table"] div[class*="filter.search"] input {
+    min-width: 250px;
+}
+
 
 
 

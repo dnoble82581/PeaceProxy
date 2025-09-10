@@ -58,6 +58,11 @@ class User extends Authenticatable
             ->using(NegotiationUser::class);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->permissions === 'admin';
+    }
+
     public function initials(): string
     {
         $nameParts = explode(' ', $this->name);

@@ -13,13 +13,9 @@ class Delete extends Component
 
     public User $user;
 
-    public function render(): string
+    public function render()
     {
-        return <<<'HTML'
-        <div>
-            <x-button.circle icon="trash" color="red" wire:click="confirm" />
-        </div>
-        HTML;
+        return view('livewire.users.delete');
     }
 
     #[Renderless]
