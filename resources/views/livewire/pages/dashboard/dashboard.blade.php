@@ -170,10 +170,6 @@
 		x-init="init()"
 		@theme-changed.window="onThemeChanged($event.detail.theme)"
 		class="p-4 dark:text-white">
-
-	<a
-			href="{{ route('tenant.pricing', ['tenantSubdomain' => tenant()->subdomain]) }}"
-			class="text-gray-500 hover:text-gray-700">Pricing</a>
 	<!-- 
 	Manual theme toggle button (fallback if automatic detection fails)
 	This button allows users to manually toggle between light and dark mode

@@ -110,12 +110,44 @@
 			<p class="mt-2 text-neutral-600 dark:text-dark-300">Tenant-first billing — one subscription per agency.</p>
 		</header>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			<!-- Free Trial -->
+			<div class="rounded-2xl border border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
+				<div class="flex items-baseline gap-2">
+					<h2 class="text-xl font-semibold">Free Trial</h2>
+					<x-badge
+							text="Free"
+							color="slate"
+							round
+							xs />
+				</div>
+				<div class="mt-4 flex items-end gap-1">
+					<span class="text-4xl font-bold">$0</span>
+					<span class="text-neutral-500">/mo</span>
+				</div>
+				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
+					<li>✔ Full access for 30 days</li>
+					<li>✔ No credit card required</li>
+					<li>✔ Cancel anytime</li>
+					<li>✔ All features included</li>
+					<li>✔ Email support</li>
+				</ul>
+				<button
+						@click="open(@js($priceMonthly))"
+						class="mt-6 w-full rounded-xl bg-slate-600 text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+				>Start free trial
+				</button>
+			</div>
+
 			<!-- Monthly -->
 			<div class="rounded-2xl border border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
-					<span class="text-xs rounded-full bg-neutral-100 dark:text-dark-700 px-2 py-0.5">Monthly</span>
+					<x-badge
+							round
+							color="black"
+							xs
+							text="Monthly" />
 				</div>
 				<div class="mt-4 flex items-end gap-1">
 					<span class="text-4xl font-bold">$99</span>
@@ -139,7 +171,11 @@
 			<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-700 dark:text-dark-300">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
-					<span class="text-xs rounded-full bg-emerald-100 text-emerald-900 px-2 py-0.5">Best value</span>
+					<x-badge
+							round
+							text="Recommended"
+							color="primary"
+							class="animate-pulse" />
 				</div>
 				<div class="mt-4 flex items-end gap-1">
 					<span class="text-4xl font-bold">$999</span>
@@ -152,7 +188,7 @@
 				</ul>
 				<button
 						@click="open(@js($priceYearly))"
-						class="mt-6 w-full rounded-xl bg-black text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/20"
+						class="mt-6 w-full rounded-xl bg-primary-600 text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/20"
 				>Start yearly
 				</button>
 			</div>

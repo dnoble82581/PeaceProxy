@@ -602,7 +602,7 @@
 					<h3 class="text-lg font-bold text-zinc-900">About Us</h3>
 					<ul class="space-y-2 text-center md:text-left">
 						<li><a
-									href="/contact"
+									href="{{ route('about') }}"
 									class="text-primary-600 hover:text-primary-800 transition-colors">Meet The
 						                                                                              Creator</a>
 						</li>

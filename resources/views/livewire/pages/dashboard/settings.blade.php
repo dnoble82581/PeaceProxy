@@ -56,8 +56,9 @@
 		public function mount()
 		{
 			// Check if tab parameter is present in the request
-			if (request()->has('tab') && in_array(request()->tab, ['agency', 'profile', 'billing'])) {
-				$this->activeTab = request()->tab;
+
+			if (authUser()->cannot('update', tenant())) {
+				$this->activeTab = 'profile';
 			}
 
 			// Initialize tenant settings
@@ -266,7 +267,7 @@
 
 <div>
 	<div class="">
-		<div class="mx-auto sm:px-6 lg:px-8">
+		<div class="mx-auto sm:px-4 lg:px-6">
 			<div class="bg-white dark:bg-dark-800 overflow-hidden shadow-sm sm:rounded-lg border border-gray-300 dark:border-dark-600">
 				<div class="p-6 text-dark-800 dark:text-white">
 					<h4 class="text-lg p-2 bg-gray-200/50 dark:text-white dark:bg-dark-800/50 rounded-t-lg mb-4">
@@ -288,12 +289,14 @@
 					<div class="mb-6 border-b border-gray-200">
 						<ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
 							<li class="mr-2">
-								<button
-										wire:click="setActiveTab('agency')"
-										class="inline-block p-4 {{ $activeTab === 'agency' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
-								>
-									Agency Settings
-								</button>
+								@can('update', tenant())
+									<button
+											wire:click="setActiveTab('agency')"
+											class="inline-block p-4 {{ $activeTab === 'agency' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
+									>
+										Agency Settings
+									</button>
+								@endcan
 							</li>
 							<li class="mr-2">
 								<button
@@ -304,284 +307,287 @@
 								</button>
 							</li>
 							<li class="mr-2">
-								<button
-										wire:click="setActiveTab('billing')"
-										class="inline-block p-4 {{ $activeTab === 'billing' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
-								>
-									Billing
-								</button>
+								@can('update', tenant())
+									<button
+											wire:click="setActiveTab('billing')"
+											class="inline-block p-4 {{ $activeTab === 'billing' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
+									>
+										Billing
+									</button>
+								@endcan
 							</li>
 						</ul>
 					</div>
 
 					<!-- Agency Settings Tab -->
-					<div class="{{ $activeTab === 'agency' ? 'block' : 'hidden' }}">
-						<form
-								wire:submit.prevent="updateAgencySettings"
-								x-data="{ billing: false, identifiers: false }">
-							<div
-									class="grid grid-cols-1 md:grid-cols-2 gap-6">
-								<!-- Agency Information -->
-								<div class="col-span-1 md:col-span-2">
-									<h2 class="text-lg mb-4 font-semibold">Agency Information</h2>
-								</div>
+					@can('update', tenant())
+						<div class="{{ $activeTab === 'agency' ? 'block' : 'hidden' }}">
+							<form
+									wire:submit.prevent="updateAgencySettings"
+									x-data="{ billing: false, identifiers: false }">
+								<div
+										class="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<!-- Agency Information -->
+									<div class="col-span-1 md:col-span-2">
+										<h2 class="text-lg mb-4 font-semibold">Agency Information</h2>
+									</div>
 
-								<div>
-									<x-input
-											label="Agency Name *"
-											wire:model="agencyName"
-									/>
-								</div>
+									<div>
+										<x-input
+												label="Agency Name *"
+												wire:model="agencyName"
+										/>
+									</div>
 
-								<div>
-									<x-input
-											label="Agency Email *"
-											wire:model="agencyEmail"
-									/>
-								</div>
+									<div>
+										<x-input
+												label="Agency Email *"
+												wire:model="agencyEmail"
+										/>
+									</div>
 
-								<div>
-									<x-input
-											label="Agency Phone"
-											wire:model="agencyPhone"
-									/>
-								</div>
+									<div>
+										<x-input
+												label="Agency Phone"
+												wire:model="agencyPhone"
+										/>
+									</div>
 
-								<div>
-									<x-input
-											label="Agency Website"
-											wire:model="agencyWebsite" />
-								</div>
+									<div>
+										<x-input
+												label="Agency Website"
+												wire:model="agencyWebsite" />
+									</div>
 
-								<div>
-									<x-select.styled
-											label="Agency Type *"
-											id="agencyType"
-											wire:model="agencyType"
-											class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
-											:options="collect(\App\Enums\Tenant\TenantTypes::cases())->map(fn($type) => [
+									<div>
+										<x-select.styled
+												label="Agency Type *"
+												id="agencyType"
+												wire:model="agencyType"
+												class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
+												:options="collect(\App\Enums\Tenant\TenantTypes::cases())->map(fn($type) => [
 																				'label' => $type->label(),
 																				'value' => $type->value,
 																				])->toArray()"
-									/>
-								</div>
-
-								<!-- Billing Address -->
-								<div class="col-span-1 md:col-span-2 mt-6">
-									<div class="flex justify-between items-center mb-4 border-b pb-2">
-										<h2 class="text-lg font-medium">Billing Information</h2>
-										<button
-												type="button"
-												@click="billing = !billing"
-												class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-										>
-											<span x-text="billing ? 'Hide Address' : 'Show Address'"></span>
-										</button>
-									</div>
-								</div>
-								<div
-										class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
-										x-show="billing"
-										x-transition:enter="transition ease-out duration-300"
-										x-transition:enter-start="opacity-0 transform scale-95"
-										x-transition:enter-end="opacity-100 transform scale-100"
-										x-transition:leave="transition ease-in duration-200"
-										x-transition:leave-start="opacity-100 transform scale-100"
-										x-transition:leave-end="opacity-0 transform scale-95">
-									<div>
-										<x-input
-												icon="envelope"
-												label="Billing Email"
-												type="email"
-												wire:model="billingEmail"
 										/>
 									</div>
 
-									<div>
-										<x-input
-												icon="phone"
-												label="Billing Phone"
-												wire:model="billingPhone"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Address Line 1"
-												wire:model="addressLine1"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Address Line 2"
-												wire:model="addressLine2"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="City"
-												wire:model="addressCity"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="State/Province"
-												wire:model="addressState"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Postal/ZIP Code"
-												wire:model="addressPostal"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Country Code (2 letters)"
-												wire:model="addressCountry"
-										/>
-									</div>
-								</div>
-
-								<!-- Agency Identifiers -->
-								<div class="col-span-1 md:col-span-2 mt-6">
-									<div class="flex justify-between items-center mb-4 border-b pb-2">
-										<h2 class="text-lg font-medium">Agency Identifiers</h2>
-										<button
-												type="button"
-												@click="identifiers = !identifiers"
-												class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-										>
-											<span x-text="identifiers ? 'Hide Identifiers' : 'Show Identifiers'"></span>
-										</button>
-									</div>
-								</div>
-								<div
-										class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
-										x-show="identifiers"
-										x-transition:enter="transition ease-out duration-300"
-										x-transition:enter-start="opacity-0 transform scale-95"
-										x-transition:enter-end="opacity-100 transform scale-100"
-										x-transition:leave="transition ease-in duration-200"
-										x-transition:leave-start="opacity-100 transform scale-100"
-										x-transition:leave-end="opacity-0 transform scale-95">
-									<div>
-										<x-input
-												label="Tax ID"
-												wire:model="tax_id"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Agency Identifier"
-												wire:model="agency_identifier"
-										/>
-									</div>
-
-									<div>
-										<x-input
-												label="Federal Agency Code"
-												wire:model="federal_agency_code"
-										/>
-									</div>
-								</div>
-
-								<!-- Logo Upload -->
-								<div class="col-span-1 md:col-span-2 mt-6">
-									<h2 class="text-lg font-medium mb-4 border-b pb-2">Agency Logo</h2>
-									<div class="flex items-center">
-										<div class="mr-4">
-											@if ($logo)
-												<img
-														src="{{ $logo->temporaryUrl() }}"
-														alt="Logo Preview"
-														class="w-32 h-32 object-contain">
-											@elseif ($tenant->logo_path)
-												<img
-														src="{{ $tenant->logo_path }}"
-														alt="{{ $tenant->agency_name }} Logo"
-														class="w-32 h-32 object-contain">
-											@else
-												<div class="w-32 h-32 flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-300 dark:border-gray-600">
-													<span>No Logo</span>
-												</div>
-											@endif
+									<!-- Billing Address -->
+									<div class="col-span-1 md:col-span-2 mt-6">
+										<div class="flex justify-between items-center mb-4 border-b pb-2">
+											<h2 class="text-lg font-medium">Billing Information</h2>
+											<button
+													type="button"
+													@click="billing = !billing"
+													class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+											>
+												<span x-text="billing ? 'Hide Address' : 'Show Address'"></span>
+											</button>
 										</div>
+									</div>
+									<div
+											class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
+											x-show="billing"
+											x-transition:enter="transition ease-out duration-300"
+											x-transition:enter-start="opacity-0 transform scale-95"
+											x-transition:enter-end="opacity-100 transform scale-100"
+											x-transition:leave="transition ease-in duration-200"
+											x-transition:leave-start="opacity-100 transform scale-100"
+											x-transition:leave-end="opacity-0 transform scale-95">
 										<div>
-											<x-upload
-													type="file"
-													wire:model="logo"
-													id="logo"
-													class="mt-1 block w-full"
-													accept="image/*" />
-											<p class="text-sm text-gray-500 mt-1">Upload a new agency logo (max
-											                                      1MB).</p>
-											@error('logo')
-											<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											<x-input
+													icon="envelope"
+													label="Billing Email"
+													type="email"
+													wire:model="billingEmail"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													icon="phone"
+													label="Billing Phone"
+													wire:model="billingPhone"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="Address Line 1"
+													wire:model="addressLine1"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="Address Line 2"
+													wire:model="addressLine2"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="City"
+													wire:model="addressCity"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="State/Province"
+													wire:model="addressState"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="Postal/ZIP Code"
+													wire:model="addressPostal"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="Country Code (2 letters)"
+													wire:model="addressCountry"
+											/>
 										</div>
 									</div>
-								</div>
 
-								<!-- Appearance Settings -->
-								<div class="col-span-1 md:col-span-2 mt-6">
-									<h2 class="text-lg font-medium mb-4 border-b pb-2">Appearance Settings</h2>
-								</div>
-
-								<div>
-									<label
-											for="primaryColor"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Primary
-									                                                                           Color</label>
-									<div class="flex items-center mt-1">
-										<input
-												type="color"
-												id="primaryColor"
-												wire:model="primaryColor"
-												class="h-8 w-8 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-										<input
-												type="text"
-												wire:model="primaryColor"
-												class="ml-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+									<!-- Agency Identifiers -->
+									<div class="col-span-1 md:col-span-2 mt-6">
+										<div class="flex justify-between items-center mb-4 border-b pb-2">
+											<h2 class="text-lg font-medium">Agency Identifiers</h2>
+											<button
+													type="button"
+													@click="identifiers = !identifiers"
+													class="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+											>
+												<span x-text="identifiers ? 'Hide Identifiers' : 'Show Identifiers'"></span>
+											</button>
+										</div>
 									</div>
-									@error('primaryColor')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-								</div>
+									<div
+											class="grid grid-cols-1 md:grid-cols-2 col-span-full gap-6"
+											x-show="identifiers"
+											x-transition:enter="transition ease-out duration-300"
+											x-transition:enter-start="opacity-0 transform scale-95"
+											x-transition:enter-end="opacity-100 transform scale-100"
+											x-transition:leave="transition ease-in duration-200"
+											x-transition:leave-start="opacity-100 transform scale-100"
+											x-transition:leave-end="opacity-0 transform scale-95">
+										<div>
+											<x-input
+													label="Tax ID"
+													wire:model="tax_id"
+											/>
+										</div>
 
-								<div>
-									<label
-											for="secondaryColor"
-											class="block text-sm font-medium text-dark-800 dark:text-gray-100">Secondary
-									                                                                           Color</label>
-									<div class="flex items-center mt-1">
-										<input
-												type="color"
-												id="secondaryColor"
-												wire:model="secondaryColor"
-												class="h-8 w-8 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-										<input
-												type="text"
-												wire:model="secondaryColor"
-												class="ml-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+										<div>
+											<x-input
+													label="Agency Identifier"
+													wire:model="agency_identifier"
+											/>
+										</div>
+
+										<div>
+											<x-input
+													label="Federal Agency Code"
+													wire:model="federal_agency_code"
+											/>
+										</div>
 									</div>
-									@error('secondaryColor')
-									<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-								</div>
 
-								<div class="col-span-1 md:col-span-2 mt-6">
-									<x-button type="submit">
-										Save Agency Settings
-									</x-button>
-								</div>
-							</div>
-						</form>
-					</div>
+									<!-- Logo Upload -->
+									<div class="col-span-1 md:col-span-2 mt-6">
+										<h2 class="text-lg font-medium mb-4 border-b pb-2">Agency Logo</h2>
+										<div class="flex items-center">
+											<div class="mr-4">
+												@if ($logo)
+													<img
+															src="{{ $logo->temporaryUrl() }}"
+															alt="Logo Preview"
+															class="w-32 h-32 object-contain">
+												@elseif ($tenant->logo_path)
+													<img
+															src="{{ $tenant->logo_path }}"
+															alt="{{ $tenant->agency_name }} Logo"
+															class="w-32 h-32 object-contain">
+												@else
+													<div class="w-32 h-32 flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-300 dark:border-gray-600">
+														<span>No Logo</span>
+													</div>
+												@endif
+											</div>
+											<div>
+												<x-upload
+														type="file"
+														wire:model="logo"
+														id="logo"
+														class="mt-1 block w-full"
+														accept="image/*" />
+												<p class="text-sm text-gray-500 mt-1">Upload a new agency logo (max
+												                                      1MB).</p>
+												@error('logo')
+												<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+											</div>
+										</div>
+									</div>
 
+									<!-- Appearance Settings -->
+									<div class="col-span-1 md:col-span-2 mt-6">
+										<h2 class="text-lg font-medium mb-4 border-b pb-2">Appearance Settings</h2>
+									</div>
+
+									<div>
+										<label
+												for="primaryColor"
+												class="block text-sm font-medium text-dark-800 dark:text-gray-100">Primary
+										                                                                           Color</label>
+										<div class="flex items-center mt-1">
+											<input
+													type="color"
+													id="primaryColor"
+													wire:model="primaryColor"
+													class="h-8 w-8 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+											<input
+													type="text"
+													wire:model="primaryColor"
+													class="ml-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+										</div>
+										@error('primaryColor')
+										<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									</div>
+
+									<div>
+										<label
+												for="secondaryColor"
+												class="block text-sm font-medium text-dark-800 dark:text-gray-100">Secondary
+										                                                                           Color</label>
+										<div class="flex items-center mt-1">
+											<input
+													type="color"
+													id="secondaryColor"
+													wire:model="secondaryColor"
+													class="h-8 w-8 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+											<input
+													type="text"
+													wire:model="secondaryColor"
+													class="ml-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+										</div>
+										@error('secondaryColor')
+										<span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+									</div>
+
+									<div class="col-span-1 md:col-span-2 mt-6">
+										<x-button type="submit">
+											Save Agency Settings
+										</x-button>
+									</div>
+								</div>
+							</form>
+						</div>
+					@endcan
 					<!-- Profile Settings Tab -->
 					<div class="{{ $activeTab === 'profile' ? 'block' : 'hidden' }}">
 						<form wire:submit.prevent="updateUserProfile">
@@ -640,6 +646,7 @@
 								<!-- Permissions -->
 								<div>
 									<x-select.styled
+											:disabled="authUser()->cannot('update', \tenant())"
 											label="Permissions"
 											wire:model="permissions"
 											:options="collect(\App\Enums\User\UserPermission::cases())->map(fn($permission) => [
@@ -731,13 +738,15 @@
 					</div>
 
 					<!-- Billing Tab -->
-					<div class="{{ $activeTab === 'billing' ? 'block' : 'hidden' }}">
-						@if ($tenant->subscribed('default'))
-							<livewire:billing.index />
-						@else
-							<livewire:billing.pricing />
-						@endif
-					</div>
+					@can('update', \tenant())
+						<div class="{{ $activeTab === 'billing' ? 'block' : 'hidden' }}">
+							@if ($tenant->subscribed('default'))
+								<livewire:billing.index />
+							@else
+								<livewire:billing.pricing />
+							@endif
+						</div>
+					@endcan
 				</div>
 			</div>
 		</div>

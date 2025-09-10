@@ -9,7 +9,9 @@
 
 	gtag('js', new Date())
 
-	gtag('config', 'G-4ERSE25W2Q')
+	gtag('config', 'G-4ERSE25W2Q', {
+		'cookie_flags': 'SameSite=None;Secure;Partitioned'
+	})
 </script>
 <meta charset="UTF-8" />
 <meta

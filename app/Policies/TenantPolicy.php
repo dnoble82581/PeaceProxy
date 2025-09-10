@@ -24,6 +24,17 @@ class TenantPolicy
 
     public function update(User $user, Tenant $tenant): bool
     {
+        // Multi-tenant safety
+        if ($user->tenant_id !== $tenant->id) {
+            return false;
+        }
+
+        // Admins can view everything in-tenant
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Tenant $tenant): bool

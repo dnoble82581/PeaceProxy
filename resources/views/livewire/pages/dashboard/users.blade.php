@@ -6,16 +6,20 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 	use Livewire\WithPagination;
+	use TallStackUi\Traits\Interactions;
 
 	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
 		use WithPagination;
+		use Interactions;
 
 		public ?int $quantity = 10;
 		public ?string $search = null;
+		public bool $showDeleteModal = false;
 		public array $sort = [
 			'column' => 'created_at',
 			'direction' => 'desc',
 		];
+		public ?User $userToDelete = null;
 
 		public array $headers = [
 			['index' => 'id', 'label' => '#'],
@@ -48,8 +52,35 @@
 				->paginate($this->quantity)
 				->withQueryString();
 		}
-	}
 
+		public function confirmDelete(User $user):void
+		{
+			$this->userToDelete = $user;
+			$this->showDeleteModal = true;
+		}
+
+		public function deleteUser():void
+		{
+			if ($this->userToDelete) {
+				try {
+					$this->userToDelete->delete();
+
+					// Refresh the component to update the table
+					$this->dispatch('$refresh');
+
+					$this->dialog()
+						->success(__('Done!'), __('User deleted successfully.'))
+						->send();
+				} catch (\Exception $e) {
+					$this->dialog()
+						->error(__('Error!'), __('Failed to delete user. Please try again.'))
+						->send();
+				} finally {
+					$this->userToDelete = null;
+				}
+			}
+		}
+	}
 ?>
 
 <div class="p-4">
@@ -61,7 +92,6 @@
 		<div class="mb-4 mt-4">
 			<livewire:users.create @created="$refresh" />
 		</div>
-
 		<x-table
 				:$headers
 				:$sort
@@ -80,18 +110,73 @@
 			@endinteract
 
 			@interact('column_action', $row)
-			<div class="flex gap-1">
-				<x-button.circle
-						icon="pencil"
-						wire:click="$dispatch('load::user', { 'user' : '{{ $row->id }}'})" />
-				<livewire:users.delete
-						:user="$row"
-						:key="uniqid('', true)"
-						@deleted="$refresh" />
+			<div class="flex gap-2">
+				@can('update', tenant())
+					<x-button.circle
+							sm
+							icon="pencil"
+							wire:click="$dispatch('load::user', { 'user' : '{{ $row->id }}'})" />
+					@if(authUser()->id === $row->id)
+						<x-button.circle
+								sm
+								disabled
+								color="red"
+								icon="trash" />
+					@else
+						<x-button.circle
+								sm
+								color="red"
+								icon="trash"
+								wire:click="confirmDelete({{ $row }})" />
+					@endif
+
+				@else
+					<x-button.circle
+							sm
+							disabled
+							icon="pencil" />
+					<x-button.circle
+							sm
+							disabled
+							color="red"
+							icon="trash" />
+				@endcan
+
 			</div>
 			@endinteract
 		</x-table>
 	</x-card>
-
 	<livewire:users.update @updated="$refresh" />
+
+	<x-modal
+			center
+			name="delete-user"
+			wire="showDeleteModal">
+		<x-slot:title>
+			Delete User
+		</x-slot:title>
+		<div class="flex items-center gap-2">
+			<x-icon
+					class="w-8 h-8 text-red-500"
+					name="exclamation-circle" />
+			<div>
+				<p>Are you sure you want to delete user
+					<span class="font-semibold">{{ $userToDelete ? $userToDelete->name : '' }}</span>?
+				</p>
+				<p class="text-xs dark:text-dark-300 font-semibold">This action cannot be undone.</p>
+			</div>
+		</div>
+		<x-slot:footer>
+			<x-button
+					sm
+					color="secondary"
+					wire:click="$set('showDeleteModal', false)">Close
+			</x-button>
+			<x-button
+					sm
+					color="red"
+					wire:click="deleteUser">Delete
+			</x-button>
+		</x-slot:footer>
+	</x-modal>
 </div>
