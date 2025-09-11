@@ -379,3 +379,7 @@
 	 * - Seat sync is optional; wire it to your own team size rules if needed.
 	 */
 ?>
+
+@once
+	<script src="https://js.stripe.com/v3/"></script>
+@endonce

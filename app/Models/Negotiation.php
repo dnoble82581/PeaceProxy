@@ -93,4 +93,12 @@ class Negotiation extends Model
     {
         return $this->hasMany(AssessmentQuestionResponse::class, 'negotiation_id');
     }
+
+    /**
+     * Get the user who created the negotiation.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

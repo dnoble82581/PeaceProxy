@@ -22,6 +22,7 @@ class NegotiationFetchingService
         // In a real-world scenario, you might want to add this method to the repository interface
         // For now, we'll implement it directly using the model
         return Negotiation::where('tenant_id', $tenantId)
+            ->with('creator')
             ->orderBy('created_at', 'desc')
             ->get();
     }

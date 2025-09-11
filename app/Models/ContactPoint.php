@@ -43,4 +43,9 @@ class ContactPoint extends Model
             'verified_at' => 'timestamp',
         ];
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

@@ -1,11 +1,13 @@
 <?php
 
+	use App\DTOs\Hook\HookDTO;
 	use App\Events\Hook\HookCreatedEvent;
 	use App\Livewire\Forms\CreateHookForm;
  use App\Enums\General\ConfidenceScore;
  use App\Enums\Hook\HookCategories;
  use App\Enums\Hook\HookSensitivityLevels;
 	use App\Models\Hook;
+	use App\Services\Hook\HookCreationService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 
@@ -22,31 +24,31 @@
 
 		}
 
-		public function saveHook():void
-		{
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by_id = Auth::user()->id;
-			$this->form->subject_id = $this->subjectId;
-			$this->form->negotiation_id = $this->negotiationId;
+ 	public function saveHook():void
+ 	{
+ 		$this->form->tenant_id = Auth::user()->tenant_id;
+ 		$this->form->created_by_id = Auth::user()->id;
+ 		$this->form->subject_id = $this->subjectId;
+ 		$this->form->negotiation_id = $this->negotiationId;
 
-			$validated = $this->form->validate();
+ 		$validated = $this->form->validate();
 
-			// Create the hook
-			$hook = Hook::create($validated);
+ 		// Create a DTO from the validated data
+ 		$hookDTO = HookDTO::fromArray($validated);
+		
+ 		// Use the service to create the hook
+ 		$hookService = app(HookCreationService::class);
+ 		$hook = $hookService->createHook($hookDTO);
 
-			$this->dispatch('close-modal', $hook->id);
+ 		$this->dispatch('close-modal', $hook->id);
 
+ 		// Reset the form
+ 		$this->form->reset();
 
-			event(new HookCreatedEvent($hook));
-			// Emit an event that the hook was created
-
-			// Reset the form
-			$this->form->reset();
-
-			// Set default values again
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by_id = Auth::user()->id;
-		}
+ 		// Set default values again
+ 		$this->form->tenant_id = Auth::user()->tenant_id;
+ 		$this->form->created_by_id = Auth::user()->id;
+ 	}
 	}
 
 ?>

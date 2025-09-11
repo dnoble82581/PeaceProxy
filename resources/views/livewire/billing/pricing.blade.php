@@ -240,3 +240,8 @@
 		</div>
 	</div>
 </div>
+
+
+@once
+	<script src="https://js.stripe.com/v3/"></script>
+@endonce

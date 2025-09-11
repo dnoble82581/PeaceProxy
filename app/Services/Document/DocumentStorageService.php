@@ -11,8 +11,11 @@ class DocumentStorageService
     /**
      * @param DocumentRepositoryInterface $documentRepository
      */
-    public function __construct(protected DocumentRepositoryInterface $documentRepository)
-    {
+    public function __construct(
+        protected DocumentRepositoryInterface $documentRepository,
+        protected ?LogService $logService = null
+    ) {
+        $this->logService = $logService ?? app(LogService::class);
     }
 
     /**
@@ -34,7 +37,13 @@ class DocumentStorageService
             $data['uploaded_by_id'] = auth()->id();
         }
 
-        return $this->documentRepository->createDocument($data, $file);
+        $document = $this->documentRepository->createDocument($data, $file);
+
+        // Log the document creation
+        $log = $this->addLogEntry($document, 'document.created', 'created');
+        logger($log);
+
+        return $document;
     }
 
     /**
@@ -47,7 +56,17 @@ class DocumentStorageService
      */
     public function updateDocument(array $data, int $documentId, ?UploadedFile $file = null): ?Document
     {
-        return $this->documentRepository->updateDocument($data, $documentId, $file);
+        $document = $this->documentRepository->updateDocument($data, $documentId, $file);
+
+        if (!$document) {
+            return null;
+        }
+
+        // Log the document update
+        $log = $this->addLogEntry($document, 'document.updated', 'updated');
+        logger($log);
+
+        return $document;
     }
 
     /**
@@ -97,5 +116,35 @@ class DocumentStorageService
         $data['negotiation_id'] = $negotiationId;
 
         return $this->createDocument($data, $file);
+    }
+
+    /**
+     * Add a log entry for document operations
+     *
+     * @param Document $document
+     * @param string $event
+     * @param string $action
+     * @return mixed
+     */
+    private function addLogEntry(Document $document, string $event, string $action)
+    {
+        $user = auth()->user();
+
+        return $this->logService->write(
+            tenantId: tenant()->id,
+            event: $event,
+            headline: "{$user->name} {$action} a document",
+            about: $document,      // loggable target
+            by: $user,            // actor
+            description: str($document->name)->limit(140),
+            properties: [
+                'negotiation_id' => $document->negotiation_id,
+                'documentable_type' => $document->documentable_type,
+                'documentable_id' => $document->documentable_id,
+                'file_type' => $document->file_type,
+                'file_size' => $document->file_size,
+                'is_private' => $document->is_private,
+            ],
+        );
     }
 }

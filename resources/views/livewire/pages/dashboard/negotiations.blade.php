@@ -222,6 +222,11 @@
 													</th>
 													<th
 															scope="col"
+															class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+														Created By
+													</th>
+													<th
+															scope="col"
 															class="relative py-3.5 pr-4 pl-3 sm:pr-0">
 														<span class="sr-only">Edit</span>
 													</th>
@@ -241,6 +246,9 @@
 														</td>
 														<td class="px-3 py-4 text-xs whitespace-nowrap text-gray-500 dark:text-white">
 															{{ $negotiation->type->label() }}
+														</td>
+														<td class="px-3 py-4 text-xs whitespace-nowrap text-gray-500 dark:text-white">
+															{{ $negotiation->creator ? $negotiation->creator->name : 'Unknown' }}
 														</td>
 														<td class="relative py-4 pr-4 pl-3 text-right text-xs font-medium whitespace-nowrap sm:pr-0">
 															<x-button

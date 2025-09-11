@@ -28,4 +28,9 @@ class MoodLog extends Model
     {
         return $this->belongsTo(User::class, 'logged_by_id');
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

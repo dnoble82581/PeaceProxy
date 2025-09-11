@@ -10,8 +10,39 @@ class WarrantDestructionService
     {
     }
 
-    public function deleteWarrant($warrantId): void
+    public function deleteWarrant($warrantId): ?Warrant
     {
-        $this->warrantRepository->deleteWarrant($warrantId);
+        // Get the warrant before deleting it
+        $warrant = $this->warrantRepository->getWarrant($warrantId);
+
+        if (!$warrant) {
+            return null;
+        }
+
+        $log = $this->addLogEntry($warrant);
+        logger($log);
+
+        return $this->warrantRepository->deleteWarrant($warrantId);
+    }
+
+    private function addLogEntry(Warrant $warrant)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'warrant.deleted',
+            headline: "{$user->name} deleted a warrant",
+            about: $warrant,      // loggable target
+            by: $user,            // actor
+            description: str($warrant->offense_description)->limit(140),
+            properties: [
+                'subject_id' => $warrant->subject_id,
+                'type' => $warrant->type?->value,
+                'status' => $warrant->status?->value,
+                'bond_amount' => $warrant->bond_amount,
+                'bond_type' => $warrant->bond_type?->value,
+            ],
+        );
     }
 }

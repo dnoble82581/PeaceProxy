@@ -83,4 +83,9 @@ class Hostage extends Model
 
         return strtoupper(implode('', $initials));
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

@@ -31,17 +31,20 @@
 		public string $subjectPhone = '';
 
 
-		public function mount():void
-		{
-			// Set the tenant_id from the authenticated user's tenant
-			$this->negotiationForm->tenant_id = Auth::user()->tenant_id;
+ 	public function mount():void
+ 	{
+ 		// Set the tenant_id from the authenticated user's tenant
+ 		$this->negotiationForm->tenant_id = Auth::user()->tenant_id;
+		
+ 		// Set the created_by field to the authenticated user's ID
+ 		$this->negotiationForm->created_by = Auth::user()->id;
 
-			// Set default status to active
-			$this->negotiationForm->status = NegotiationStatuses::active->value;
+ 		// Set default status to active
+ 		$this->negotiationForm->status = NegotiationStatuses::active->value;
 
-			// Set default type to unknown
-			$this->negotiationForm->type = NegotiationTypes::unknown->value;
-		}
+ 		// Set default type to unknown
+ 		$this->negotiationForm->type = NegotiationTypes::unknown->value;
+ 	}
 
  	/**
  	 * Create a new subject based on form data

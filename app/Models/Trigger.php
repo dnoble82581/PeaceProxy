@@ -47,4 +47,9 @@ class Trigger extends Model
     {
         return $this->belongsTo(Negotiation::class);
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

@@ -105,8 +105,5 @@
 
 {{-- Scripts --}}
 @include('layouts.partials._tail')
-@once
-	<script src="https://js.stripe.com/v3/"></script>
-@endonce
 </body>
 </html>

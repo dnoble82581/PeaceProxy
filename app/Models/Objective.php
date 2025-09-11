@@ -38,4 +38,9 @@ class Objective extends Model
     {
         return $this->belongsTo(User::class, 'completed_by_id');
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

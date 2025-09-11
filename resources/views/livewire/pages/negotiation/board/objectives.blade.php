@@ -4,7 +4,11 @@
 	use App\Enums\Objective\Status;
 	use App\Models\Objective;
 	use App\Models\User;
+	use App\DTOs\Objective\ObjectiveDTO;
 	use App\DTOs\Pin\PinDTO;
+	use App\Services\Objective\ObjectiveCreationService;
+	use App\Services\Objective\ObjectiveUpdatingService;
+	use App\Services\Objective\ObjectiveDestructionService;
 	use App\Services\Pin\PinCreationService;
 	use App\Services\Pin\PinDeletionService;
 	use App\Services\Pin\PinFetchingService;
@@ -100,25 +104,44 @@
 			]);
 
 			if ($this->editingId) {
+				// Get the existing objective to preserve other fields
 				$objective = Objective::findOrFail($this->editingId);
-				$objective->update([
-					'objective' => $this->objective,
-					'priority' => $this->priority,
-				]);
+
+				// Create an ObjectiveDTO with updated fields
+				$objectiveDTO = new ObjectiveDTO(
+					id: $this->editingId,
+					tenant_id: $objective->tenant_id,
+					negotiation_id: $objective->negotiation_id,
+					created_by_id: $objective->created_by_id,
+					priority: $this->priority,
+					status: $objective->status->value,
+					objective: $this->objective,
+					created_at: now(),
+					updated_at: now()
+				);
+
+				// Use the service to update the objective
+				app(ObjectiveUpdatingService::class)->updateObjective($objectiveDTO, $this->editingId);
 
 				$this->dispatch('notify', [
 					'message' => 'Objective updated successfully!',
 					'type' => 'success',
 				]);
 			} else {
-				Objective::create([
-					'tenant_id' => authUser()->tenant_id,
-					'negotiation_id' => $this->negotiation_id,
-					'created_by_id' => auth()->id(),
-					'objective' => $this->objective,
-					'priority' => $this->priority,
-					'status' => Status::pending->value,
-				]);
+				// Create an ObjectiveDTO
+				$objectiveDTO = new ObjectiveDTO(
+					tenant_id: authUser()->tenant_id,
+					negotiation_id: $this->negotiation_id,
+					created_by_id: auth()->id(),
+					priority: $this->priority,
+					status: Status::pending->value,
+					objective: $this->objective,
+					created_at: now(),
+					updated_at: now()
+				);
+
+				// Use the service to create the objective
+				app(ObjectiveCreationService::class)->createObjective($objectiveDTO);
 
 				$this->dispatch('notify', [
 					'message' => 'Objective created successfully!',
@@ -151,8 +174,8 @@
 
 		public function delete(int $id):void
 		{
-			$objective = Objective::findOrFail($id);
-			$objective->delete();
+			// Use the service to delete the objective
+			app(ObjectiveDestructionService::class)->deleteObjective($id);
 
 			$this->dispatch('notify', [
 				'message' => 'Objective deleted successfully!',
@@ -162,12 +185,22 @@
 
 		public function complete(int $id):void
 		{
+			// Get the existing objective to preserve other fields
 			$objective = Objective::findOrFail($id);
-			$objective->update([
-				'status' => Status::completed->value,
-				'completed_at' => now(),
-				'completed_by_id' => auth()->id(),
-			]);
+
+			// Create an ObjectiveDTO with updated fields
+			$objectiveDTO = new ObjectiveDTO(
+				id: $id,
+				tenant_id: $objective->tenant_id,
+				negotiation_id: $objective->negotiation_id,
+				created_by_id: $objective->created_by_id,
+				objective: $objective->objective,
+				priority: $objective->priority->value,
+				status: Status::completed->value
+			);
+
+			// Use the service to update the objective
+			app(ObjectiveUpdatingService::class)->updateObjective($objectiveDTO, $id);
 
 			$this->dispatch('notify', [
 				'message' => 'Objective marked as complete!',
@@ -266,7 +299,7 @@
 						</div>
 						<div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500 dark:text-gray-400">
 							<p class="whitespace-nowrap">
-								<time datetime="{{ $objective->created_at->toIso8601String() }}">{{ $objective->created_at->format('F j, Y') }}</time>
+								<time datetime="{{ $objective->created_at ? $objective->created_at->toIso8601String() : now()->toIso8601String() }}">{{ $objective->created_at ? $objective->created_at->format('F j, Y') : now()->format('F j, Y') }}</time>
 							</p>
 							<svg
 									viewBox="0 0 2 2"
@@ -289,7 +322,7 @@
 								</svg>
 								<p class="whitespace-nowrap">
 									Completed on
-									<time datetime="{{ $objective->completed_at->toIso8601String() }}">{{ $objective->completed_at->format('F j, Y') }}</time>
+									<time datetime="{{ $objective->completed_at ? $objective->completed_at->toIso8601String() : now()->toIso8601String() }}">{{ $objective->completed_at ? $objective->completed_at->format('F j, Y') : now()->format('F j, Y') }}</time>
 								</p>
 								<svg
 										viewBox="0 0 2 2"

@@ -3,7 +3,7 @@
 namespace App\Services\MoodLog;
 
 use App\Contracts\MoodLogRepositoryInterface;
-use App\Models\moodLog;
+use App\Models\MoodLog;
 
 class MoodLogDestructionService
 {
@@ -14,8 +14,39 @@ class MoodLogDestructionService
     /**
      * Delete a mood log by ID.
      */
-    public function deleteMoodLog($id): ?moodLog
+    public function deleteMoodLog($id): ?MoodLog
     {
-        return $this->moodLogRepository->deleteMoodLog($id);
+        // Get the mood log before deleting it
+        $moodLog = $this->moodLogRepository->getMoodLog($id);
+
+        if (!$moodLog) {
+            return null;
+        }
+
+        $log = $this->addLogEntry($moodLog);
+        logger($log);
+
+        $deletedMoodLog = $this->moodLogRepository->deleteMoodLog($id);
+        event(new MoodDeletedEvent($moodLog));
+
+        return $deletedMoodLog;
+    }
+
+    private function addLogEntry(MoodLog $moodLog)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'moodlog.deleted',
+            headline: "{$user->name} deleted a mood log",
+            about: $moodLog,      // loggable target
+            by: $user,            // actor
+            description: "Mood log deleted for subject",
+            properties: [
+                'subject_id' => $moodLog->subject_id,
+                'logged_by_id' => $moodLog->logged_by_id,
+            ],
+        );
     }
 }

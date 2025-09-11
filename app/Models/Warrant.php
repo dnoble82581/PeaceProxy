@@ -37,4 +37,9 @@ class Warrant extends Model
 
         return 0;
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

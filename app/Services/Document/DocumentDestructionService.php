@@ -9,9 +9,13 @@ class DocumentDestructionService
 {
     /**
      * @param DocumentRepositoryInterface $documentRepository
+     * @param LogService|null $logService
      */
-    public function __construct(protected DocumentRepositoryInterface $documentRepository)
-    {
+    public function __construct(
+        protected DocumentRepositoryInterface $documentRepository,
+        protected ?LogService $logService = null
+    ) {
+        $this->logService = $logService ?? app(LogService::class);
     }
 
     /**
@@ -22,6 +26,14 @@ class DocumentDestructionService
      */
     public function deleteDocument(int $documentId): ?Document
     {
+        // Get the document before deleting it
+        $document = $this->documentRepository->getDocument($documentId);
+
+        if ($document) {
+            $log = $this->addLogEntry($document);
+            logger($log);
+        }
+
         return $this->documentRepository->deleteDocument($documentId);
     }
 
@@ -77,5 +89,32 @@ class DocumentDestructionService
     public function deleteNegotiationDocuments(int $negotiationId): int
     {
         return $this->deleteDocumentsByDocumentable('App\\Models\\Negotiation', $negotiationId);
+    }
+
+    /**
+     * Add a log entry for document deletion
+     *
+     * @param Document $document
+     * @return mixed
+     */
+    private function addLogEntry(Document $document)
+    {
+        $user = auth()->user();
+
+        return $this->logService->write(
+            tenantId: tenant()->id,
+            event: 'document.deleted',
+            headline: "{$user->name} deleted a document",
+            about: $document,      // loggable target
+            by: $user,            // actor
+            description: str($document->name)->limit(140),
+            properties: [
+                'negotiation_id' => $document->negotiation_id,
+                'documentable_type' => $document->documentable_type,
+                'documentable_id' => $document->documentable_id,
+                'file_type' => $document->file_type,
+                'file_size' => $document->file_size,
+            ],
+        );
     }
 }

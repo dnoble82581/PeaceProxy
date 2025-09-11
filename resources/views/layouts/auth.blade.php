@@ -10,7 +10,7 @@
 		x-bind:class="{ 'dark bg-dark-900': darkTheme, 'bg-white': !darkTheme }">
 
 {{-- Auth Card --}}
-<div class="w-full {{ Route::currentRouteName()==='login' ? 'max-w-lg' : 'max-w-4xl' }} bg-white dark:bg-dark-800 shadow-xl rounded-2xl p-8">
+<div class="w-full {{ Route::currentRouteName()==='login' ? 'max-w-lg lg:max-w-4xl' : 'max-w-4xl' }} bg-white dark:bg-dark-800 shadow-xl rounded-2xl p-8">
 	<a href="/">
 		<x-logos.app-logo-icon
 				main="text-2xl"

@@ -5,6 +5,7 @@ namespace App\Services\Demand;
 use App\Contracts\DemandRepositoryInterface;
 use App\DTOs\Demand\DemandDTO;
 use App\Events\Demand\DemandCreatedEvent;
+use App\Models\Demand;
 
 class DemandCreationService
 {
@@ -16,9 +17,31 @@ class DemandCreationService
     {
         $demand = $this->demandRepository->createDemand($demandDTO->toArray());
 
+        $log = $this->addLogEntry($demand);
+        logger($log);
+
         // Dispatch event
         event(new DemandCreatedEvent($demand));
 
         return $demand;
+    }
+
+    private function addLogEntry(Demand $demand)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'demand.created',
+            headline: "{$user->name} created a demand",
+            about: $demand,      // loggable target
+            by: $user,            // actor
+            description: str($demand->title)->limit(140),
+            properties: [
+                'negotiation_id' => $demand->negotiation_id,
+                'category' => $demand->category?->value,
+                'status' => $demand->status?->value,
+            ],
+        );
     }
 }
