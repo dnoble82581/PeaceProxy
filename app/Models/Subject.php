@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use PHPUnit\Framework\TestStatus\Warning;
-use Propaganistas\LaravelPhone\Casts\RawPhoneNumberCast;
 
 class Subject extends Model
 {
@@ -26,7 +25,6 @@ class Subject extends Model
         'current_mood' => MoodLevels::class,
         'status' => SubjectNegotiationStatuses::class,
         'risk_factors' => 'array',
-        'phone' => RawPhoneNumberCast::class.':US',
         'alias' => 'array',
     ];
 
