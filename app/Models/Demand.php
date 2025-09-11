@@ -10,6 +10,7 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Demand extends Model
 {
@@ -50,5 +51,10 @@ class Demand extends Model
             'channel' => Channels::class,
             'deadline_date' => 'date',
         ];
+    }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
     }
 }

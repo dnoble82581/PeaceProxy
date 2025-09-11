@@ -1,18 +1,20 @@
 <!-- Google tag (gtag.js) -->
-<script
-		async
-		src="https://www.googletagmanager.com/gtag/js?id=G-4ERSE25W2Q"></script>
-<script>
-	window.dataLayer = window.dataLayer || []
+@if(app()->environment('production'))
+	<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=G-4ERSE25W2Q"></script>
+	<script>
+		window.dataLayer = window.dataLayer || []
 
-	function gtag () {dataLayer.push(arguments)}
+		function gtag () {dataLayer.push(arguments)}
 
-	gtag('js', new Date())
+		gtag('js', new Date())
 
-	gtag('config', 'G-4ERSE25W2Q', {
-		'cookie_flags': 'SameSite=None;Secure;Partitioned'
-	})
-</script>
+		gtag('config', 'G-4ERSE25W2Q', {
+			'cookie_flags': 'SameSite=None;Secure;Partitioned'
+		})
+	</script>
+@endif
 <meta charset="UTF-8" />
 <meta
 		name="viewport"
@@ -29,7 +31,7 @@
 		content="{{ $description ?? 'Law enforcement negotiation dashboard.' }}">
 <link
 		rel="icon"
-		href="{{ asset('favicon.ico') }}" />
+		href="{{ asset('favicon.png') }}" />
 
 <link
 		rel="stylesheet"
@@ -40,7 +42,12 @@
 		href="{{ asset('assets/favicon.png') }}"
 		type="image/png">
 
+{{--<script>--}}
+{{--	// Patch to make touch listeners passive--}}
+{{--	document.addEventListener('touchstart', function () {}, { passive: true })--}}
+{{--</script>--}}
+
 {{-- Styles --}}
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+@vite(['resources/js/app.js', 'resources/css/app.css'])
 @livewireStyles
 @stack('head')

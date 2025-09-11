@@ -4,6 +4,7 @@ namespace App\Services\Warrant;
 
 use App\Contracts\WarrantRepositoryInterface;
 use App\DTOs\Warrant\WarrantDTO;
+use App\Models\Warrant;
 
 class WarrantCreationService
 {
@@ -13,6 +14,32 @@ class WarrantCreationService
 
     public function createWarrant(WarrantDTO $data)
     {
-        return $this->warrantRepository->createWarrant($data->toArray());
+        $warrant = $this->warrantRepository->createWarrant($data->toArray());
+
+        $log = $this->addLogEntry($warrant);
+        logger($log);
+
+        return $warrant;
+    }
+
+    private function addLogEntry(Warrant $warrant)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'warrant.created',
+            headline: "{$user->name} created a warrant",
+            about: $warrant,      // loggable target
+            by: $user,            // actor
+            description: str($warrant->offense_description)->limit(140),
+            properties: [
+                'subject_id' => $warrant->subject_id,
+                'type' => $warrant->type?->value,
+                'status' => $warrant->status?->value,
+                'bond_amount' => $warrant->bond_amount,
+                'bond_type' => $warrant->bond_type?->value,
+            ],
+        );
     }
 }

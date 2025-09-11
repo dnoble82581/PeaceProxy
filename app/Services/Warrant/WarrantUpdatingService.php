@@ -13,6 +13,36 @@ class WarrantUpdatingService
 
     public function updateWarrant(WarrantDTO $warrantDataDTO, $warrantId)
     {
-        return $this->warrantRepository->updateWarrant($warrantDataDTO->toArray(), $warrantId);
+        $warrant = $this->warrantRepository->updateWarrant($warrantDataDTO->toArray(), $warrantId);
+
+        if (!$warrant) {
+            return null;
+        }
+
+        $log = $this->addLogEntry($warrant);
+        logger($log);
+
+        return $warrant;
+    }
+
+    private function addLogEntry(Warrant $warrant)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'warrant.updated',
+            headline: "{$user->name} updated a warrant",
+            about: $warrant,      // loggable target
+            by: $user,            // actor
+            description: str($warrant->offense_description)->limit(140),
+            properties: [
+                'subject_id' => $warrant->subject_id,
+                'type' => $warrant->type?->value,
+                'status' => $warrant->status?->value,
+                'bond_amount' => $warrant->bond_amount,
+                'bond_type' => $warrant->bond_type?->value,
+            ],
+        );
     }
 }

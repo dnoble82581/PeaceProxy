@@ -10,6 +10,25 @@ use Illuminate\Support\Facades\DB;
 
 class ContactPointCreationService
 {
+    private function addLogEntry(ContactPoint $contactPoint)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'contactpoint.created',
+            headline: "{$user->name} created a contact point",
+            about: $contactPoint,      // loggable target
+            by: $user,                 // actor
+            description: "Contact point created: {$contactPoint->kind} - {$contactPoint->label}",
+            properties: [
+                'contactable_type' => $contactPoint->contactable_type,
+                'contactable_id' => $contactPoint->contactable_id,
+                'kind' => $contactPoint->kind,
+                'is_primary' => $contactPoint->is_primary,
+            ],
+        );
+    }
     /**
      * Create a new contact point
      *
@@ -37,7 +56,7 @@ class ContactPointCreationService
      */
     public function createContactPoint(array $data): ContactPoint
     {
-        return DB::transaction(function () use ($data) {
+        $contactPoint = DB::transaction(function () use ($data) {
             // Handle the case where subject_id is provided instead of contactable_id
             $contactableId = $data['contactable_id'] ?? null;
             $contactableType = $data['contactable_type'] ?? null;
@@ -90,5 +109,10 @@ class ContactPointCreationService
 
             return $contactPoint;
         });
+
+        $log = $this->addLogEntry($contactPoint);
+        logger($log);
+
+        return $contactPoint;
     }
 }

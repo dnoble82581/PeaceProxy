@@ -36,19 +36,15 @@
  		// $this->form->confidence_score = $trigger->confidence_score;
  	}
 
-		public function updateTrigger():void
-		{
-			$validated = $this->form->validate();
-			$dto = TriggerDTO::fromArray($validated);
-			$trigger = app(TriggerUpdatingService::class)->updateTrigger($this->trigger->id, $dto);
+ 	public function updateTrigger():void
+ 	{
+ 		$validated = $this->form->validate();
+ 		$dto = TriggerDTO::fromArray($validated);
+ 		$trigger = app(TriggerUpdatingService::class)->updateTrigger($this->trigger->id, $dto);
 
-			// Emit an event that the trigger was updated
-			if (class_exists(TriggerUpdatedEvent::class) && $trigger) {
-				event(new TriggerUpdatedEvent($trigger));
-			}
-
-			$this->dispatch('close-modal', $this->trigger->id);
-		}
+ 		// No need to emit event here as the service already does it
+ 		$this->dispatch('close-modal', $this->trigger->id);
+ 	}
 	}
 
 ?>

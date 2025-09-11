@@ -74,4 +74,12 @@ class Document extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Get the logs for this document.
+     */
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

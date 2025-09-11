@@ -45,4 +45,9 @@ class Hook extends Model
     {
         return $this->belongsTo(User::class, 'created_by_id');
     }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

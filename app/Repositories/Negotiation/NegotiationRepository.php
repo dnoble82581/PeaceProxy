@@ -32,7 +32,7 @@ class NegotiationRepository implements NegotiationRepositoryInterface
     public function getNegotiation($id)
     {
         // This is needed for updateNegotiation and deleteNegotiation
-        return Negotiation::find($id);
+        return Negotiation::with('creator')->find($id);
     }
 
     public function deleteNegotiation($id)

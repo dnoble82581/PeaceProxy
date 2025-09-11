@@ -20,8 +20,35 @@ class HostageUpdatingService
     {
         $hostage = $this->hostageRepository->updateHostage($hostageId, $hostageDTO->toArray());
 
+        if (!$hostage) {
+            return null;
+        }
+
+        $log = $this->addLogEntry($hostage);
+        logger($log);
+
         event(new HostageUpdatedEvent($hostage));
 
         return $hostage;
+    }
+
+    private function addLogEntry(Hostage $hostage)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'hostage.updated',
+            headline: "{$user->name} updated a hostage",
+            about: $hostage,      // loggable target
+            by: $user,            // actor
+            description: str($hostage->name)->limit(140),
+            properties: [
+                'negotiation_id' => $hostage->negotiation_id,
+                'is_primary_hostage' => $hostage->is_primary_hostage,
+                'risk_level' => $hostage->risk_level?->value,
+                'injury_status' => $hostage->injury_status?->value,
+            ],
+        );
     }
 }

@@ -1,11 +1,13 @@
 <?php
 
+	use App\DTOs\Trigger\TriggerDTO;
 	use App\Events\Trigger\TriggerCreatedEvent;
 	use App\Livewire\Forms\CreateTriggerForm;
  use App\Enums\General\ConfidenceScore;
  use App\Enums\Trigger\TriggerCategories;
  use App\Enums\Trigger\TriggerSensitivityLevels;
 	use App\Models\Trigger;
+	use App\Services\Trigger\TriggerCreationService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 
@@ -20,32 +22,31 @@
 			$this->negotiationId = $negotiationId;
 		}
 
-		public function saveTrigger():void
-		{
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by_id = Auth::user()->id;
-			$this->form->subject_id = $this->subjectId;
-			$this->form->negotiation_id = $this->negotiationId;
+ 	public function saveTrigger():void
+ 	{
+ 		$this->form->tenant_id = Auth::user()->tenant_id;
+ 		$this->form->created_by_id = Auth::user()->id;
+ 		$this->form->subject_id = $this->subjectId;
+ 		$this->form->negotiation_id = $this->negotiationId;
 
-			$validated = $this->form->validate();
+ 		$validated = $this->form->validate();
 
-			// Create the trigger
-			$trigger = Trigger::create($validated);
+ 		// Create a DTO from the validated data
+ 		$triggerDTO = TriggerDTO::fromArray($validated);
+		
+ 		// Use the service to create the trigger
+ 		$triggerService = app(TriggerCreationService::class);
+ 		$trigger = $triggerService->createTrigger($triggerDTO);
 
-			$this->dispatch('close-modal', $trigger->id);
+ 		$this->dispatch('close-modal', $trigger->id);
 
-			// Emit an event that the trigger was created
-			if (class_exists(TriggerCreatedEvent::class)) {
-				event(new TriggerCreatedEvent($trigger));
-			}
+ 		// Reset the form
+ 		$this->form->reset();
 
-			// Reset the form
-			$this->form->reset();
-
-			// Set default values again
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by_id = Auth::user()->id;
-		}
+ 		// Set default values again
+ 		$this->form->tenant_id = Auth::user()->tenant_id;
+ 		$this->form->created_by_id = Auth::user()->id;
+ 	}
 	}
 
 ?>

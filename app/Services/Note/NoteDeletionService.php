@@ -16,6 +16,35 @@ class NoteDeletionService
 
     public function deleteNote($id): ?Note
     {
+        // Get the note before deleting it
+        $note = $this->noteRepository->getNote($id);
+
+        if (!$note) {
+            return null;
+        }
+
+        $log = $this->addLogEntry($note);
+        logger($log);
+
         return $this->noteRepository->deleteNote($id);
+    }
+
+    private function addLogEntry(Note $note)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'note.deleted',
+            headline: "{$user->name} deleted a note",
+            about: $note,      // loggable target
+            by: $user,            // actor
+            description: str($note->title)->limit(140),
+            properties: [
+                'negotiation_id' => $note->negotiation_id,
+                'is_private' => $note->is_private,
+                'pinned' => $note->pinned,
+            ],
+        );
     }
 }

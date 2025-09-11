@@ -10,6 +10,9 @@ class NegotiationForm extends Form
     #[Validate(['required', 'integer'])]
     public $tenant_id = '';
 
+    #[Validate(['nullable', 'integer'])]
+    public $created_by = null;
+
     #[Validate(['required'])]
     public $title = '';
 
