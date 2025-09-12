@@ -31,12 +31,20 @@ class Image extends Model
     public function url(): string
     {
         try {
-            // Use the disk specified in the image record, or default to 's3_public'
-            $disk = $this->disk ?? 's3_public';
+            // If the url property is already set and not empty, use it
+            if (!empty($this->url)) {
+                return $this->url;
+            }
+
+            // Use the disk specified in the image record, or use the default filesystem disk
+            $disk = $this->disk ?? config('filesystems.default', 'local');
 
             // Check if the file exists in storage
             if (Storage::disk($disk)->exists($this->path)) {
-                return Storage::disk($disk)->url($this->path);
+                // Generate and cache the URL
+                $url = Storage::disk($disk)->url($this->path);
+                $this->update(['url' => $url]);
+                return $url;
             }
 
             // Return a default image URL if the file doesn't exist

@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Objective;
 use App\Models\User;
+use App\Services\Negotiation\NegotiationFetchingService;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ObjectivePolicy
@@ -24,6 +25,9 @@ class ObjectivePolicy
 
     public function update(User $user, Objective $objective): bool
     {
+        $negotiation = app(NegotiationFetchingService::class)->getNegotiationById($objective->negotiation_id);
+        return authUserRole($negotiation)->value === 'team_leader';
+
     }
 
     public function delete(User $user, Objective $objective): bool

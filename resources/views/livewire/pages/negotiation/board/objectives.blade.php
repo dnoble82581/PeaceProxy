@@ -341,9 +341,18 @@
 								icon="ellipsis-vertical"
 								static>
 							<x-dropdown.items
-									wire:click="edit({{ $objective->id }})"
-									icon="pencil-square">Edit
+									icon="pencil-square">
+								<button
+										@if(authUser()->cannot('update', $objective))
+											disabled
+										@endif
+										wire:click="edit({{ $objective->id }})"
+										class="w-full hover:cursor-pointer disabled:cursor-not-allowed
+									disabled:text-gray-400 text-left">
+									Edit
+								</button>
 							</x-dropdown.items>
+
 							@if($objective->status !== 'completed')
 								<x-dropdown.items
 										wire:click="complete({{ $objective->id }})"

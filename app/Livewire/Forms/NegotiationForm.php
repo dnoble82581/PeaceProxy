@@ -13,7 +13,7 @@ class NegotiationForm extends Form
     #[Validate(['nullable', 'integer'])]
     public $created_by = null;
 
-    #[Validate(['required'])]
+    #[Validate(['required', 'unique:negotiations,title'])]
     public $title = '';
 
     #[Validate(['nullable'])]
@@ -56,5 +56,5 @@ class NegotiationForm extends Form
     public $duration_minutes = null;
 
     #[Validate(['nullable'])]
-    public $tags = '';
+    public $tags = null;
 }
