@@ -34,32 +34,36 @@
 		{
 			$this->imageUrls = [];
 
-			// Only proceed if primarySubject is not null
 			if ($this->primarySubject) {
-				// Load images if not already loaded
 				if (!$this->primarySubject->relationLoaded('images')) {
 					$this->primarySubject->load('images');
 				}
 
-				// Get all image URLs
 				foreach ($this->primarySubject->images as $image) {
-					// Check if url property exists and is not null
-					if (isset($image->url)) {
-						$this->imageUrls[] = $image->url;
-					} else {
-						// Fall back to url() method
-						$this->imageUrls[] = $image->url();
+					// Prefer a non-empty property value; otherwise call the method
+					$url = $image->url ?? null;
+
+					if (!filled($url) && method_exists($image, 'url')) {
+						$url = $image->url();
+					}
+
+					// Keep only non-empty, non-whitespace strings
+					if (is_string($url) && trim($url) !== '') {
+						$this->imageUrls[] = $url;
 					}
 				}
 
-				// If no images, use the temporary image URL
+				// De-dup and reindex (optional hardening)
+				$this->imageUrls = array_values(array_unique($this->imageUrls));
+
+				// Fallback if we still have nothing
 				if (empty($this->imageUrls)) {
 					$this->imageUrls[] = $this->primarySubject->temporaryImageUrl();
 				}
 			}
 		}
 
-		public function loadRecentMoods()
+		public function loadRecentMoods():void
 		{
 			if ($this->primarySubject) {
 				// Load recent mood logs if not already loaded
@@ -197,11 +201,11 @@
             currentImageUrl() {
                 return this.imageUrls[this.currentIndex];
             },
-            
+
             openPhoneModal() {
                 this.showPhoneModal = true;
             },
-            
+
             closePhoneModal() {
                 this.showPhoneModal = false;
             }
