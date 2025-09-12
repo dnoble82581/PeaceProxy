@@ -35,6 +35,12 @@
 				->get();
 		}
 
+		public function openActivityLogModal()
+		{
+			$this->loadActivityLogs();
+			$this->showActivityLogModal = true;
+		}
+
 		public function showLog($logId)
 		{
 			$this->selectedLog = null;
@@ -173,7 +179,7 @@
 		<x-button
 				color="emerald"
 				flat
-				wire:click="$toggle('showActivityLogModal')"
+				wire:click="openActivityLogModal"
 				sm
 				icon="clock"
 				class="relative">
@@ -378,7 +384,7 @@
 					<div class="space-y-4">
 						@foreach($this->activityLogs as $log)
 							<div
-									class="bg-gray-100 dark:bg-dark-700 rounded-md p-3 flex items-start group shadow-sm hover:bg-gray-200 dark:hover:bg-dark-600 cursor-pointer"
+									class="bg-gray-100 dark:bg-dark-700 rounded-md p-3 flex items-center group shadow-sm hover:bg-gray-200 dark:hover:bg-dark-600 cursor-pointer"
 									wire:click="showLog({{ $log->id }})">
 								<div class="text-emerald-500 mr-2 flex-shrink-0">
 									<svg
@@ -397,6 +403,11 @@
 									<p class="text-xs text-gray-500 dark:text-dark-300">
 										{{ $log->event }} · {{ $log->occurred_at->diffForHumans() }}
 									</p>
+								</div>
+								<div>
+									<x-icon
+											name="chevron-right"
+											class="h-5 w-5 text-gray-500 dark:text-gray-400" />
 								</div>
 							</div>
 						@endforeach
@@ -438,7 +449,9 @@
 					@if($selectedLog->description)
 						<div class="mb-4">
 							<h4 class="font-medium text-gray-800 dark:text-gray-200">Description</h4>
-       <p class="text-gray-700 dark:text-gray-300">{{ $selectedLog->description }}</p>
+							<p class="text-gray-700 dark:text-gray-300">
+								{{ truncateString($selectedLog->description, 50) }}
+							</p>
 						</div>
 					@endif
 

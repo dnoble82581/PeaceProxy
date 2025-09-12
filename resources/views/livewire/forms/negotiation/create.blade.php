@@ -136,42 +136,25 @@
 				->createNegotiationUser($negotiationUserDTO);
 		}
 
-		public function saveNegotiation():Redirector|null
+		public function saveNegotiation():Redirector
 		{
-			// Validate the form data
 			$validated = $this->negotiationForm->validate();
 
-			// Check if a negotiation with the same title already exists
-			$existingNegotiation = Negotiation::where('title', $this->negotiationForm->title)->first();
+			$newNegotiation = Negotiation::create($validated);
 
-			if ($existingNegotiation) {
-				// Add a custom error message for duplicate title
-				$this->addError('negotiationForm.title', 'The negotiation title has already been taken.');
-				return null;
-			}
+			$newSubject = $this->createSubject();
 
-			try {
-				// Create the negotiation
-				$newNegotiation = Negotiation::create($validated);
+			$this->createNegotiationSubject(
+				$newNegotiation->id,
+				$newSubject->id,
+				SubjectNegotiationRoles::primary
+			);
 
-				$newSubject = $this->createSubject();
+			// Add the authenticated user to the negotiation
+			$this->addAuthUserToNegotiation($newNegotiation->id);
 
-				$this->createNegotiationSubject(
-					$newNegotiation->id,
-					$newSubject->id,
-					SubjectNegotiationRoles::primary
-				);
-
-				// Add the authenticated user to the negotiation
-				$this->addAuthUserToNegotiation($newNegotiation->id);
-
-				return redirect(route('negotiation-noc',
-					['negotiation' => $newNegotiation->title, 'tenantSubdomain' => tenant()->subdomain]));
-			} catch (\Exception $e) {
-				// Handle any other exceptions that might occur
-				$this->addError('negotiationForm.title', 'An error occurred while creating the negotiation.');
-				return null;
-			}
+			return redirect(route('negotiation-noc',
+				['negotiation' => $newNegotiation->title, 'tenantSubdomain' => tenant()->subdomain]));
 		}
 
 		public function cancel()
