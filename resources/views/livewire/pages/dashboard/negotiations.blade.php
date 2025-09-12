@@ -20,10 +20,8 @@
 		#[Validate('required')]
 		public string $choseRole = '';
 
-  #[Validate('required')]
-	public string $title = '';
-	
-	// Custom validation rules for title uniqueness will be applied in the saveNegotiation method
+		#[Validate('required')]
+		public string $title = '';
 
 		#[Validate('required')]
 		public string $location = '';
@@ -62,44 +60,27 @@
 			$this->editModal = true;
 		}
 
- 	public function saveNegotiation():void
- 	{
- 		// Validate required fields
- 		$this->validate();
+		public function saveNegotiation():void
+		{
+			$this->validate();
 
- 		// Find the negotiation in the database
- 		$negotiation = Negotiation::find($this->selectedNegotiation);
+			// Find the negotiation in the database
+			$negotiation = Negotiation::find($this->selectedNegotiation);
 
- 		// Custom validation for unique title
- 		$existingNegotiation = Negotiation::where('title', $this->title)
- 			->where('id', '!=', $this->selectedNegotiation)
- 			->first();
+			// Update the negotiation
+			$negotiation->update([
+				'title' => $this->title,
+				'location' => $this->location,
+				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
+				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+			]);
 
- 		if ($existingNegotiation) {
- 			// Add a custom error message for duplicate title
- 			$this->addError('title', 'The negotiation title has already been taken.');
- 			return;
- 		}
+			// Close the modal
+			$this->editModal = false;
 
- 		try {
- 			// Update the negotiation
- 			$negotiation->update([
- 				'title' => $this->title,
- 				'location' => $this->location,
- 				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
- 				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
- 			]);
-
- 			// Close the modal
- 			$this->editModal = false;
-
- 			// Refresh the negotiations list
- 			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
- 		} catch (\Exception $e) {
- 			// Handle any other exceptions that might occur
- 			$this->addError('title', 'An error occurred while saving the negotiation.');
- 		}
- 	}
+			// Refresh the negotiations list
+			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+		}
 
 		public function openDeleteModal(int $negotiationId):void
 		{
@@ -178,7 +159,7 @@
 
 ?>
 
-<div>
+<div class="">
 	<div class="">
 		<div class="mx-auto sm:px-4 lg:px-2">
 			<div class="bg-white dark:bg-dark-700 overflow-hidden shadow-sm sm:rounded-lg">
@@ -290,24 +271,34 @@
 																	center
 																	wire="roleModal"
 																	title="Choose Your Role">
-																<p>Choose your role in this negotiation</p>
-																<div class="mt-4 space-y-4">
-																	<x-select.styled
-																			placeholder="Select Role..."
+																{{--																<p>Choose your role in this negotiation</p>--}}
+																<div class="mb-4">
+																	<label
+																			class="block mb-2"
+																			for="chooseRole">Choose your role in this
+																	                         negotiation</label>
+																	<select
+																			class="text-black w-full dark:text-dark-300 dark:bg-dark-700 rounded-md border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+																			placeholder="test"
 																			wire:model="choseRole"
-																			:request="route('enums.user-negotiation-roles')"
-																	/>
-																	<div class="space-x-2">
-																		<x-button wire:click="enterNegotiation({{ $selectedNegotiation }})">
-																			Enter
-																		</x-button>
-																		<x-button
-																				wire:click="$toggle('roleModal')"
-																				color="zinc">Cancel
-																		</x-button>
-																	</div>
-
+																			id="chooseRole"
+																			class="mt-2">
+																		@foreach(\App\Enums\User\UserNegotiationRole::cases() as $role)
+																			<option value="{{ $role->value }}">{{ $role->label() }}</option>
+																		@endforeach
+																	</select>
 																</div>
+																<div class="space-x-2">
+																	<x-button wire:click="enterNegotiation({{ $selectedNegotiation }})">
+																		Enter
+																	</x-button>
+																	<x-button
+																			wire:click="$toggle('roleModal')"
+																			color="zinc">Cancel
+																	</x-button>
+																</div>
+
+
 															</x-modal>
 
 															<!-- Edit Negotiation Modal -->
@@ -323,9 +314,6 @@
 																				wire:model="title"
 																				placeholder="Enter negotiation title"
 																				required />
-																		@error('title')
-																			<span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-																		@enderror
 																	</div>
 																	<div>
 																		<x-input

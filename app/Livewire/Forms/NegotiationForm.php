@@ -56,5 +56,5 @@ class NegotiationForm extends Form
     public $duration_minutes = null;
 
     #[Validate(['nullable'])]
-    public $tags = null;
+    public $tags = '';
 }

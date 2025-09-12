@@ -108,7 +108,7 @@
 
 				// Get all contact points for the subject
 				$contactPoints = app(ContactPointFetchingService::class)->getContactPointsBySubject($this->primarySubject);
-				
+
 				if ($contactPoints->isEmpty()) {
 					return;
 				}
@@ -124,16 +124,14 @@
 
 				// Try to find a primary email contact point, or use the first email as fallback
 				$primaryEmail = $emailContactPoints->firstWhere('is_primary', true) ?? $emailContactPoints->first();
-				
+
 				// Get the email address from the related ContactEmail model
 				if ($primaryEmail && isset($primaryEmail->email) && $primaryEmail->email && isset($primaryEmail->email->email)) {
 					$this->primaryEmailAddress = $primaryEmail->email->email;
-				} 
-				// Check for alternative ways the email might be stored
+				} // Check for alternative ways the email might be stored
 				elseif ($primaryEmail && isset($primaryEmail->address)) {
 					$this->primaryEmailAddress = $primaryEmail->address;
-				}
-				elseif ($primaryEmail && isset($primaryEmail->value)) {
+				} elseif ($primaryEmail && isset($primaryEmail->value)) {
 					$this->primaryEmailAddress = $primaryEmail->value;
 				}
 			} catch (\Exception $e) {
@@ -183,9 +181,9 @@
 		<div
 				class="inline text-center"
 				x-data="{
-            imageUrls: {{ json_encode($imageUrls) }},
-            currentIndex: 0,
-            totalImages: {{ count($imageUrls) }},
+           imageUrls: @js($imageUrls),
+           currentIndex: 0,
+           totalImages: @js(count($imageUrls)),
             showPhoneModal: false,
 
             nextImage() {
@@ -212,7 +210,7 @@
 			<div class="relative group">
 				<img
 						class="rounded-lg size-24"
-						x-bind:src="currentImageUrl()"
+						:src="currentImageUrl()"
 						alt="">
 				<!-- Overlay with buttons that appear on hover -->
 				<div class="absolute inset-0 bg-black/50 bg-opacity-25 rounded-lg flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

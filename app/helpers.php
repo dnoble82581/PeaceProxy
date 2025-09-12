@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Negotiation;
 use App\Models\Tenant;
 use App\Models\User;
 
@@ -35,20 +34,11 @@ function authUserRole($negotiation)
     // $role will now contain the role as a string.
 }
 
-/**
- * Check if a user is a participant in a negotiation.
- *
- * This function checks if the user exists in the negotiation_users pivot table
- * for the specified negotiation, regardless of their role or status.
- *
- * @param User $user The user to check
- * @param Negotiation $negotiation The negotiation to check
- * @return bool True if the user is a participant, false otherwise
- */
-function isUserInNegotiation(User $user, Negotiation $negotiation): bool
+function truncateString($string, $maxLength)
 {
-    return $negotiation->users()
-       ->where('user_id', $user->id)
-       ->whereNull('negotiation_users.left_at') // Only consider active participations
-       ->exists();
+    $tuncatedString = strlen($string) > $maxLength
+        ? substr($string, 0, $maxLength).'...'
+        : $string;
+
+    return $tuncatedString;
 }
