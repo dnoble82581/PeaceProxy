@@ -3,6 +3,7 @@
 	use App\Models\Negotiation;
 	use App\Models\User;
 	use App\Models\Tenant;
+	use App\Models\Log;
 	use App\Enums\Negotiation\NegotiationStatuses;
 	use App\Enums\User\UserNegotiationRole;
 	use App\Services\Auth\LogoutService;
@@ -19,6 +20,19 @@
 		public $userRolesData;
 		public $userActivityData;
 		public $tenantInfo;
+		public $recentLogs;
+		
+		// Filter properties
+		public $selectedUser = null;
+		public $selectedEvent = null;
+		public $selectedSeverity = null;
+		public $dateFrom = null;
+		public $dateTo = null;
+		
+		// Filter options
+		public $userOptions = [];
+		public $eventOptions = [];
+		public $severityOptions = [];
 
 		public function mount()
 		{
@@ -161,6 +175,114 @@
 					'avgDuration' => round($negotiationStats->avg_duration ?? 0),
 				],
 			];
+			
+			// Initialize filter options
+			$this->initializeFilterOptions($tenantId);
+			
+			// Load logs with default filters
+			$this->loadLogs();
+		}
+		
+		/**
+		 * Initialize filter options for activity logs
+		 */
+		public function initializeFilterOptions($tenantId)
+		{
+			// Get unique users who have activity logs
+			$users = DB::table('logs')
+				->join('users', function($join) {
+					$join->on('logs.actor_id', '=', 'users.id')
+						->where('logs.actor_type', '=', 'App\\Models\\User');
+				})
+				->where('logs.tenant_id', $tenantId)
+				->select('users.id', 'users.name')
+				->distinct()
+				->orderBy('users.name')
+				->get();
+			
+			$this->userOptions = $users->map(function($user) {
+				return [
+					'id' => $user->id,
+					'name' => $user->name
+				];
+			})->toArray();
+			
+			// Get unique event types
+			$events = DB::table('logs')
+				->where('tenant_id', $tenantId)
+				->select('event')
+				->distinct()
+				->orderBy('event')
+				->pluck('event')
+				->toArray();
+			
+			$this->eventOptions = $events;
+			
+			// Get unique severity levels
+			$severities = DB::table('logs')
+				->where('tenant_id', $tenantId)
+				->select('severity')
+				->distinct()
+				->orderBy('severity')
+				->pluck('severity')
+				->toArray();
+			
+			$this->severityOptions = $severities;
+		}
+		
+		/**
+		 * Load logs with applied filters
+		 */
+		public function loadLogs()
+		{
+			$query = Log::forTenant(tenant()->id)
+				->orderBy('occurred_at', 'desc');
+			
+			// Apply user filter
+			if ($this->selectedUser) {
+				$query->where('actor_type', 'App\\Models\\User')
+					->where('actor_id', $this->selectedUser);
+			}
+			
+			// Apply event filter
+			if ($this->selectedEvent) {
+				$query->where('event', $this->selectedEvent);
+			}
+			
+			// Apply severity filter
+			if ($this->selectedSeverity) {
+				$query->where('severity', $this->selectedSeverity);
+			}
+			
+			// Apply date range filter
+			if ($this->dateFrom && $this->dateTo) {
+				$from = Carbon::parse($this->dateFrom)->startOfDay();
+				$to = Carbon::parse($this->dateTo)->endOfDay();
+				$query->whereBetween('occurred_at', [$from, $to]);
+			} elseif ($this->dateFrom) {
+				$from = Carbon::parse($this->dateFrom)->startOfDay();
+				$query->where('occurred_at', '>=', $from);
+			} elseif ($this->dateTo) {
+				$to = Carbon::parse($this->dateTo)->endOfDay();
+				$query->where('occurred_at', '<=', $to);
+			}
+			
+			// Get the logs
+			$this->recentLogs = $query->limit(10)->get();
+		}
+		
+		/**
+		 * Reset all filters and reload logs
+		 */
+		public function resetFilters()
+		{
+			$this->selectedUser = null;
+			$this->selectedEvent = null;
+			$this->selectedSeverity = null;
+			$this->dateFrom = null;
+			$this->dateTo = null;
+			
+			$this->loadLogs();
 		}
 	}
 
@@ -884,24 +1006,242 @@
 				<x-slot:header>
 					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">Recent Activity</h4>
 				</x-slot:header>
-				<div class="space-y-4 bg-gray-100/60 dark:bg-dark-700 p-4 rounded-lg">
-					<p class="text-sm text-center py-4">
-                        <span class="block mb-2">
-                            <svg
-		                            xmlns="http://www.w3.org/2000/svg"
-		                            class="h-10 w-10 mx-auto text-gray-400"
-		                            fill="none"
-		                            viewBox="0 0 24 24"
-		                            stroke="currentColor">
-                                <path
-		                                stroke-linecap="round"
-		                                stroke-linejoin="round"
-		                                stroke-width="2"
-		                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-						Activity feed coming soon
-					</p>
+				
+				<!-- Filter Toggle Button -->
+				<div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700">
+					<div class="flex items-center">
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filters</span>
+						@if($selectedUser || $selectedEvent || $selectedSeverity || $dateFrom || $dateTo)
+							<div class="ml-2 flex flex-wrap gap-1">
+								@if($selectedUser)
+									@php
+										$userName = collect($userOptions)->firstWhere('id', $selectedUser)['name'] ?? 'Unknown';
+									@endphp
+									<span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-600/30">
+										{{ $userName }}
+									</span>
+								@endif
+								
+								@if($selectedEvent)
+									<span class="inline-flex items-center rounded-md bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-300 ring-1 ring-inset ring-green-700/10 dark:ring-green-600/30">
+										{{ $selectedEvent }}
+									</span>
+								@endif
+								
+								@if($selectedSeverity)
+									<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-700/10 dark:ring-amber-600/30">
+										{{ ucfirst($selectedSeverity) }}
+									</span>
+								@endif
+							</div>
+						@endif
+					</div>
+					<button 
+						onclick="window.toggleFilters()"
+						type="button" 
+						class="px-2 py-1 text-xs font-medium text-center text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-dark-600 rounded-md hover:bg-gray-300 dark:hover:bg-dark-500 focus:outline-none"
+					>
+						<span id="filterButtonText">Show Filters</span>
+					</button>
+				</div>
+				
+				<!-- Activity Log Filters -->
+				<div 
+					id="filterPanel"
+					style="display: none;"
+					class="p-3 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700"
+				>
+					<!-- Active Filters Indicator -->
+					@if($selectedUser || $selectedEvent || $selectedSeverity || $dateFrom || $dateTo)
+						<div class="mb-3 flex flex-wrap gap-2">
+							<span class="text-xs font-medium text-gray-700 dark:text-gray-300">Active Filters:</span>
+							
+							@if($selectedUser)
+								@php
+									$userName = collect($userOptions)->firstWhere('id', $selectedUser)['name'] ?? 'Unknown';
+								@endphp
+								<span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-600/30">
+									User: {{ $userName }}
+								</span>
+							@endif
+							
+							@if($selectedEvent)
+								<span class="inline-flex items-center rounded-md bg-green-50 dark:bg-green-900/30 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300 ring-1 ring-inset ring-green-700/10 dark:ring-green-600/30">
+									Event: {{ $selectedEvent }}
+								</span>
+							@endif
+							
+							@if($selectedSeverity)
+								<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/30 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-700/10 dark:ring-amber-600/30">
+									Severity: {{ ucfirst($selectedSeverity) }}
+								</span>
+							@endif
+							
+							@if($dateFrom)
+								<span class="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 ring-1 ring-inset ring-purple-700/10 dark:ring-purple-600/30">
+									From: {{ \Carbon\Carbon::parse($dateFrom)->format('M d, Y') }}
+								</span>
+							@endif
+							
+							@if($dateTo)
+								<span class="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 ring-1 ring-inset ring-purple-700/10 dark:ring-purple-600/30">
+									To: {{ \Carbon\Carbon::parse($dateTo)->format('M d, Y') }}
+								</span>
+							@endif
+						</div>
+					@endif
+					
+					<div class="flex flex-col md:flex-row gap-2 mb-2">
+						<!-- User Filter -->
+						<div class="w-full md:w-1/4">
+							<label for="userFilter" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">User</label>
+							<select 
+								id="userFilter" 
+								wire:model.live="selectedUser" 
+								wire:change="loadLogs"
+								class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-dark-900 dark:text-white shadow-sm text-sm"
+							>
+								<option value="">All Users</option>
+								@foreach($userOptions as $user)
+									<option value="{{ $user['id'] }}">{{ $user['name'] }}</option>
+								@endforeach
+							</select>
+						</div>
+						
+						<!-- Event Filter -->
+						<div class="w-full md:w-1/4">
+							<label for="eventFilter" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Event</label>
+							<select 
+								id="eventFilter" 
+								wire:model.live="selectedEvent" 
+								wire:change="loadLogs"
+								class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-dark-900 dark:text-white shadow-sm text-sm"
+							>
+								<option value="">All Events</option>
+								@foreach($eventOptions as $event)
+									<option value="{{ $event }}">{{ $event }}</option>
+								@endforeach
+							</select>
+						</div>
+						
+						<!-- Severity Filter -->
+						<div class="w-full md:w-1/4">
+							<label for="severityFilter" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
+							<select 
+								id="severityFilter" 
+								wire:model.live="selectedSeverity" 
+								wire:change="loadLogs"
+								class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-dark-900 dark:text-white shadow-sm text-sm"
+							>
+								<option value="">All Severities</option>
+								@foreach($severityOptions as $severity)
+									<option value="{{ $severity }}">{{ ucfirst($severity) }}</option>
+								@endforeach
+							</select>
+						</div>
+						
+						<!-- Reset Button -->
+						<div class="w-full md:w-1/4 flex items-end">
+							<button 
+								wire:click="resetFilters"
+								type="button" 
+								class="w-full px-3 py-2 text-xs font-medium text-center text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-700"
+							>
+								Reset Filters
+							</button>
+						</div>
+					</div>
+					
+					<!-- Date Range Filter -->
+					<div class="flex flex-col md:flex-row gap-2">
+						<div class="w-full md:w-1/2">
+							<label for="dateFrom" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
+							<input 
+								type="date" 
+								id="dateFrom" 
+								wire:model.live="dateFrom" 
+								wire:change="loadLogs"
+								class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-dark-900 dark:text-white shadow-sm text-sm"
+							>
+						</div>
+						<div class="w-full md:w-1/2">
+							<label for="dateTo" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
+							<input 
+								type="date" 
+								id="dateTo" 
+								wire:model.live="dateTo" 
+								wire:change="loadLogs"
+								class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-dark-900 dark:text-white shadow-sm text-sm"
+							>
+						</div>
+					</div>
+				</div>
+				
+				<div class="space-y-3 bg-gray-100/60 dark:bg-dark-700 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+					@if(count($recentLogs) > 0)
+						@foreach($recentLogs as $log)
+							<div class="flex items-start p-2 rounded-md hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors group">
+								<div class="text-emerald-500 mr-3 flex-shrink-0 mt-1">
+									@if(str_contains($log->event, 'created'))
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+										</svg>
+									@elseif(str_contains($log->event, 'updated') || str_contains($log->event, 'changed'))
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+										</svg>
+									@elseif(str_contains($log->event, 'deleted') || str_contains($log->event, 'removed'))
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+										</svg>
+									@else
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+										</svg>
+									@endif
+								</div>
+								<div class="flex-1">
+									<h3 class="font-medium text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ $log->headline }}</h3>
+									<div class="flex justify-between items-center mt-1">
+										<p class="text-xs text-gray-500 dark:text-gray-400">
+											<span class="inline-flex items-center rounded-md bg-gray-50 dark:bg-dark-600 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-500/10 dark:ring-gray-400/20">
+												{{ $log->event }}
+											</span>
+										</p>
+										<span class="text-xs text-gray-400 dark:text-gray-500">
+											{{ $log->occurred_at->diffForHumans() }}
+										</span>
+									</div>
+									@if($log->description)
+          <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
+											{{ Str::limit($log->description, 50, '...') }}
+										</p>
+									@endif
+								</div>
+							</div>
+							@if(!$loop->last)
+								<div class="border-b border-gray-200 dark:border-gray-700"></div>
+							@endif
+						@endforeach
+					@else
+						<p class="text-sm text-center py-4">
+							<span class="block mb-2">
+								<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-10 w-10 mx-auto text-gray-400"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor">
+									<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+							</span>
+							No recent activity found
+						</p>
+					@endif
 				</div>
 			</x-card>
 		</div>
@@ -910,6 +1250,20 @@
 
 @push('scripts')
 	<script>
+		// Filter toggle function
+		window.toggleFilters = function() {
+			const filterPanel = document.getElementById('filterPanel');
+			const buttonText = document.getElementById('filterButtonText');
+			
+			if (filterPanel.style.display === 'none') {
+				filterPanel.style.display = 'block';
+				buttonText.textContent = 'Hide Filters';
+			} else {
+				filterPanel.style.display = 'none';
+				buttonText.textContent = 'Show Filters';
+			}
+		}
+	
 		document.addEventListener('DOMContentLoaded', function () {
 			// This ensures ApexCharts is available
 			if (typeof ApexCharts === 'undefined') {

@@ -20,8 +20,10 @@
 		#[Validate('required')]
 		public string $choseRole = '';
 
-		#[Validate('required')]
-		public string $title = '';
+  #[Validate('required')]
+	public string $title = '';
+	
+	// Custom validation rules for title uniqueness will be applied in the saveNegotiation method
 
 		#[Validate('required')]
 		public string $location = '';
@@ -60,27 +62,44 @@
 			$this->editModal = true;
 		}
 
-		public function saveNegotiation():void
-		{
-			$this->validate();
+ 	public function saveNegotiation():void
+ 	{
+ 		// Validate required fields
+ 		$this->validate();
 
-			// Find the negotiation in the database
-			$negotiation = Negotiation::find($this->selectedNegotiation);
+ 		// Find the negotiation in the database
+ 		$negotiation = Negotiation::find($this->selectedNegotiation);
 
-			// Update the negotiation
-			$negotiation->update([
-				'title' => $this->title,
-				'location' => $this->location,
-				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
-				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
-			]);
+ 		// Custom validation for unique title
+ 		$existingNegotiation = Negotiation::where('title', $this->title)
+ 			->where('id', '!=', $this->selectedNegotiation)
+ 			->first();
 
-			// Close the modal
-			$this->editModal = false;
+ 		if ($existingNegotiation) {
+ 			// Add a custom error message for duplicate title
+ 			$this->addError('title', 'The negotiation title has already been taken.');
+ 			return;
+ 		}
 
-			// Refresh the negotiations list
-			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
-		}
+ 		try {
+ 			// Update the negotiation
+ 			$negotiation->update([
+ 				'title' => $this->title,
+ 				'location' => $this->location,
+ 				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
+ 				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+ 			]);
+
+ 			// Close the modal
+ 			$this->editModal = false;
+
+ 			// Refresh the negotiations list
+ 			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+ 		} catch (\Exception $e) {
+ 			// Handle any other exceptions that might occur
+ 			$this->addError('title', 'An error occurred while saving the negotiation.');
+ 		}
+ 	}
 
 		public function openDeleteModal(int $negotiationId):void
 		{
@@ -304,6 +323,9 @@
 																				wire:model="title"
 																				placeholder="Enter negotiation title"
 																				required />
+																		@error('title')
+																			<span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+																		@enderror
 																	</div>
 																	<div>
 																		<x-input

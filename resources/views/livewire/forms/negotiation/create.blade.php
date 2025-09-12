@@ -1,6 +1,6 @@
 <?php
 
- use App\DTOs\NegotiationSubject\NegotiationSubjectDTO;
+	use App\DTOs\NegotiationSubject\NegotiationSubjectDTO;
 	use App\DTOs\NegotiationUser\NegotiationUserDTO;
 	use App\DTOs\Subject\SubjectDTO;
 	use App\Enums\Subject\MoodLevels;
@@ -31,62 +31,62 @@
 		public string $subjectPhone = '';
 
 
- 	public function mount():void
- 	{
- 		// Set the tenant_id from the authenticated user's tenant
- 		$this->negotiationForm->tenant_id = Auth::user()->tenant_id;
-		
- 		// Set the created_by field to the authenticated user's ID
- 		$this->negotiationForm->created_by = Auth::user()->id;
+		public function mount():void
+		{
+			// Set the tenant_id from the authenticated user's tenant
+			$this->negotiationForm->tenant_id = Auth::user()->tenant_id;
 
- 		// Set default status to active
- 		$this->negotiationForm->status = NegotiationStatuses::active->value;
+			// Set the created_by field to the authenticated user's ID
+			$this->negotiationForm->created_by = Auth::user()->id;
 
- 		// Set default type to unknown
- 		$this->negotiationForm->type = NegotiationTypes::unknown->value;
- 	}
+			// Set default status to active
+			$this->negotiationForm->status = NegotiationStatuses::active->value;
 
- 	/**
- 	 * Create a new subject based on form data
- 	 *
- 	 * @return Subject The newly created subject
- 	 */
- 	private function createSubject():Subject
- 	{
- 		// Create Subject
- 		$newSubjectDTO = new SubjectDTO(
- 			tenant_id: tenant()->id,
- 			name: $this->subjectName,
- 			current_mood: MoodLevels::Depressed,
- 			status: SubjectNegotiationStatuses::active,
- 			created_at: now(),
- 			updated_at: now()
- 		);
+			// Set default type to unknown
+			$this->negotiationForm->type = NegotiationTypes::unknown->value;
+		}
 
- 		// Create the Subject
- 		$subject = app(SubjectCreationService::class)->createSubject($newSubjectDTO);
+		/**
+		 * Create a new subject based on form data
+		 *
+		 * @return Subject The newly created subject
+		 */
+		private function createSubject():Subject
+		{
+			// Create Subject
+			$newSubjectDTO = new SubjectDTO(
+				tenant_id: tenant()->id,
+				name: $this->subjectName,
+				current_mood: MoodLevels::Depressed,
+				status: SubjectNegotiationStatuses::active,
+				created_at: now(),
+				updated_at: now()
+			);
 
- 		// Only create a contact point if a phone number is provided
- 		if (!empty($this->subjectPhone)) {
- 			$formattedPhone = new PhoneNumber($this->subjectPhone, 'US');
-			
- 			// Create a ContactPoint record for the Subject with associated phone information
- 			app(ContactPointCreationService::class)->createContactPoint([
- 				'subject_id' => $subject->id,
- 				'tenant_id' => tenant()->id,
- 				'kind' => 'phone',
- 				'label' => 'home',
- 				'is_primary' => true,
- 				'is_verified' => false,
- 				'priority' => 1,
- 				'e164' => $formattedPhone,
- 				'ext' => null,
- 				'phone_country_iso' => 'US',
- 			]);
- 		}
+			// Create the Subject
+			$subject = app(SubjectCreationService::class)->createSubject($newSubjectDTO);
 
- 		return $subject;
- 	}
+			// Only create a contact point if a phone number is provided
+			if (!empty($this->subjectPhone)) {
+				$formattedPhone = new PhoneNumber($this->subjectPhone, 'US');
+
+				// Create a ContactPoint record for the Subject with associated phone information
+				app(ContactPointCreationService::class)->createContactPoint([
+					'subject_id' => $subject->id,
+					'tenant_id' => tenant()->id,
+					'kind' => 'phone',
+					'label' => 'home',
+					'is_primary' => true,
+					'is_verified' => false,
+					'priority' => 1,
+					'e164' => $formattedPhone,
+					'ext' => null,
+					'phone_country_iso' => 'US',
+				]);
+			}
+
+			return $subject;
+		}
 
 		/**
 		 * Create a negotiation subject link between negotiation and subject
@@ -136,25 +136,42 @@
 				->createNegotiationUser($negotiationUserDTO);
 		}
 
-		public function saveNegotiation():Redirector
+		public function saveNegotiation():Redirector|null
 		{
+			// Validate the form data
 			$validated = $this->negotiationForm->validate();
 
-			$newNegotiation = Negotiation::create($validated);
+			// Check if a negotiation with the same title already exists
+			$existingNegotiation = Negotiation::where('title', $this->negotiationForm->title)->first();
 
-			$newSubject = $this->createSubject();
+			if ($existingNegotiation) {
+				// Add a custom error message for duplicate title
+				$this->addError('negotiationForm.title', 'The negotiation title has already been taken.');
+				return null;
+			}
 
-			$this->createNegotiationSubject(
-				$newNegotiation->id,
-				$newSubject->id,
-				SubjectNegotiationRoles::primary
-			);
+			try {
+				// Create the negotiation
+				$newNegotiation = Negotiation::create($validated);
 
-			// Add the authenticated user to the negotiation
-			$this->addAuthUserToNegotiation($newNegotiation->id);
+				$newSubject = $this->createSubject();
 
-			return redirect(route('negotiation-noc',
-				['negotiation' => $newNegotiation->title, 'tenantSubdomain' => tenant()->subdomain]));
+				$this->createNegotiationSubject(
+					$newNegotiation->id,
+					$newSubject->id,
+					SubjectNegotiationRoles::primary
+				);
+
+				// Add the authenticated user to the negotiation
+				$this->addAuthUserToNegotiation($newNegotiation->id);
+
+				return redirect(route('negotiation-noc',
+					['negotiation' => $newNegotiation->title, 'tenantSubdomain' => tenant()->subdomain]));
+			} catch (\Exception $e) {
+				// Handle any other exceptions that might occur
+				$this->addError('negotiationForm.title', 'An error occurred while creating the negotiation.');
+				return null;
+			}
 		}
 
 		public function cancel()
