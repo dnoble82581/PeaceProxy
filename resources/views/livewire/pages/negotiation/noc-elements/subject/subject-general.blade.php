@@ -177,6 +177,30 @@
 ?>
 
 <div class="py-2 grid grid-cols-[1fr_1fr_1fr_1fr_1fr_3rem] gap-4 dark:bg-dark-800 p-4 mt-4">
+	{{-- DEBUG: remove after checking --}}
+	@php
+		$__urls = $imageUrls ?? [];
+	@endphp
+	<div class="p-2 text-xs text-gray-600 bg-yellow-50 rounded">
+		<div>imageUrls count: {{ is_array($__urls) ? count($__urls) : 'not array' }}</div>
+		<div>first url: <code>{{ is_array($__urls) && isset($__urls[0]) ? $__urls[0] : '— (none)' }}</code></div>
+		@if (is_array($__urls))
+			<ul>
+				@foreach($__urls as $u)
+					<li>
+						<a
+								href="{{ $u }}"
+								target="_blank"
+								rel="noopener">{{ Str::limit($u, 120) }}</a>
+						<img
+								src="{{ $u }}"
+								class="inline-block w-10 h-10 object-cover rounded ml-2 align-middle"
+								alt="probe">
+					</li>
+				@endforeach
+			</ul>
+		@endif
+	</div>
 	<div
 			class="relative w-32 h-32 rounded-2xl overflow-hidden bg-gray-200/60"
 			wire:ignore
