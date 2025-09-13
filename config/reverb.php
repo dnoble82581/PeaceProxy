@@ -90,6 +90,8 @@ return [
                     'http://peaceproxy.test:5173',
                     'https://peaceproxy.com',
                     'https://peaceproxy.com:5173',
+                    'https://app.peaceproxy.com',
+                    'https://*.peaceproxy.com'
                 ],
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'activity_timeout' => env('REVERB_APP_ACTIVITY_TIMEOUT', 30),
