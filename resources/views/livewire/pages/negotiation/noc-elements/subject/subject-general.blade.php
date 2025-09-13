@@ -40,7 +40,7 @@
 			if ($this->primarySubject) {
 				// Load recent mood logs if not already loaded
 				if (!$this->primarySubject->relationLoaded('moods')) {
-					$this->recentMoods = $this->primarySubject->moods()->latest()->take(5)->get();
+					$this->recentMoods = $this->primarySubject->moods()->latest()->take(8)->get();
 				} else {
 					$this->recentMoods = $this->primarySubject->moods->sortByDesc('created_at')->take(5);
 				}
@@ -178,7 +178,6 @@
 			];
 		}
 
-
 		public function handleMoodCreated($event)
 		{
 			// Refresh the component when a conversation is closed
@@ -197,7 +196,7 @@
 	}
 ?>
 
-<div class="py-4 px-6 grid grid-cols-1 md:grid-cols-[200px_1fr_1fr_1fr_auto] gap-6 dark:bg-dark-800 bg-white rounded-lg shadow-sm">
+<div class="py-4 px-6 grid grid-cols-1 md:grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] gap-6 dark:bg-dark-800 bg-white rounded-lg shadow-sm">
 	<div
 			x-data="{
 			activeSlide: 0,
@@ -327,7 +326,20 @@
 			</div>
 		</div>
 	</div>
-
+	<div class="space-y-3">
+		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Basic</h3>
+		<div class="space-y-2">
+			<p class="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 px-3 py-1 rounded-md">
+				{{ $primarySubject->name }}
+			</p>
+			<p class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 px-3 py-1 rounded-md">
+				{{ $primarySubject->subjectAge() }} Year old {{ $primarySubject->gender ?? 'UNK Gender' }}
+			</p>
+			<p class="text-xs text-primary-600 dark:text-gray-200 bg-gray-100 dark:bg-blue-700 px-3 py-1 rounded-md">
+				{{ $primaryPhoneNumber }}
+			</p>
+		</div>
+	</div>
 	<div class="space-y-3">
 		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Aliases</h3>
 		<div class="space-y-2">

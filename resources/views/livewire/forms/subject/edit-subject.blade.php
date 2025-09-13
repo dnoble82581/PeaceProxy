@@ -456,7 +456,7 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 2">
-			<h2 class="text-lg font-semibold text-white">Status Information</h2>
+			<h2 class="text-lg font-semibold text-dark-600 dark:text-dark-200">Status Information</h2>
 			<p class="mb-4 text-sm text-gray-400">Enter status information for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -489,7 +489,7 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 3">
-			<h2 class="text-lg font-semibold text-white">Contact Information</h2>
+			<h2 class="text-lg font-semibold text-dark-600 dark:text-dark-200">Contact Information</h2>
 			<p class="mb-4 text-sm text-gray-400">Enter contact details for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -542,7 +542,7 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 4">
-			<h2 class="text-lg font-semibold text-white">Employment Information</h2>
+			<h2 class="text-lg font-semibold text-dark-600 dark:text-dark-200">Employment Information</h2>
 			<p class="mb-4 text-sm text-gray-400">Enter employment details for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -565,7 +565,7 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 5">
-			<h2 class="text-lg font-semibold text-white">History and Risk Factors</h2>
+			<h2 class="text-lg font-semibold text-dark-600 dark:text-dark-200">History and Risk Factors</h2>
 			<p class="mb-4 text-sm text-gray-400">Enter history and risk factors for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -610,11 +610,11 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 6">
-			<h2 class="text-lg font-semibold text-white">Subject Images</h2>
+			<h2 class="text-lg font-semibold text-dark-600 dark:text-dark-200">Subject Images</h2>
 			<p class="mb-4 text-sm text-gray-400">Upload images of the subject</p>
 
 			<div class="mb-6">
-				<label class="block text-sm font-medium text-gray-300 mb-2">Upload Images</label>
+				<label class="block text-sm font-medium text-gray-500 mb-2">Upload Images</label>
 				<div class="flex items-center justify-center w-full">
 					<label class="flex flex-col w-full h-32 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-dark-600 transition-colors duration-300">
 						<div class="flex flex-col items-center justify-center pt-7">
@@ -651,7 +651,7 @@
 			<!-- Image Preview -->
 			@if(count($tempImages) > 0)
 				<div class="mt-4">
-					<h3 class="text-md font-medium text-gray-300 mb-2">Subject Images</h3>
+					<h3 class="text-md font-medium text-gray-500 mb-2">Subject Images</h3>
 
 					<!-- Display existing images first -->
 					@if(count(array_filter($tempImages, 'is_string')) > 0)
@@ -824,6 +824,13 @@
 						wire:click="cancel"
 						color="secondary">
 					Cancel
+				</x-button>
+
+				<x-button
+						sm
+						type="submit"
+						color="success">
+					Save and Exit
 				</x-button>
 
 				@if($currentStep < $totalSteps)
