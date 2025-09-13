@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Console\Command;
 
 class TestBroadcast extends Command
