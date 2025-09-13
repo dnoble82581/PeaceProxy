@@ -161,6 +161,7 @@
 	<div class="p-2 text-xs text-gray-600 bg-yellow-50 rounded">
 		<div>imageUrls count: {{ is_array($__urls) ? count($__urls) : 'not array' }}</div>
 		<div>first url: <code>{{ is_array($__urls) && isset($__urls[0]) ? $__urls[0] : '— (none)' }}</code></div>
+		<div>Primary Subject: {{ $this->primarySubject->name }}</div>
 		@if (is_array($__urls))
 			<ul>
 				@foreach($__urls as $u)
