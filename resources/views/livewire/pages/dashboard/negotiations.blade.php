@@ -20,17 +20,25 @@
 		#[Validate('required')]
 		public string $choseRole = '';
 
-		#[Validate('required')]
-		public string $title = '';
+ 	#[Validate('required')]
+ 	public string $title = '';
 
-		#[Validate('required')]
-		public string $location = '';
+ 	public string $location = '';
+ 	public string $location_address = '';
+ 	public string $location_city = '';
+ 	public string $location_state = '';
+ 	public string $location_zip = '';
 
-		#[Validate('required')]
-		public string $status = '';
+ 	#[Validate('required')]
+ 	public string $status = '';
 
-		#[Validate('required')]
-		public string $type = '';
+ 	#[Validate('required')]
+ 	public string $type = '';
+	
+ 	public string $summary = '';
+ 	public string $initial_complaint = '';
+ 	public string $negotiation_strategy = '';
+ 	public array $tags = [];
 
 		public function mount():void
 		{
@@ -44,43 +52,76 @@
 			$this->roleModal = true;
 		}
 
-		public function openEditModal(int $negotiationId):void
-		{
-			$this->selectedNegotiation = $negotiationId;
+ 	public function openEditModal(int $negotiationId):void
+ 	{
+ 		$this->selectedNegotiation = $negotiationId;
 
-			// Find the negotiation in the collection
-			$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
+ 		// Find the negotiation in the collection
+ 		$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
 
-			// Populate the form fields
-			$this->title = $negotiation->title;
-			$this->location = $negotiation->location ?? '';
-			$this->status = $negotiation->status->value; // Convert enum to string
-			$this->type = $negotiation->type->value; // Convert enum to string
+ 		// Populate the form fields - basic information
+ 		$this->title = $negotiation->title;
+ 		$this->status = $negotiation->status->value; // Convert enum to string
+ 		$this->type = $negotiation->type->value; // Convert enum to string
+		
+ 		// Populate summary and details
+ 		$this->summary = $negotiation->summary ?? '';
+ 		$this->initial_complaint = $negotiation->initial_complaint ?? '';
+ 		$this->negotiation_strategy = $negotiation->negotiation_strategy ?? '';
+		
+ 		// Populate location information
+ 		$this->location = $negotiation->location ?? '';
+ 		$this->location_address = $negotiation->location_address ?? '';
+ 		$this->location_city = $negotiation->location_city ?? '';
+ 		$this->location_state = $negotiation->location_state ?? '';
+ 		$this->location_zip = $negotiation->location_zip ?? '';
+ 		$this->tags = $negotiation->tags ?? [];
 
-			$this->editModal = true;
-		}
+ 		$this->editModal = true;
+ 	}
 
-		public function saveNegotiation():void
-		{
-			$this->validate();
+ 	public function saveNegotiation():void
+ 	{
+ 		$this->validate([
+ 			'title' => 'required',
+ 			'status' => 'required',
+ 			'type' => 'required',
+ 			'location' => 'nullable',
+ 			'location_address' => 'nullable',
+ 			'location_city' => 'nullable',
+ 			'location_state' => 'nullable',
+ 			'location_zip' => 'nullable|numeric',
+ 			'summary' => 'nullable',
+ 			'initial_complaint' => 'nullable',
+ 			'negotiation_strategy' => 'nullable',
+ 			'tags' => 'nullable|array',
+ 		]);
 
-			// Find the negotiation in the database
-			$negotiation = Negotiation::find($this->selectedNegotiation);
+ 		// Find the negotiation in the database
+ 		$negotiation = Negotiation::find($this->selectedNegotiation);
 
-			// Update the negotiation
-			$negotiation->update([
-				'title' => $this->title,
-				'location' => $this->location,
-				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
-				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
-			]);
+ 		// Update the negotiation
+ 		$negotiation->update([
+ 			'title' => $this->title,
+ 			'location' => $this->location,
+ 			'location_address' => $this->location_address ?? null,
+ 			'location_city' => $this->location_city ?? null,
+ 			'location_state' => $this->location_state ?? null,
+ 			'location_zip' => $this->location_zip ?? null,
+ 			'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
+ 			'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+ 			'summary' => $this->summary ?? null,
+ 			'initial_complaint' => $this->initial_complaint ?? null,
+ 			'negotiation_strategy' => $this->negotiation_strategy ?? null,
+ 			'tags' => $this->tags ?? [],
+ 		]);
 
-			// Close the modal
-			$this->editModal = false;
+ 		// Close the slide-over panel
+ 		$this->editModal = false;
 
-			// Refresh the negotiations list
-			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
-		}
+ 		// Refresh the negotiations list
+ 		$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+ 	}
 
 		public function openDeleteModal(int $negotiationId):void
 		{
@@ -301,60 +342,147 @@
 
 															</x-modal>
 
-															<!-- Edit Negotiation Modal -->
-															<x-modal
+               <!-- Edit Negotiation Slide -->
+															<x-slide
 																	persistent
-																	center
+																	position="right"
 																	wire="editModal"
 																	title="Edit Negotiation">
-																<div class="mt-4 space-y-4">
-																	<div>
-																		<x-input
-																				label="Title"
-																				wire:model="title"
-																				placeholder="Enter negotiation title"
-																				required />
+																<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20">
+																	<!-- Basic Information -->
+																	<div class="mb-6">
+																		<h2 class="text-lg font-semibold text-white">Basic Information</h2>
+																		<p class="mb-4 text-sm text-gray-400">Edit the basic details about this negotiation</p>
+
+																		<div class="grid grid-cols-1 gap-4">
+																			<div>
+																				<x-input
+																						icon="user"
+																						label="Title *"
+																						wire:model="title"
+																						placeholder="Enter negotiation title"
+																						required />
+																			</div>
+																			<div>
+																				<x-select.styled
+																						class="w-full"
+																						icon="flag"
+																						label="Status *"
+																						wire:model="status"
+																						placeholder="Enter status"
+																						:options="collect(\App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
+																						'label' => $status->label(),
+																						'value' => $status->value,
+																						])->toArray()"
+																						required />
+																			</div>
+																			<div>
+																				<x-select.styled
+																						class="w-full"
+																						icon="shield-exclamation"
+																						label="Type *"
+																						wire:model="type"
+																						placeholder="Enter type"
+																						:options="collect(\App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
+																						'label' => $type->label(),
+																						'value' => $type->value,
+																						])->toArray()"
+																						required />
+																			</div>
+																		</div>
 																	</div>
-																	<div>
-																		<x-input
-																				label="Location"
-																				wire:model="location"
-																				placeholder="Enter location" />
+
+																	<!-- Summary and Details -->
+																	<div class="mb-6">
+																		<h2 class="text-lg font-semibold text-white">Summary and Details</h2>
+																		<p class="mb-4 text-sm text-gray-400">Provide additional information about the negotiation</p>
+
+																		<div class="grid grid-cols-1 gap-4">
+																			<x-textarea
+																					label="Summary"
+																					wire:model="summary"
+																					placeholder="Enter a brief summary of the negotiation"
+																					rows="3" />
+
+																			<x-textarea
+																					label="Initial Complaint"
+																					wire:model="initial_complaint"
+																					placeholder="Describe the initial complaint or situation"
+																					rows="3" />
+
+																			<x-textarea
+																					label="Negotiation Strategy"
+																					wire:model="negotiation_strategy"
+																					placeholder="Outline the strategy for this negotiation"
+																					rows="3" />
+																		</div>
 																	</div>
-																	<div>
-																		<x-select.styled
-																				label="Status"
-																				wire:model="status"
-																				placeholder="Enter status"
-																				:options="collect(\App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
-																				'label' => $status->label(),
-																				'value' => $status->value,
-																				])->toArray()"
-																				required />
+
+																	<!-- Location Information -->
+																	<div class="mb-6">
+																		<h2 class="text-lg font-semibold text-white">Location Information</h2>
+																		<p class="mb-4 text-sm text-gray-400">Enter details about where the negotiation took place</p>
+
+																		<div class="grid grid-cols-1 gap-4">
+																			<x-input
+																					icon="map-pin"
+																					label="Location Name"
+																					wire:model="location"
+																					placeholder="Enter location name" />
+
+																			<x-input
+																					icon="home"
+																					label="Address"
+																					wire:model="location_address"
+																					placeholder="Enter street address" />
+
+																			<div class="grid grid-cols-2 gap-4">
+																				<x-input
+																						icon="building-office"
+																						label="City"
+																						wire:model="location_city"
+																						placeholder="Enter city" />
+
+																				<x-input
+																						icon="map"
+																						label="State"
+																						wire:model="location_state"
+																						placeholder="Enter state" />
+																			</div>
+
+																			<x-input
+																					icon="hashtag"
+																					label="ZIP Code"
+																					type="number"
+																					wire:model="location_zip"
+																					placeholder="Enter ZIP code" />
+
+																			<x-tag
+																					placeholder="Add tags"
+																					icon="tag"
+																					label="Tags"
+																					limit="4"
+																					wire:model="tags" />
+																		</div>
 																	</div>
-																	<div>
-																		<x-select.styled
-																				label="Type"
-																				wire:model="type"
-																				placeholder="Enter type"
-																				:options="collect(\App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
-																				'label' => $type->label(),
-																				'value' => $type->value,
-																				])->toArray()"
-																				required />
-																	</div>
-																	<div class="space-x-2">
-																		<x-button
-																				wire:click="saveNegotiation">
-																			Save
-																		</x-button>
-																		<x-button
-																				wire:click="$toggle('editModal')"
-																				color="zinc">Cancel
-																		</x-button>
+
+																	<!-- Action Buttons -->
+																	<div class="fixed bottom-0 right-0 p-4 bg-dark-800 w-full border-t border-dark-600">
+																		<div class="flex justify-end space-x-2">
+																			<x-button
+																					wire:click="$toggle('editModal')"
+																					color="zinc">
+																				Cancel
+																			</x-button>
+																			<x-button
+																					wire:click="saveNegotiation"
+																					primary>
+																				Save Changes
+																			</x-button>
+																		</div>
 																	</div>
 																</div>
-															</x-modal>
+															</x-slide>
 
 															<!-- Delete Confirmation Modal -->
 															<x-modal

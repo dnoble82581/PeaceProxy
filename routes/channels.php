@@ -43,3 +43,5 @@ Broadcast::channel('private.negotiation.{tenantId}.{negotiationId}', function (U
 Broadcast::channel('tenants.{tenantId}.notifications', function ($user, $tenantId) {
     return (int) $user->tenant_id === (int) $tenantId; // adapt to your tenant resolver
 });
+
+Broadcast::channel('debug', fn () => true);
