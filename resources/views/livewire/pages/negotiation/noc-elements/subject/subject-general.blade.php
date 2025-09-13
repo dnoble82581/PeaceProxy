@@ -30,35 +30,6 @@
 			$this->loadPrimaryEmailAddress();
 		}
 
-		public function loadImageUrls()
-		{
-			$this->imageUrls = [];
-
-			// Only proceed if primarySubject is not null
-			if ($this->primarySubject) {
-				// Load images if not already loaded
-				if (!$this->primarySubject->relationLoaded('images')) {
-					$this->primarySubject->load('images');
-				}
-
-				// Get all image URLs
-				foreach ($this->primarySubject->images as $image) {
-					// Check if url property exists and is not null
-					if (isset($image->url)) {
-						$this->imageUrls[] = $image->url;
-					} else {
-						// Fall back to url() method
-						$this->imageUrls[] = $image->url();
-					}
-				}
-
-				// If no images, use the temporary image URL
-				if (empty($this->imageUrls)) {
-					$this->imageUrls[] = $this->primarySubject->temporaryImageUrl();
-				}
-			}
-		}
-
 		public function loadRecentMoods():void
 		{
 			if ($this->primarySubject) {
@@ -69,6 +40,17 @@
 					$this->recentMoods = $this->primarySubject->moods->sortByDesc('created_at')->take(5);
 				}
 			}
+		}
+
+		public function loadImageUrls()
+		{
+			$imageUrls = [];
+
+			foreach ($this->primarySubject->images as $image) {
+				$this->imageUrls[] = $image->url;
+			}
+
+			logger($this->imageUrls);
 		}
 
 		public function loadPrimaryPhoneNumber()
@@ -177,65 +159,12 @@
 ?>
 
 <div class="py-2 grid grid-cols-[1fr_1fr_1fr_1fr_1fr_3rem] gap-4 dark:bg-dark-800 p-4 mt-4">
-	{{-- DEBUG: remove after checking --}}
-	@php
-		$__urls = $imageUrls ?? [];
-	@endphp
-	<div class="p-2 text-xs text-gray-600 bg-yellow-50 rounded">
-		<div>imageUrls count: {{ is_array($__urls) ? count($__urls) : 'not array' }}</div>
-		<div>first url: <code>{{ is_array($__urls) && isset($__urls[0]) ? $__urls[0] : '— (none)' }}</code></div>
-		@if (is_array($__urls))
-			<ul>
-				@foreach($__urls as $u)
-					<li>
-						<a
-								href="{{ $u }}"
-								target="_blank"
-								rel="noopener">{{ Str::limit($u, 120) }}</a>
-						<img
-								src="{{ $u }}"
-								class="inline-block w-10 h-10 object-cover rounded ml-2 align-middle"
-								alt="probe">
-					</li>
-				@endforeach
-			</ul>
-		@endif
-	</div>
-	<div
-			class="relative w-32 h-32 rounded-2xl overflow-hidden bg-gray-200/60"
-			wire:ignore
-			x-data="subjectCarousel()"
-			x-init="init()">
 
-		{{-- Safe JSON (no attribute escaping) --}}
-		<script
-				type="application/json"
-				x-ref="json">@json($imageUrls)</script>
-
-		@if (!empty($imageUrls))
-			<img
-					src="{{ $imageUrls[0] }}"
-					class="w-32 h-32 object-cover rounded"
-					alt="Test image">
-		@endif
-		{{--		<img--}}
-		{{--				class="w-full h-full object-cover"--}}
-		{{--				:src="current()" />--}}
-
-		<div class="absolute inset-0 flex items-center justify-between p-2">
-			<button
-					type="button"
-					class="rounded bg-white/80 px-2 py-1 text-xs"
-					@click="prev()"
-					:disabled="!hasImages()">‹
-			</button>
-			<button
-					type="button"
-					class="rounded bg-white/80 px-2 py-1 text-xs"
-					@click="next()"
-					:disabled="!hasImages()">›
-			</button>
-		</div>
+	<div>
+		<img
+				class="rounded-lg w-32 h-32 object-cover"
+				src="{{ $imageUrls[0] }}"
+				alt="">
 	</div>
 
 	<div class="space-y-2">
@@ -298,34 +227,3 @@
 		</x-dropdown>
 	</div>
 </div>
-
-<script>
-	document.addEventListener('alpine:init', () => {
-		Alpine.data('subjectCarousel', () => ({
-			imageUrls: [],
-			index: 0,
-
-			init () {
-				try {
-					const raw = this.$refs.json?.textContent || '[]'
-					const arr = JSON.parse(raw)
-					this.imageUrls = Array.isArray(arr)
-						? arr.filter(u => typeof u === 'string' && u.trim() !== '')
-						: []
-				} catch { this.imageUrls = [] }
-				if (this.index >= this.imageUrls.length) this.index = 0
-			},
-
-			hasImages () { return this.imageUrls.length > 0 },
-			current () { return this.imageUrls[this.index] || '/images/placeholder-avatar.png' },
-			next () {
-				if (!this.hasImages()) return
-				this.index = (this.index + 1) % this.imageUrls.length
-			},
-			prev () {
-				if (!this.hasImages()) return
-				this.index = (this.index - 1 + this.imageUrls.length) % this.imageUrls.length
-			},
-		}))
-	})
-</script>
