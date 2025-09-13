@@ -188,9 +188,15 @@
 				type="application/json"
 				x-ref="json">@json($imageUrls)</script>
 
-		<img
-				class="w-full h-full object-cover"
-				:src="current()" />
+		@if (!empty($imageUrls))
+			<img
+					src="{{ $imageUrls[0] }}"
+					class="w-32 h-32 object-cover rounded"
+					alt="Test image">
+		@endif
+		{{--		<img--}}
+		{{--				class="w-full h-full object-cover"--}}
+		{{--				:src="current()" />--}}
 
 		<div class="absolute inset-0 flex items-center justify-between p-2">
 			<button
