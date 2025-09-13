@@ -76,14 +76,17 @@ return [
 
         'apps' => [
             [
-                'key' => env('REVERB_APP_KEY'),
-                'secret' => env('REVERB_APP_SECRET'),
-                'app_id' => env('REVERB_APP_ID'),
+                // pull credentials from broadcasting config (single source of truth)
+                'key' => config('broadcasting.connections.reverb.key'),
+                'secret' => config('broadcasting.connections.reverb.secret'),
+                'app_id' => config('broadcasting.connections.reverb.app_id'),
+
+                // reuse the same host/port/scheme
                 'options' => [
-                    'host' => env('REVERB_HOST'),
-                    'port' => env('REVERB_PORT', 443),
-                    'scheme' => env('REVERB_SCHEME', 'https'),
-                    'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                    'host' => config('broadcasting.connections.reverb.options.host'),
+                    'port' => (int) config('broadcasting.connections.reverb.options.port'),
+                    'scheme' => config('broadcasting.connections.reverb.options.scheme'),
+                    'useTLS' => config('broadcasting.connections.reverb.options.scheme') === 'https',
                 ],
                 'allowed_origins' => [
                     'http://peaceproxy.test',
