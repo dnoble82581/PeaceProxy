@@ -44,13 +44,9 @@
 
 		public function loadImageUrls()
 		{
-			$imageUrls = [];
-
 			foreach ($this->primarySubject->images as $image) {
 				$this->imageUrls[] = $image->url;
 			}
-
-			logger($this->imageUrls);
 		}
 
 		public function loadPrimaryPhoneNumber()
@@ -163,7 +159,7 @@
 	<div>
 		<img
 				class="rounded-lg w-32 h-32 object-cover"
-				src="{{ $imageUrls[0] }}"
+				src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/subjects/1/images/dzmANiYZz9hd57L659CZDgrC2gVe7jajRH6tnaps.jpg"
 				alt="">
 	</div>
 
