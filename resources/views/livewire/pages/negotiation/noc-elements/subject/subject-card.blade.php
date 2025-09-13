@@ -2,6 +2,7 @@
 
 	use App\Models\Negotiation;
 	use App\Models\Subject;
+	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
 
@@ -206,5 +207,4 @@
 				:subjectId="$primarySubject->id"
 				:negotiationId="$negotiation->id" />
 	</div>
-
 </div>

@@ -456,8 +456,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 2">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Status Information</h2>
-			<p class="mb-4 text-sm text-dark-500">Enter status information for this subject</p>
+			<h2 class="text-lg font-semibold text-white">Status Information</h2>
+			<p class="mb-4 text-sm text-gray-400">Enter status information for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-select.styled
@@ -489,8 +489,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 3">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Contact Information</h2>
-			<p class="mb-4 text-sm text-dark-500">Enter contact details for this subject</p>
+			<h2 class="text-lg font-semibold text-white">Contact Information</h2>
+			<p class="mb-4 text-sm text-gray-400">Enter contact details for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-input
@@ -542,8 +542,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 4">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Employment Information</h2>
-			<p class="mb-4 text-sm text-dark-500">Enter employment details for this subject</p>
+			<h2 class="text-lg font-semibold text-white">Employment Information</h2>
+			<p class="mb-4 text-sm text-gray-400">Enter employment details for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-input
@@ -565,8 +565,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 5">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800">History and Risk Factors</h2>
-			<p class="mb-4 text-sm text-dark-500">Enter history and risk factors for this subject</p>
+			<h2 class="text-lg font-semibold text-white">History and Risk Factors</h2>
+			<p class="mb-4 text-sm text-gray-400">Enter history and risk factors for this subject</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-textarea
@@ -610,8 +610,8 @@
 				class="mb-6"
 				x-data="{}"
 				x-show="$wire.currentStep == 6">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Subject Images</h2>
-			<p class="mb-4 text-sm text-dark-500">Upload images of the subject</p>
+			<h2 class="text-lg font-semibold text-white">Subject Images</h2>
+			<p class="mb-4 text-sm text-gray-400">Upload images of the subject</p>
 
 			<div class="mb-6">
 				<label class="block text-sm font-medium text-gray-300 mb-2">Upload Images</label>
