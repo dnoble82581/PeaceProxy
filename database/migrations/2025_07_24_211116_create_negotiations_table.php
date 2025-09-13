@@ -57,7 +57,8 @@ return new class () extends Migration {
 
         Schema::create('negotiation_subjects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('negotiation_id');
+            $table->foreignId('negotiation_id') ->references('id')->on('negotiations')
+                ->onDelete('cascade');
             $table->foreignId('subject_id');
             $table->enum('role', array_map(fn ($status) => $status->value, SubjectNegotiationRoles::cases()))
                 ->default(SubjectNegotiationRoles::secondary->value);
