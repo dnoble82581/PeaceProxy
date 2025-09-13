@@ -87,7 +87,9 @@ return [
                 ],
                 'allowed_origins' => [
                     'http://peaceproxy.test',
-                    'http://peaceproxy.test:5173', // if Vite runs here
+                    'http://peaceproxy.test:5173',
+                    'https://peaceproxy.com',
+                    'https://peaceproxy.com:5173',
                 ],
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'activity_timeout' => env('REVERB_APP_ACTIVITY_TIMEOUT', 30),
