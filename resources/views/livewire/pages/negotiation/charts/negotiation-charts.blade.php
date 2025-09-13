@@ -122,29 +122,29 @@
 			id="chart"
 			class="w-full h-80">
 	</div>
-	@if(authUser()->can('create', App\Models\MoodLog::class))
-		<div class="flex items-center justify-evenly">
-			@foreach(App\Enums\Subject\MoodLevels::cases() as $index => $mood)
-				<div class="relative group">
-					<!-- Button -->
-					<button
-							wire:click="createMood({{ $mood->value }})"
-							class="text-3xl">
-						{{ $mood->icon() }}
-					</button>
+	{{--	@if(authUser()->can('create', App\Models\MoodLog::class))--}}
+	<div class="flex items-center justify-evenly">
+		@foreach(App\Enums\Subject\MoodLevels::cases() as $index => $mood)
+			<div class="relative group">
+				<!-- Button -->
+				<button
+						wire:click="createMood({{ $mood->value }})"
+						class="text-3xl">
+					{{ $mood->icon() }}
+				</button>
 
-					<!-- Tooltip -->
-					<span
-							class="absolute
+				<!-- Tooltip -->
+				<span
+						class="absolute
 						{{ $loop->first ? 'translate-x-2 left-0':($loop->last || $loop->iteration > count(App\Enums\Subject\MoodLevels::cases()) - 3 ? '-translate-x-4 right-0' : '-translate-x-1/2 left-1/2') }}
                     bottom-full mb-2 opacity-0 group-hover:opacity-100 bg-gray-900 text-white text-xs rounded-md px-2 py-1 transition duration-150 ease-in-out z-10 whitespace-nowrap">
                 {{ $mood->description() }}
             </span>
 
-				</div>
-			@endforeach
-		</div>
-	@endif
+			</div>
+		@endforeach
+	</div>
+	{{--	@endif--}}
 </div>
 
 @push('scripts')
