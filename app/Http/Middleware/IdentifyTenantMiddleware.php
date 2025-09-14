@@ -17,7 +17,7 @@ class IdentifyTenantMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->is('horizon*')) {
+        if ($request->is('horizon*') || $request->routeIs('horizon.*')) {
             return $next($request);
         }
 
