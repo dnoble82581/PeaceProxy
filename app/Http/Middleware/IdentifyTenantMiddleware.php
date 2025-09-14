@@ -17,6 +17,9 @@ class IdentifyTenantMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
+        if ($request->is('horizon*')) {
+            return $next($request);
+        }
 
         $tenant = app(TenantManagerService::class)->resolve($request);
 
