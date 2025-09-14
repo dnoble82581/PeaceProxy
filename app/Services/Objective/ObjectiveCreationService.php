@@ -19,17 +19,16 @@ class ObjectiveCreationService
     {
         $objective = $this->objectiveRepository->createObjective($objectiveDTO->toArray());
 
-        $log = $this->addLogEntry($objective);
-        logger($log);
+        $this->addLogEntry($objective);
 
         return $objective;
     }
 
-    private function addLogEntry(Objective $objective)
+    private function addLogEntry(Objective $objective): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'objective.created',
             headline: "{$user->name} created an objective",

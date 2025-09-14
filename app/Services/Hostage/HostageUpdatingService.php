@@ -24,19 +24,18 @@ class HostageUpdatingService
             return null;
         }
 
-        $log = $this->addLogEntry($hostage);
-        logger($log);
+        $this->addLogEntry($hostage);
 
         event(new HostageUpdatedEvent($hostage));
 
         return $hostage;
     }
 
-    private function addLogEntry(Hostage $hostage)
+    private function addLogEntry(Hostage $hostage): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'hostage.updated',
             headline: "{$user->name} updated a hostage",

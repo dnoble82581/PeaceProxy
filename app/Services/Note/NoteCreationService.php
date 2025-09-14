@@ -20,18 +20,17 @@ class NoteCreationService
     {
         $newNote = $this->noteRepository->createNote($noteDTO->toArray());
 
-        $log = $this->addLogEntry($newNote);
-        logger($log);
+        $this->addLogEntry($newNote);
 
         event(new NoteCreatedEvent($newNote->id, $newNote->negotiation_id));
         return $newNote;
     }
 
-    private function addLogEntry(Note $note)
+    private function addLogEntry(Note $note): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'note.created',
             headline: "{$user->name} created a note",

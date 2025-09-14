@@ -17,19 +17,18 @@ class TriggerCreationService
     {
         $trigger = $this->triggerRepository->createTrigger($triggerDTO->toArray());
 
-        $log = $this->addLogEntry($trigger);
-        logger($log);
+        $this->addLogEntry($trigger);
 
         event(new TriggerCreatedEvent($trigger));
 
         return $trigger;
     }
 
-    private function addLogEntry(Trigger $trigger)
+    private function addLogEntry(Trigger $trigger): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'trigger.created',
             headline: "{$user->name} created a trigger",

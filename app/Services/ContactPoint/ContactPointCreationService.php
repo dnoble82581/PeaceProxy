@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class ContactPointCreationService
 {
-    private function addLogEntry(ContactPoint $contactPoint)
+    private function addLogEntry(ContactPoint $contactPoint): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'contactpoint.created',
             headline: "{$user->name} created a contact point",
@@ -110,8 +110,7 @@ class ContactPointCreationService
             return $contactPoint;
         });
 
-        $log = $this->addLogEntry($contactPoint);
-        logger($log);
+        $this->addLogEntry($contactPoint);
 
         return $contactPoint;
     }

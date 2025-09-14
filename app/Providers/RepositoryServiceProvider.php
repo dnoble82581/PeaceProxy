@@ -10,6 +10,7 @@ use App\Contracts\DemandRepositoryInterface;
 use App\Contracts\DocumentRepositoryInterface;
 use App\Contracts\HookRepositoryInterface;
 use App\Contracts\HostageRepositoryInterface;
+use App\Contracts\LogRepositoryInterface;
 use App\Contracts\MessageRepositoryInterface;
 use App\Contracts\MoodLogRepositoryInterface;
 use App\Contracts\NegotiationRepositoryInterface;
@@ -30,6 +31,7 @@ use App\Repositories\Demand\DemandRepository;
 use App\Repositories\Document\DocumentRepository;
 use App\Repositories\Hook\HookRepository;
 use App\Repositories\Hostage\HostageRepository;
+use App\Repositories\Log\LogRepository;
 use App\Repositories\Message\MessageRepository;
 use App\Repositories\MoodLog\MoodLogRepository;
 use App\Repositories\Negotiation\NegotiationRepository;
@@ -172,6 +174,12 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             RiskAssessmentRepositoryInterface::class,
             RiskAssessmentRepository::class
+        );
+
+        // Bind Log repository
+        $this->app->bind(
+            LogRepositoryInterface::class,
+            LogRepository::class
         );
     }
 

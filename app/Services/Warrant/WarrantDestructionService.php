@@ -19,17 +19,16 @@ class WarrantDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($warrant);
-        logger($log);
+        $this->addLogEntry($warrant);
 
         return $this->warrantRepository->deleteWarrant($warrantId);
     }
 
-    private function addLogEntry(Warrant $warrant)
+    private function addLogEntry(Warrant $warrant): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'warrant.deleted',
             headline: "{$user->name} deleted a warrant",

@@ -21,8 +21,7 @@ class ObjectiveUpdatingService
             return null;
         }
 
-        $log = $this->addLogEntry($objective);
-        logger($log);
+        $this->addLogEntry($objective);
 
         // Dispatch event
         event(new ObjectiveUpdatedEvent($objective));
@@ -30,11 +29,11 @@ class ObjectiveUpdatingService
         return $objective;
     }
 
-    private function addLogEntry(Objective $objective)
+    private function addLogEntry(Objective $objective): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'objective.updated',
             headline: "{$user->name} updated an objective",

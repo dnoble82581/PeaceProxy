@@ -6,4 +6,5 @@ return [
     App\Providers\RepositoryServiceProvider::class,
     App\Providers\TelephonyServiceProvider::class,
     App\Providers\PennantServiceProvider::class,
+    App\Providers\EventServiceProvider::class,
 ];

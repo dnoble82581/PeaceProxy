@@ -235,21 +235,21 @@
 	}
 
 ?>
-<div class="max-w-7xl mx-auto bg-dark-700 p-8 mt-4 rounded-lg">
+<div class="max-w-7xl mx-auto bg-white dark:bg-dark-700 p-8 mt-4 rounded-lg shadow-sm">
 	<div class="px-4 sm:px-8 text-center space-y-3">
-		<h1 class="text-2xl text-gray-400 font-semibold uppercase">Edit Contact Point</h1>
-		<p class="text-xs">Editing contact point for:
-			<span class="text-primary-400">{{ $subject->name }}</span></p>
+		<h1 class="text-2xl text-gray-900 dark:text-gray-400 font-semibold uppercase">Edit Contact Point</h1>
+		<p class="text-xs text-gray-700 dark:text-gray-400">Editing contact point for:
+			<span class="text-primary-600 dark:text-primary-400">{{ $subject->name }}</span></p>
 			
 		<!-- Flash Messages -->
 		@if(session()->has('message'))
-			<div class="mt-4 p-3 bg-green-500 bg-opacity-20 text-green-300 rounded-lg">
+			<div class="mt-4 p-3 bg-green-100 dark:bg-green-500 dark:bg-opacity-20 text-green-700 dark:text-green-300 rounded-lg">
 				{{ session('message') }}
 			</div>
 		@endif
 		
 		@if(session()->has('error'))
-			<div class="mt-4 p-3 bg-red-500 bg-opacity-20 text-red-300 rounded-lg">
+			<div class="mt-4 p-3 bg-red-100 dark:bg-red-500 dark:bg-opacity-20 text-red-700 dark:text-red-300 rounded-lg">
 				{{ session('error') }}
 			</div>
 		@endif
@@ -263,7 +263,7 @@
 		<!-- Backup hidden input for subject_id without wire:model to ensure it's submitted -->
 		<input type="hidden" name="subject_id_backup" id="subject_id_backup" value="{{ $subject->id }}">
 		
-		<h2 class="text-lg font-semibold text-white mb-4">Contact Information</h2>
+		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100 mb-4">Contact Information</h2>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<!-- Contact Type -->
 			<div>

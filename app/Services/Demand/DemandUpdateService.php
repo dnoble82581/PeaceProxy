@@ -17,8 +17,7 @@ class DemandUpdateService
     {
         $demand = $this->demandRepository->updateDemand($demandId, $demandDTO->toArray());
 
-        $log = $this->addLogEntry($demand);
-        logger($log);
+        $this->addLogEntry($demand);
 
         // Dispatch event
         event(new DemandUpdatedEvent($demand));
@@ -26,11 +25,11 @@ class DemandUpdateService
         return $demand;
     }
 
-    private function addLogEntry(Demand $demand)
+    private function addLogEntry(Demand $demand): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'demand.updated',
             headline: "{$user->name} updated a demand",

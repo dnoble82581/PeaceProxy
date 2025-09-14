@@ -24,8 +24,7 @@ class HostageDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($hostage);
-        logger($log);
+        $this->addLogEntry($hostage);
 
         $deletedHostage = $this->hostageRepository->deleteHostage($id);
         event(new HostageDestroyedEvent($hostage));
@@ -33,11 +32,11 @@ class HostageDestructionService
         return $deletedHostage;
     }
 
-    private function addLogEntry(Hostage $hostage)
+    private function addLogEntry(Hostage $hostage): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'hostage.deleted',
             headline: "{$user->name} deleted a hostage",

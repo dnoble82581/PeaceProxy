@@ -16,18 +16,17 @@ class HookCreationService
     public function createHook(HookDTO $hookDTO)
     {
         $hook = $this->hookRepository->createHook($hookDTO->toArray());
-        $log = $this->addLogEntry($hook);
-        logger($log);
+        $this->addLogEntry($hook);
         // Dispatch event on private.negotiation channel
         event(new HookCreatedEvent($hook));
 
         return $hook;
     }
 
-    private function addLogEntry(Hook $hook)
+    private function addLogEntry(Hook $hook): void
     {
         $user = auth()->user();
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'hook.created',
             headline: "{$user->name} created a hook",

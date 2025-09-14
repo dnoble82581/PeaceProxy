@@ -38,4 +38,12 @@ class Assessment extends Model
     {
         return $this->hasMany(AssessmentQuestionsAnswer::class);
     }
+
+    /**
+     * Get the logs for this assessment.
+     */
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 }

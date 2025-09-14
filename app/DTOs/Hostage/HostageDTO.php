@@ -83,7 +83,7 @@ class HostageDTO
             address: $data['address'] ?? null,
             status: $data['status'] ?? null,
             injury_status: $data['injury_status'] ?? null,
-            risk_factors: $data['risk_factors'] ?? null,
+            risk_factors: is_string($data['risk_factors'] ?? null) ? json_decode($data['risk_factors'], true) : ($data['risk_factors'] ?? null),
             notes: $data['notes'] ?? null,
             last_seen_at: $data['last_seen_at'] ?? null,
             freed_at: $data['freed_at'] ?? null,

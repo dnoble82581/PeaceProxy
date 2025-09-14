@@ -17,8 +17,7 @@ class DemandCreationService
     {
         $demand = $this->demandRepository->createDemand($demandDTO->toArray());
 
-        $log = $this->addLogEntry($demand);
-        logger($log);
+        $this->addLogEntry($demand);
 
         // Dispatch event
         event(new DemandCreatedEvent($demand));
@@ -26,11 +25,11 @@ class DemandCreationService
         return $demand;
     }
 
-    private function addLogEntry(Demand $demand)
+    private function addLogEntry(Demand $demand): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'demand.created',
             headline: "{$user->name} created a demand",

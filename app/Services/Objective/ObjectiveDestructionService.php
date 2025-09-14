@@ -21,8 +21,7 @@ class ObjectiveDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($objective);
-        logger($log);
+        $this->addLogEntry($objective);
 
         // Dispatch event
         event(new ObjectiveDestroyedEvent($objective));
@@ -30,11 +29,11 @@ class ObjectiveDestructionService
         return $this->objectiveRepository->deleteObjective($objectiveId);
     }
 
-    private function addLogEntry(Objective $objective)
+    private function addLogEntry(Objective $objective): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'objective.deleted',
             headline: "{$user->name} deleted an objective",
