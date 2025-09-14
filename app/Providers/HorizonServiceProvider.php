@@ -14,7 +14,12 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     public function boot(): void
     {
         parent::boot();
-        Horizon::auth(static fn ($request) => true);
+        Horizon::auth(function ($request) {
+            // pick the guard that authenticates on the apex
+            return auth('web')->check() && auth('web')->user()->isAdmin();
+            // or email/IP allowlist while you sort auth:
+            // return in_array($request->ip(), ['YOUR.PUBLIC.IP']);
+        });
         // Horizon::routeSmsNotificationsTo('15556667777');
         // Horizon::routeMailNotificationsTo('example@example.com');
         // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
