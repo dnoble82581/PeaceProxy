@@ -183,8 +183,8 @@
 ?>
 
 <div x-data="{showHostages: true}">
-	<div class="bg-teal-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm font-semibold">Hostages <span
+	<div class="bg-primary-600 dark:bg-primary-700 px-4 py-2 rounded-lg flex items-center justify-between">
+		<h3 class="text-sm font-semibold text-white">Hostages <span
 					x-show="!showHostages"
 					x-transition>({{ $negotiation->hostages->count() }})</span></h3>
 		<div class="flex items-center gap-2">
@@ -355,8 +355,8 @@
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">
-				<p class="text-gray-500 mb-4">No Hostages at this time.</p>
-				<p class="text-sm text-gray-400">Click the + button above to create a new hostage.</p>
+				<p class="text-gray-500 dark:text-gray-400 mb-4">No Hostages at this time.</p>
+				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new hostage.</p>
 			</div>
 		@endif
 	</div>

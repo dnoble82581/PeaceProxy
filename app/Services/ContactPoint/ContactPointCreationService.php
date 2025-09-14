@@ -10,25 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class ContactPointCreationService
 {
-    private function addLogEntry(ContactPoint $contactPoint): void
-    {
-        $user = auth()->user();
-
-        app(\App\Services\Log\LogService::class)->writeAsync(
-            tenantId: tenant()->id,
-            event: 'contactpoint.created',
-            headline: "{$user->name} created a contact point",
-            about: $contactPoint,      // loggable target
-            by: $user,                 // actor
-            description: "Contact point created: {$contactPoint->kind} - {$contactPoint->label}",
-            properties: [
-                'contactable_type' => $contactPoint->contactable_type,
-                'contactable_id' => $contactPoint->contactable_id,
-                'kind' => $contactPoint->kind,
-                'is_primary' => $contactPoint->is_primary,
-            ],
-        );
-    }
     /**
      * Create a new contact point
      *
@@ -110,8 +91,29 @@ class ContactPointCreationService
             return $contactPoint;
         });
 
-        $this->addLogEntry($contactPoint);
+        $log = $this->addLogEntry($contactPoint);
+        logger($log);
 
         return $contactPoint;
+    }
+
+    private function addLogEntry(ContactPoint $contactPoint)
+    {
+        $user = auth()->user();
+
+        return app(\App\Services\Log\LogService::class)->write(
+            tenantId: tenant()->id,
+            event: 'contactpoint.created',
+            headline: "{$user->name} created a contact point",
+            about: $contactPoint,      // loggable target
+            by: $user,                 // actor
+            description: "Contact point created: {$contactPoint->kind} - {$contactPoint->label}",
+            properties: [
+                'contactable_type' => $contactPoint->contactable_type,
+                'contactable_id' => $contactPoint->contactable_id,
+                'kind' => $contactPoint->kind,
+                'is_primary' => $contactPoint->is_primary,
+            ],
+        );
     }
 }

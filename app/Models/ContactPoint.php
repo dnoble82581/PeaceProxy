@@ -6,7 +6,6 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ContactPoint extends Model
@@ -36,6 +35,11 @@ class ContactPoint extends Model
         return $this->hasOne(ContactAddress::class);
     }
 
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
+
     protected function casts(): array
     {
         return [
@@ -43,10 +47,5 @@ class ContactPoint extends Model
             'is_verified' => 'boolean',
             'verified_at' => 'timestamp',
         ];
-    }
-
-    public function logs(): MorphMany
-    {
-        return $this->morphMany(Log::class, 'loggable');
     }
 }

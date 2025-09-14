@@ -20,7 +20,7 @@ class ProcessLogCreationJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param CreateLogDTO $logData The data for creating a log entry
+     * @param  CreateLogDTO  $logData  The data for creating a log entry
      */
     public function __construct(
         private readonly CreateLogDTO $logData
@@ -29,9 +29,6 @@ class ProcessLogCreationJob implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @param LogRepositoryInterface $repository
-     * @return void
      */
     public function handle(LogRepositoryInterface $repository): void
     {
@@ -48,8 +45,8 @@ class ProcessLogCreationJob implements ShouldQueue
     {
         return [
             'log',
-            'tenant:' . $this->logData->tenantId,
-            'event:' . $this->logData->event,
+            'tenant:'.$this->logData->tenantId,
+            'event:'.$this->logData->event,
         ];
     }
 }

@@ -172,8 +172,8 @@
 <div
 		class=""
 		x-data="{ showHooks: true }">
-	<div class="bg-primary-600 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm font-semibold">Hooks <span
+ <div class="bg-primary-600 dark:bg-primary-700 px-4 py-2 rounded-lg flex items-center justify-between">
+		<h3 class="text-sm font-semibold text-white">Hooks <span
 					x-show="!showHooks"
 					x-transition>({{ $primarySubject->hooks->count() }})</span></h3>
 		<div class="flex items-center gap-2">
@@ -201,7 +201,6 @@
 					flat
 					icon="chevron-up-down" />
 		</div>
-
 	</div>
 	<div
 			class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4"
@@ -213,16 +212,16 @@
 						wire:key="tsui-card-{{ $hook->id }}">
 					<x-card>
 						<x-slot:header>
-							<div class="p-3 flex items-center justify-between bg-primary-500 text-dark-100 rounded-t-lg">
+       <div class="p-3 flex items-center justify-between bg-primary-500 dark:bg-primary-600 text-dark-100 rounded-t-lg">
 								<div>
 									<p class="capitalize font-semibold">{{ $hook->title }}</p>
-									<p class="text-gray-300 text-xs">{{ $hook->source }}</p>
+									<p class="text-gray-100 dark:text-gray-300 text-xs">{{ $hook->source }}</p>
 								</div>
 								<div class="text-right">
 									<div class="flex items-end gap-1">
 										<x-subject.confidence-badge :confidence-score="$hook->confidence_score" />
 									</div>
-									<p class="text-gray-300 text-xs mt-1">{{ $hook->createdBy->name }}</p>
+									<p class="text-gray-100 dark:text-gray-300 text-xs mt-1">{{ $hook->createdBy->name }}</p>
 								</div>
 							</div>
 						</x-slot:header>
@@ -260,9 +259,9 @@
 				</div>
 			@endforeach
 		@else
-			<div class="col-span-3 text-center py-8">
-				<p class="text-gray-500 mb-4">No hooks available for this subject.</p>
-				<p class="text-sm text-gray-400">Click the + button above to create a new hook.</p>
+   <div class="col-span-3 text-center py-8">
+				<p class="text-gray-500 dark:text-gray-400 mb-4">No hooks available for this subject.</p>
+				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new hook.</p>
 			</div>
 		@endif
 

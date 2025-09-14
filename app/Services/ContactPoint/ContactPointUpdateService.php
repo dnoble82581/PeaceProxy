@@ -2,36 +2,17 @@
 
 namespace App\Services\ContactPoint;
 
-use App\Models\ContactPoint;
+use App\Models\ContactAddress;
 use App\Models\ContactEmail;
 use App\Models\ContactPhone;
-use App\Models\ContactAddress;
+use App\Models\ContactPoint;
 use Illuminate\Support\Facades\DB;
 
 class ContactPointUpdateService
 {
-    private function addLogEntry(ContactPoint $contactPoint): void
-    {
-        $user = auth()->user();
-
-        app(\App\Services\Log\LogService::class)->writeAsync(
-            tenantId: tenant()->id,
-            event: 'contactpoint.updated',
-            headline: "{$user->name} updated a contact point",
-            about: $contactPoint,      // loggable target
-            by: $user,                 // actor
-            description: "Contact point updated: {$contactPoint->kind} - {$contactPoint->label}",
-            properties: [
-                'contactable_type' => $contactPoint->contactable_type,
-                'contactable_id' => $contactPoint->contactable_id,
-                'kind' => $contactPoint->kind,
-                'is_primary' => $contactPoint->is_primary,
-            ],
-        );
-    }
     public function updateContactPoint(int $id, array $data): ContactPoint
     {
-        $contactPoint = DB::transaction(function () use ($id, $data) {
+        return DB::transaction(function () use ($id, $data) {
             // Get the contact point
             $contactPoint = ContactPoint::findOrFail($id);
 
@@ -92,10 +73,5 @@ class ContactPointUpdateService
 
             return $contactPoint->fresh(['email', 'phone', 'address']);
         });
-
-        // Log the update
-        $this->addLogEntry($contactPoint);
-
-        return $contactPoint;
     }
 }
