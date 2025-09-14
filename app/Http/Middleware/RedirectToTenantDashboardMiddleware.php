@@ -10,6 +10,10 @@ class RedirectToTenantDashboardMiddleware
 {
     public function handle(Request $request, Closure $next, ...$guards)
     {
+        if ($request->is('horizon*')) {
+            return $next($request);
+        }
+
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
                 $user = Auth::guard($guard)->user();
