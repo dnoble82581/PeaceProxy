@@ -13,6 +13,13 @@ Route::middleware([
 ])->group(function () {
     Volt::route('/', 'pages.welcome');
     Volt::route('/about', 'pages.about.about-us')->name('about');
+    Route::get('/_whoami', fn () => [
+        'host' => request()->getHost(),
+        'app_path' => base_path(),
+        'horizon.path' => config('horizon.path'),
+        'horizon.domain' => config('horizon.domain'),
+        'app_url' => config('app.url'),
+    ]);
 });
 
 // TENANT AWARE ROUTES
