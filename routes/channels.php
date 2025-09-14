@@ -29,6 +29,7 @@ Broadcast::channel('negotiation.{conversationId}', function (User $user, int $co
     //        ? ['id' => $user->id, 'name' => $user->name, 'avatar' => $user->avatar_path ?? null]
     //        : false;
 
+
     return [
         'id' => $user->id,
         'name' => $user->name,

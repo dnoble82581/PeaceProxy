@@ -4,6 +4,7 @@ namespace App\Services\Objective;
 
 use App\Contracts\ObjectiveRepositoryInterface;
 use App\DTOs\Objective\ObjectiveDTO;
+use App\Events\Objective\ObjectiveCreatedEvent;
 use App\Models\Objective;
 
 class ObjectiveCreationService
@@ -19,6 +20,7 @@ class ObjectiveCreationService
     {
         $objective = $this->objectiveRepository->createObjective($objectiveDTO->toArray());
 
+        event(new ObjectiveCreatedEvent($objective));
         $this->addLogEntry($objective);
 
         return $objective;

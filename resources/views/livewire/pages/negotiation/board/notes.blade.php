@@ -192,7 +192,7 @@
 		class="relative"
 		x-data="{ minimize: false }">
 	<div class="mb-4 flex justify-between items-center">
-		<h2 class="text-xl font-semibold">Notes</h2>
+		<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Notes</h2>
 		<x-button
 				icon="plus"
 				wire:click="openCreateModal"
@@ -204,12 +204,16 @@
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			@foreach($notes as $note)
 				<x-card>
-					<x-slot:header><h3 class="p-2">{{ $note->title }}</h3></x-slot:header>
+					<x-slot:header>
+						<div class="p-3 flex items-center justify-between bg-primary-500 dark:bg-primary-600 text-dark-100 rounded-t-lg">
+							<h3 class="font-semibold">{{ $note->title }}</h3>
+						</div>
+					</x-slot:header>
 					<p>{{ $note->body }}</p>
 					<x-slot:footer>
 						<div class="flex justify-between items-center">
 							<div>
-								<p class="text-xs">Created
+								<p class="text-xs text-gray-600 dark:text-gray-300">Created
 								                   by {{ $note->author->name }} {{ $note->created_at->diffForHumans() }}</p>
 							</div>
 							<div>
@@ -244,7 +248,7 @@
 		</div>
 	@else
 		<div class="text-center py-4">
-			<p class="text-gray-500">No notes found. Click "Add Note" to create one.</p>
+			<p class="text-gray-500 dark:text-gray-400">No notes found. Click "Add Note" to create one.</p>
 		</div>
 	@endif
 

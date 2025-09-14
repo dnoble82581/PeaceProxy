@@ -17,6 +17,62 @@ class DocumentStorageService
     }
 
     /**
+     * Update an existing document
+     */
+    public function updateDocument(array $data, int $documentId, ?UploadedFile $file = null): ?Document
+    {
+        $document = $this->documentRepository->updateDocument($data, $documentId, $file);
+
+        if (! $document) {
+            return null;
+        }
+
+        // Log the document update
+        $log = $this->addLogEntry($document, 'document.updated', 'updated');
+        logger($log);
+
+        return $document;
+    }
+
+    /**
+     * Add a log entry for document operations
+     *
+     * @return mixed
+     */
+    private function addLogEntry(Document $document, string $event, string $action)
+    {
+        $user = auth()->user();
+
+        return $this->logService->write(
+            tenantId: tenant()->id,
+            event: $event,
+            headline: "{$user->name} {$action} a document",
+            about: $document,      // loggable target
+            by: $user,            // actor
+            description: str($document->name)->limit(140),
+            properties: [
+                'negotiation_id' => $document->negotiation_id,
+                'documentable_type' => $document->documentable_type,
+                'documentable_id' => $document->documentable_id,
+                'file_type' => $document->file_type,
+                'file_size' => $document->file_size,
+                'is_private' => $document->is_private,
+            ],
+        );
+    }
+
+    /**
+     * Create a document for a subject
+     */
+    public function createSubjectDocument(array $data, int $subjectId, ?UploadedFile $file = null): Document
+    {
+        $data['documentable_type'] = 'App\\Models\\Subject';
+        $data['documentable_id'] = $subjectId;
+
+        return $this->createDocument($data, $file);
+    }
+
+    /**
      * Create a new document
      */
     public function createDocument(array $data, ?UploadedFile $file = null): Document
@@ -34,37 +90,10 @@ class DocumentStorageService
         $document = $this->documentRepository->createDocument($data, $file);
 
         // Log the document creation
-        $this->addLogEntry($document, 'document.created', 'created');
+        $log = $this->addLogEntry($document, 'document.created', 'created');
+        logger($log);
 
         return $document;
-    }
-
-    /**
-     * Update an existing document
-     */
-    public function updateDocument(array $data, int $documentId, ?UploadedFile $file = null): ?Document
-    {
-        $document = $this->documentRepository->updateDocument($data, $documentId, $file);
-
-        if (! $document) {
-            return null;
-        }
-
-        // Log the document update
-        $this->addLogEntry($document, 'document.updated', 'updated');
-
-        return $document;
-    }
-
-    /**
-     * Create a document for a subject
-     */
-    public function createSubjectDocument(array $data, int $subjectId, ?UploadedFile $file = null): Document
-    {
-        $data['documentable_type'] = 'App\\Models\\Subject';
-        $data['documentable_id'] = $subjectId;
-
-        return $this->createDocument($data, $file);
     }
 
     /**
@@ -88,32 +117,5 @@ class DocumentStorageService
         $data['negotiation_id'] = $negotiationId;
 
         return $this->createDocument($data, $file);
-    }
-
-    /**
-     * Add a log entry for document operations
-     *
-     * @return mixed
-     */
-    private function addLogEntry(Document $document, string $event, string $action): void
-    {
-        $user = auth()->user();
-
-        $this->logService->writeAsync(
-            tenantId: tenant()->id,
-            event: $event,
-            headline: "{$user->name} {$action} a document",
-            about: $document,      // loggable target
-            by: $user,            // actor
-            description: str($document->name)->limit(140),
-            properties: [
-                'negotiation_id' => $document->negotiation_id,
-                'documentable_type' => $document->documentable_type,
-                'documentable_id' => $document->documentable_id,
-                'file_type' => $document->file_type,
-                'file_size' => $document->file_size,
-                'is_private' => $document->is_private,
-            ],
-        );
     }
 }

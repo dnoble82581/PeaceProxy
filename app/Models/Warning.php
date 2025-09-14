@@ -33,11 +33,4 @@ class Warning extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the logs for this warning.
-     */
-    public function logs(): MorphMany
-    {
-        return $this->morphMany(Log::class, 'loggable');
-    }
 }

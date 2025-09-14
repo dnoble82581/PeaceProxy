@@ -19,21 +19,14 @@ class DocumentDestructionService
     }
 
     /**
-     * Delete a document
+     * Delete all documents for a subject
      *
-     * @param int $documentId
-     * @return Document|null
+     * @param int $subjectId
+     * @return int Number of documents deleted
      */
-    public function deleteDocument(int $documentId): ?Document
+    public function deleteSubjectDocuments(int $subjectId): int
     {
-        // Get the document before deleting it
-        $document = $this->documentRepository->getDocument($documentId);
-
-        if ($document) {
-            $this->addLogEntry($document);
-        }
-
-        return $this->documentRepository->deleteDocument($documentId);
+        return $this->deleteDocumentsByDocumentable('App\\Models\\Subject', $subjectId);
     }
 
     /**
@@ -58,14 +51,49 @@ class DocumentDestructionService
     }
 
     /**
-     * Delete all documents for a subject
+     * Delete a document
      *
-     * @param int $subjectId
-     * @return int Number of documents deleted
+     * @param int $documentId
+     * @return Document|null
      */
-    public function deleteSubjectDocuments(int $subjectId): int
+    public function deleteDocument(int $documentId): ?Document
     {
-        return $this->deleteDocumentsByDocumentable('App\\Models\\Subject', $subjectId);
+        // Get the document before deleting it
+        $document = $this->documentRepository->getDocument($documentId);
+
+        if ($document) {
+            $log = $this->addLogEntry($document);
+            logger($log);
+        }
+
+        return $this->documentRepository->deleteDocument($documentId);
+    }
+
+    /**
+     * Add a log entry for document deletion
+     *
+     * @param Document $document
+     * @return mixed
+     */
+    private function addLogEntry(Document $document)
+    {
+        $user = auth()->user();
+
+        return $this->logService->write(
+            tenantId: tenant()->id,
+            event: 'document.deleted',
+            headline: "{$user->name} deleted a document",
+            about: $document,      // loggable target
+            by: $user,            // actor
+            description: str($document->name)->limit(140),
+            properties: [
+                'negotiation_id' => $document->negotiation_id,
+                'documentable_type' => $document->documentable_type,
+                'documentable_id' => $document->documentable_id,
+                'file_type' => $document->file_type,
+                'file_size' => $document->file_size,
+            ],
+        );
     }
 
     /**
@@ -88,31 +116,5 @@ class DocumentDestructionService
     public function deleteNegotiationDocuments(int $negotiationId): int
     {
         return $this->deleteDocumentsByDocumentable('App\\Models\\Negotiation', $negotiationId);
-    }
-
-    /**
-     * Add a log entry for document deletion
-     *
-     * @param Document $document
-     */
-    private function addLogEntry(Document $document): void
-    {
-        $user = auth()->user();
-
-        $this->logService->writeAsync(
-            tenantId: tenant()->id,
-            event: 'document.deleted',
-            headline: "{$user->name} deleted a document",
-            about: $document,      // loggable target
-            by: $user,            // actor
-            description: str($document->name)->limit(140),
-            properties: [
-                'negotiation_id' => $document->negotiation_id,
-                'documentable_type' => $document->documentable_type,
-                'documentable_id' => $document->documentable_id,
-                'file_type' => $document->file_type,
-                'file_size' => $document->file_size,
-            ],
-        );
     }
 }

@@ -83,7 +83,13 @@
 			return [
 				"echo-private:tenants.$this->tenantId.notifications,.ObjectivePinned" => 'loadPinnedObjectives',
 				"echo-private:tenants.$this->tenantId.notifications,.ObjectiveUnpinned" => 'loadPinnedObjectives',
+				"echo-private.negotiation.$this->tenantId.$this->negotiation_id,.ObjectiveCreated" => 'handleObjectiveCreated'
 			];
+		}
+
+		public function handleObjectiveCreated(array $data):void
+		{
+			logger('heard objective');
 		}
 
 		#[Computed]
@@ -194,9 +200,9 @@
 				tenant_id: $objective->tenant_id,
 				negotiation_id: $objective->negotiation_id,
 				created_by_id: $objective->created_by_id,
-				objective: $objective->objective,
 				priority: $objective->priority->value,
-				status: Status::completed->value
+				status: Status::completed->value,
+				objective: $objective->objective
 			);
 
 			// Use the service to update the objective
