@@ -27,6 +27,7 @@
     "league/flysystem-aws-s3-v3": "^3.0",
     "livewire/livewire": "^3.0.0",
     "livewire/volt": "^1.7",
+    "predis/predis": "^3.2",
     "propaganistas/laravel-phone": "^6.0",
     "tallstackui/tallstackui": "^2.12",
     "twilio/sdk": "^8.7"

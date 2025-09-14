@@ -23,17 +23,16 @@ class NoteDeletionService
             return null;
         }
 
-        $log = $this->addLogEntry($note);
-        logger($log);
+        $this->addLogEntry($note);
 
         return $this->noteRepository->deleteNote($id);
     }
 
-    private function addLogEntry(Note $note)
+    private function addLogEntry(Note $note): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'note.deleted',
             headline: "{$user->name} deleted a note",

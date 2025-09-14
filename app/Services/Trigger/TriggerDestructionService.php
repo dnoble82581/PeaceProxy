@@ -20,8 +20,7 @@ class TriggerDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($deletedTrigger);
-        logger($log);
+        $this->addLogEntry($deletedTrigger);
 
         $deleted = $this->triggerRepository->deleteTrigger($id);
 
@@ -30,11 +29,11 @@ class TriggerDestructionService
         return $deleted;
     }
 
-    private function addLogEntry(Trigger $trigger)
+    private function addLogEntry(Trigger $trigger): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'trigger.deleted',
             headline: "{$user->name} deleted a trigger",

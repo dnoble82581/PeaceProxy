@@ -19,17 +19,16 @@ class WarrantUpdatingService
             return null;
         }
 
-        $log = $this->addLogEntry($warrant);
-        logger($log);
+        $this->addLogEntry($warrant);
 
         return $warrant;
     }
 
-    private function addLogEntry(Warrant $warrant)
+    private function addLogEntry(Warrant $warrant): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'warrant.updated',
             headline: "{$user->name} updated a warrant",

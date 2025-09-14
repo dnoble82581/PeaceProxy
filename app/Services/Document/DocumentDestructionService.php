@@ -30,8 +30,7 @@ class DocumentDestructionService
         $document = $this->documentRepository->getDocument($documentId);
 
         if ($document) {
-            $log = $this->addLogEntry($document);
-            logger($log);
+            $this->addLogEntry($document);
         }
 
         return $this->documentRepository->deleteDocument($documentId);
@@ -95,13 +94,12 @@ class DocumentDestructionService
      * Add a log entry for document deletion
      *
      * @param Document $document
-     * @return mixed
      */
-    private function addLogEntry(Document $document)
+    private function addLogEntry(Document $document): void
     {
         $user = auth()->user();
 
-        return $this->logService->write(
+        $this->logService->writeAsync(
             tenantId: tenant()->id,
             event: 'document.deleted',
             headline: "{$user->name} deleted a document",

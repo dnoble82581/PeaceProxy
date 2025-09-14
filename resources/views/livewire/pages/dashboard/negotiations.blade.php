@@ -20,25 +20,25 @@
 		#[Validate('required')]
 		public string $choseRole = '';
 
- 	#[Validate('required')]
- 	public string $title = '';
+		#[Validate('required')]
+		public string $title = '';
 
- 	public string $location = '';
- 	public string $location_address = '';
- 	public string $location_city = '';
- 	public string $location_state = '';
- 	public string $location_zip = '';
+		public string $location = '';
+		public string $location_address = '';
+		public string $location_city = '';
+		public string $location_state = '';
+		public string $location_zip = '';
 
- 	#[Validate('required')]
- 	public string $status = '';
+		#[Validate('required')]
+		public string $status = '';
 
- 	#[Validate('required')]
- 	public string $type = '';
-	
- 	public string $summary = '';
- 	public string $initial_complaint = '';
- 	public string $negotiation_strategy = '';
- 	public array $tags = [];
+		#[Validate('required')]
+		public string $type = '';
+
+		public string $summary = '';
+		public string $initial_complaint = '';
+		public string $negotiation_strategy = '';
+		public array $tags = [];
 
 		public function mount():void
 		{
@@ -52,76 +52,76 @@
 			$this->roleModal = true;
 		}
 
- 	public function openEditModal(int $negotiationId):void
- 	{
- 		$this->selectedNegotiation = $negotiationId;
+		public function openEditModal(int $negotiationId):void
+		{
+			$this->selectedNegotiation = $negotiationId;
 
- 		// Find the negotiation in the collection
- 		$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
+			// Find the negotiation in the collection
+			$negotiation = $this->negotiations->firstWhere('id', $negotiationId);
 
- 		// Populate the form fields - basic information
- 		$this->title = $negotiation->title;
- 		$this->status = $negotiation->status->value; // Convert enum to string
- 		$this->type = $negotiation->type->value; // Convert enum to string
-		
- 		// Populate summary and details
- 		$this->summary = $negotiation->summary ?? '';
- 		$this->initial_complaint = $negotiation->initial_complaint ?? '';
- 		$this->negotiation_strategy = $negotiation->negotiation_strategy ?? '';
-		
- 		// Populate location information
- 		$this->location = $negotiation->location ?? '';
- 		$this->location_address = $negotiation->location_address ?? '';
- 		$this->location_city = $negotiation->location_city ?? '';
- 		$this->location_state = $negotiation->location_state ?? '';
- 		$this->location_zip = $negotiation->location_zip ?? '';
- 		$this->tags = $negotiation->tags ?? [];
+			// Populate the form fields - basic information
+			$this->title = $negotiation->title;
+			$this->status = $negotiation->status->value; // Convert enum to string
+			$this->type = $negotiation->type->value; // Convert enum to string
 
- 		$this->editModal = true;
- 	}
+			// Populate summary and details
+			$this->summary = $negotiation->summary ?? '';
+			$this->initial_complaint = $negotiation->initial_complaint ?? '';
+			$this->negotiation_strategy = $negotiation->negotiation_strategy ?? '';
 
- 	public function saveNegotiation():void
- 	{
- 		$this->validate([
- 			'title' => 'required',
- 			'status' => 'required',
- 			'type' => 'required',
- 			'location' => 'nullable',
- 			'location_address' => 'nullable',
- 			'location_city' => 'nullable',
- 			'location_state' => 'nullable',
- 			'location_zip' => 'nullable|numeric',
- 			'summary' => 'nullable',
- 			'initial_complaint' => 'nullable',
- 			'negotiation_strategy' => 'nullable',
- 			'tags' => 'nullable|array',
- 		]);
+			// Populate location information
+			$this->location = $negotiation->location ?? '';
+			$this->location_address = $negotiation->location_address ?? '';
+			$this->location_city = $negotiation->location_city ?? '';
+			$this->location_state = $negotiation->location_state ?? '';
+			$this->location_zip = $negotiation->location_zip ?? '';
+			$this->tags = $negotiation->tags ?? [];
 
- 		// Find the negotiation in the database
- 		$negotiation = Negotiation::find($this->selectedNegotiation);
+			$this->editModal = true;
+		}
 
- 		// Update the negotiation
- 		$negotiation->update([
- 			'title' => $this->title,
- 			'location' => $this->location,
- 			'location_address' => $this->location_address ?? null,
- 			'location_city' => $this->location_city ?? null,
- 			'location_state' => $this->location_state ?? null,
- 			'location_zip' => $this->location_zip ?? null,
- 			'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
- 			'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
- 			'summary' => $this->summary ?? null,
- 			'initial_complaint' => $this->initial_complaint ?? null,
- 			'negotiation_strategy' => $this->negotiation_strategy ?? null,
- 			'tags' => $this->tags ?? [],
- 		]);
+		public function saveNegotiation():void
+		{
+			$this->validate([
+				'title' => 'required',
+				'status' => 'required',
+				'type' => 'required',
+				'location' => 'nullable',
+				'location_address' => 'nullable',
+				'location_city' => 'nullable',
+				'location_state' => 'nullable',
+				'location_zip' => 'nullable|numeric',
+				'summary' => 'nullable',
+				'initial_complaint' => 'nullable',
+				'negotiation_strategy' => 'nullable',
+				'tags' => 'nullable|array',
+			]);
 
- 		// Close the slide-over panel
- 		$this->editModal = false;
+			// Find the negotiation in the database
+			$negotiation = Negotiation::find($this->selectedNegotiation);
 
- 		// Refresh the negotiations list
- 		$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
- 	}
+			// Update the negotiation
+			$negotiation->update([
+				'title' => $this->title,
+				'location' => $this->location,
+				'location_address' => $this->location_address ?? null,
+				'location_city' => $this->location_city ?? null,
+				'location_state' => $this->location_state ?? null,
+				'location_zip' => $this->location_zip ?? null,
+				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
+				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+				'summary' => $this->summary ?? null,
+				'initial_complaint' => $this->initial_complaint ?? null,
+				'negotiation_strategy' => $this->negotiation_strategy ?? null,
+				'tags' => $this->tags ?? [],
+			]);
+
+			// Close the slide-over panel
+			$this->editModal = false;
+
+			// Refresh the negotiations list
+			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+		}
 
 		public function openDeleteModal(int $negotiationId):void
 		{
@@ -319,15 +319,27 @@
 																			for="chooseRole">Choose your role in this
 																	                         negotiation</label>
 																	<select
-																			class="text-black w-full dark:text-dark-300 dark:bg-dark-700 rounded-md border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+																			class="text-black w-full dark:text-dark-300 dark:bg-dark-700 rounded-md text-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
 																			placeholder="test"
 																			wire:model="choseRole"
 																			id="chooseRole"
+																			required
 																			class="mt-2">
+																		@if(empty($choseRole))
+																			<option
+																					value=""
+																					selected>Select Your Role...
+																			</option>
+																		@else
+																			<option value="">Make Selection</option>
+																		@endif
 																		@foreach(\App\Enums\User\UserNegotiationRole::cases() as $role)
 																			<option value="{{ $role->value }}">{{ $role->label() }}</option>
 																		@endforeach
 																	</select>
+																	@error('choseRole')
+																	<p class="text-rose-500">{{ $message }}</p>
+																	@enderror
 																</div>
 																<div class="space-x-2">
 																	<x-button wire:click="enterNegotiation({{ $selectedNegotiation }})">
@@ -342,17 +354,24 @@
 
 															</x-modal>
 
-               <!-- Edit Negotiation Slide -->
+															<!-- Edit Negotiation Slide -->
 															<x-slide
+																	size="4xl"
 																	persistent
 																	position="right"
 																	wire="editModal"
 																	title="Edit Negotiation">
-																<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20">
+																<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20 px-8">
 																	<!-- Basic Information -->
 																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-white">Basic Information</h2>
-																		<p class="mb-4 text-sm text-gray-400">Edit the basic details about this negotiation</p>
+																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																			Basic Information</h2>
+																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																			Edit the
+																			basic
+																			details
+																			about this
+																			negotiation</p>
 
 																		<div class="grid grid-cols-1 gap-4">
 																			<div>
@@ -394,8 +413,14 @@
 
 																	<!-- Summary and Details -->
 																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-white">Summary and Details</h2>
-																		<p class="mb-4 text-sm text-gray-400">Provide additional information about the negotiation</p>
+																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																			Summary and Details</h2>
+																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																			Provide
+																			additional
+																			information
+																			about the
+																			negotiation</p>
 
 																		<div class="grid grid-cols-1 gap-4">
 																			<x-textarea
@@ -420,8 +445,16 @@
 
 																	<!-- Location Information -->
 																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-white">Location Information</h2>
-																		<p class="mb-4 text-sm text-gray-400">Enter details about where the negotiation took place</p>
+																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																			Location Information</h2>
+																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																			Enter
+																			details
+																			about
+																			where the
+																			negotiation
+																			took
+																			place</p>
 
 																		<div class="grid grid-cols-1 gap-4">
 																			<x-input
@@ -453,11 +486,11 @@
 																			<x-input
 																					icon="hashtag"
 																					label="ZIP Code"
-																					type="number"
 																					wire:model="location_zip"
 																					placeholder="Enter ZIP code" />
 
 																			<x-tag
+																					hint="Add tag and then commit it by pressing enter"
 																					placeholder="Add tags"
 																					icon="tag"
 																					label="Tags"
@@ -467,8 +500,9 @@
 																	</div>
 
 																	<!-- Action Buttons -->
-																	<div class="fixed bottom-0 right-0 p-4 bg-dark-800 w-full border-t border-dark-600">
-																		<div class="flex justify-end space-x-2">
+
+																	<x-slot:footer end>
+																		<div class="space-x-2 bg-dark-200 dark:bg-dark-800 w-full p-4">
 																			<x-button
 																					wire:click="$toggle('editModal')"
 																					color="zinc">
@@ -480,8 +514,7 @@
 																				Save Changes
 																			</x-button>
 																		</div>
-																	</div>
-																</div>
+																	</x-slot:footer>
 															</x-slide>
 
 															<!-- Delete Confirmation Modal -->

@@ -21,8 +21,7 @@ class HookUpdatingService
             return null;
         }
 
-        $log = $this->addLogEntry($hook);
-        logger($log);
+        $this->addLogEntry($hook);
 
         // Dispatch event if needed
         event(new HookUpdatedEvent($hook));
@@ -30,11 +29,11 @@ class HookUpdatingService
         return $hook;
     }
 
-    private function addLogEntry(Hook $hook)
+    private function addLogEntry(Hook $hook): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'hook.updated',
             headline: "{$user->name} updated a hook",

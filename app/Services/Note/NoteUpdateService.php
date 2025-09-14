@@ -23,17 +23,16 @@ class NoteUpdateService
             return null;
         }
 
-        $log = $this->addLogEntry($note);
-        logger($log);
+        $this->addLogEntry($note);
 
         return $note;
     }
 
-    private function addLogEntry(Note $note)
+    private function addLogEntry(Note $note): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'note.updated',
             headline: "{$user->name} updated a note",

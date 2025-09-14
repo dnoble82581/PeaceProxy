@@ -20,8 +20,7 @@ class DemandDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($demand);
-        logger($log);
+        $this->addLogEntry($demand);
 
         // Dispatch event
         event(new DemandDestroyedEvent($demand));
@@ -29,11 +28,11 @@ class DemandDestructionService
         return $this->demandRepository->deleteDemand($demandId);
     }
 
-    private function addLogEntry(Demand $demand)
+    private function addLogEntry(Demand $demand): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'demand.deleted',
             headline: "{$user->name} deleted a demand",

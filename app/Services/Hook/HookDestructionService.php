@@ -20,8 +20,7 @@ class HookDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($hook);
-        logger($log);
+        $this->addLogEntry($hook);
 
         // Dispatch event if needed
         event(new HookDestroyedEvent($hook));
@@ -29,11 +28,11 @@ class HookDestructionService
         return $this->hookRepository->deleteHook($hookId);
     }
 
-    private function addLogEntry(Hook $hook)
+    private function addLogEntry(Hook $hook): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'hook.deleted',
             headline: "{$user->name} deleted a hook",

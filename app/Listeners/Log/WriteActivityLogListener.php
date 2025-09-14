@@ -14,7 +14,7 @@ class WriteActivityLogListener
     {
         // Each event exposes tenantId, actor, subject, summary, etc.
         $this->logs->write(
-            tenantId: $event->tenantId,
+            tenantId: tenant()->id,
             event: $event->eventKey,         // e.g. 'message.sent'
             headline: $event->headline,         // "Sgt. Hall sent a message"
             about: $event->subjectModel ?? null,

@@ -19,18 +19,17 @@ class MessageCreationService
     public function createMessage(MessageDTO $messageDTO): Message
     {
         $newMessage = $this->messageRepository->createMessage($messageDTO->toArray());
-        $log = $this->addLogEntry($newMessage);
-        logger($log);
+        $this->addLogEntry($newMessage);
         $this->broadCastMessageCreated($newMessage);
 
         return $newMessage;
     }
 
-    private function addLogEntry(Message $message)
+    private function addLogEntry(Message $message): void
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        app(\App\Services\Log\LogService::class)->writeAsync(
             tenantId: tenant()->id,
             event: 'message.sent',
             headline: "{$user->name} sent a message",
