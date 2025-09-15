@@ -131,21 +131,12 @@
 
 			$hostageDTO = \App\DTOs\Hostage\HostageDTO::fromArray($validated);
 
-			// Update the hostage
-//			$this->hostage->update($validated);
-
-			// Handle image uploads using ImageService
-			if (!empty($this->newImages)) {
-				$imageService = app(ImageService::class);
-				$imageService->uploadImagesForModel(
-					$this->newImages,
-					$this->hostage,
-					'hostages',
-					's3_public'
-				);
-			}
-
-			app(\App\Services\Hostage\HostageUpdatingService::class)->updateHostage($hostageDTO, $this->hostage->id);
+			// Update the hostage and handle image uploads in one step
+			app(\App\Services\Hostage\HostageUpdatingService::class)->updateHostage(
+				$hostageDTO, 
+				$this->hostage->id, 
+				$this->newImages
+			);
 
 
 			// Redirect back to the negotiation page or dashboard

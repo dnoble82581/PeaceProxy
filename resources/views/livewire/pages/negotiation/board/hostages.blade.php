@@ -7,16 +7,16 @@
 	use Livewire\WithPagination;
 
 	new class extends Component {
- 	use WithPagination;
+		use WithPagination;
 
- 	public bool $showCreateHostageModal = false;
- 	public bool $showViewHostageModal = false;
- 	public bool $showEditHostageModal = false;
- 	public bool $showDeleteHostageModal = false;
-	public $currentHostageId = null;
-	public $hostages = [];
-	public $negotiation;
-	public string $sortBy = 'name';
+		public bool $showCreateHostageModal = false;
+		public bool $showViewHostageModal = false;
+		public bool $showEditHostageModal = false;
+		public bool $showDeleteHostageModal = false;
+		public $currentHostageId = null;
+		public $hostages = [];
+		public $negotiation;
+		public string $sortBy = 'name';
 
 		public function mount($negotiationId)
 		{
@@ -25,34 +25,34 @@
 
 		}
 
- 	public function loadHostages():void
- 	{
- 		$negotiation = $this->negotiation ?? null;
+		public function loadHostages():void
+		{
+			$negotiation = $this->negotiation ?? null;
 
- 		if ($negotiation) {
- 			$hostages = Hostage::where('negotiation_id', $negotiation->id)
- 				->with(['images', 'contacts.phone', 'contacts.email'])
- 				->get();
- 		} else {
- 			$hostages = Hostage::with(['images', 'contacts.phone', 'contacts.email'])->get();
- 		}
-		
- 		// Sort the hostages based on the sortBy property
- 		$this->hostages = $hostages->sortBy($this->sortBy);
- 	}
-	
- 	/**
- 	 * Update the sort field and refresh the hostages
- 	 *
- 	 * @param  string  $field  The field to sort by
- 	 *
- 	 * @return void
- 	 */
- 	public function updateSort(string $field):void
- 	{
- 		$this->sortBy = $field;
- 		$this->loadHostages();
- 	}
+			if ($negotiation) {
+				$hostages = Hostage::where('negotiation_id', $negotiation->id)
+					->with(['images', 'contacts.phone', 'contacts.email'])
+					->get();
+			} else {
+				$hostages = Hostage::with(['images', 'contacts.phone', 'contacts.email'])->get();
+			}
+
+			// Sort the hostages based on the sortBy property
+			$this->hostages = $hostages->sortBy($this->sortBy);
+		}
+
+		/**
+		 * Update the sort field and refresh the hostages
+		 *
+		 * @param  string  $field  The field to sort by
+		 *
+		 * @return void
+		 */
+		public function updateSort(string $field):void
+		{
+			$this->sortBy = $field;
+			$this->loadHostages();
+		}
 
 		public function createHostage()
 		{
@@ -106,25 +106,25 @@
 			$this->showDeleteHostageModal = true;
 		}
 
- 	public function deleteHostage():void
- 	{
- 		if ($this->currentHostageId) {
- 			$hostage = Hostage::find($this->currentHostageId);
+		public function deleteHostage():void
+		{
+			if ($this->currentHostageId) {
+				$hostage = Hostage::find($this->currentHostageId);
 
- 			if ($hostage) {
- 				// Use the service to delete the hostage
- 				$hostageDestructionService = app(HostageDestructionService::class);
- 				$hostageDestructionService->deleteHostage($hostage->id);
+				if ($hostage) {
+					// Use the service to delete the hostage
+					$hostageDestructionService = app(HostageDestructionService::class);
+					$hostageDestructionService->deleteHostage($hostage->id);
 
- 				// Close the modal and reset currentHostageId
- 				$this->showDeleteHostageModal = false;
- 				$this->currentHostageId = null;
+					// Close the modal and reset currentHostageId
+					$this->showDeleteHostageModal = false;
+					$this->currentHostageId = null;
 
- 				// Reload hostages
- 				$this->loadHostages();
- 			}
- 		}
- 	}
+					// Reload hostages
+					$this->loadHostages();
+				}
+			}
+		}
 
 		/**
 		 * Define the event listeners for this component
@@ -183,8 +183,8 @@
 ?>
 
 <div x-data="{showHostages: true}">
-	<div class="bg-primary-600 dark:bg-primary-700 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm font-semibold text-white">Hostages <span
+	<div class="bg-teal-600 px-4 py-2 rounded-lg flex items-center justify-between">
+		<h3 class="text-sm font-semibold">Hostages <span
 					x-show="!showHostages"
 					x-transition>({{ $negotiation->hostages->count() }})</span></h3>
 		<div class="flex items-center gap-2">
@@ -355,8 +355,8 @@
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">
-				<p class="text-gray-500 dark:text-gray-400 mb-4">No Hostages at this time.</p>
-				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new hostage.</p>
+				<p class="text-gray-500 mb-4">No Hostages at this time.</p>
+				<p class="text-sm text-gray-400">Click the + button above to create a new hostage.</p>
 			</div>
 		@endif
 	</div>

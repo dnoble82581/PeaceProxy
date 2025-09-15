@@ -8,7 +8,7 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.auth')] class extends Component {
+	new #[Layout('layouts.auth'), \Livewire\Attributes\Title('Register - PeaceProxy')] class extends Component {
 		public CreateTenantForm $tenantForm;
 		public CreateUserForm $userForm;
 
