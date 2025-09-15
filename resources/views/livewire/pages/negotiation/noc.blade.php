@@ -12,7 +12,7 @@
 	use Illuminate\View\View;
 
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+	new #[Layout('layouts.negotiation'), \Livewire\Attributes\Title('NOC - Peace Proxy')] class extends Component {
 
 		public ?Negotiation $negotiation;
 		public bool $showPhoneModal = false;
@@ -37,7 +37,7 @@
 		{
 			$this->showPhoneModal = !$this->showPhoneModal;
 		}
-		
+
 		/**
 		 * Load all phone numbers for the primary subject
 		 */
@@ -46,19 +46,19 @@
 			if ($this->primarySubject) {
 				// Get all contact points for the subject
 				$contactPoints = app(ContactPointFetchingService::class)->getContactPointsBySubject($this->primarySubject);
-				
+
 				// Filter to get only phone contact points
 				$phoneContactPoints = $contactPoints->filter(function ($contactPoint) {
 					return $contactPoint->kind === 'phone';
 				});
-				
+
 				// Extract phone numbers from contact points
 				$this->phoneNumbers = $phoneContactPoints->map(function ($contactPoint) {
-					$label = $contactPoint->label ?: 'Phone';
+					$label = $contactPoint->label?: 'Phone';
 					$number = $contactPoint->phone->e164;
-					$ext = $contactPoint->phone->ext ? ' ext. ' . $contactPoint->phone->ext : '';
-					$isPrimary = $contactPoint->is_primary ? ' (Primary)' : '';
-					
+					$ext = $contactPoint->phone->ext? ' ext. '.$contactPoint->phone->ext : '';
+					$isPrimary = $contactPoint->is_primary? ' (Primary)' : '';
+
 					return [
 						'label' => $label,
 						'number' => $number,

@@ -76,20 +76,9 @@
 			// Create a DTO from the validated data
 			$hostageDTO = HostageDTO::fromArray($validated);
 
-			// Use the service to create the hostage
+			// Use the service to create the hostage and handle image uploads in one step
 			$hostageCreationService = app(HostageCreationService::class);
-			$hostage = $hostageCreationService->createHostage($hostageDTO);
-
-			// Handle image uploads using ImageService
-			if (!empty($this->images)) {
-				$imageService = app(ImageService::class);
-				$imageService->uploadImagesForModel(
-					$this->images,
-					$hostage,
-					'hostages',
-					's3_public'
-				);
-			}
+			$hostage = $hostageCreationService->createHostage($hostageDTO, $this->images);
 
 			// Redirect back to the negotiation page or dashboard
 			if ($this->negotiation) {

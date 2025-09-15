@@ -280,7 +280,7 @@
 			</button>
 			<button
 					@click="nextSlide"
-					class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-l focus:outline-none transition-opacity duration-200"
+					class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 bg-opacity-50 text-white p-1 rounded-l focus:outline-none transition-opacity duration-200"
 					x-show="slides.length > 1 && isHovering"
 					x-transition:enter="transition ease-out duration-200"
 					x-transition:enter-start="opacity-0"

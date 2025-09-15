@@ -16,12 +16,27 @@ class HostageCreationService
     /**
      * Create a new hostage using DTO.
      */
-    public function createHostage(HostageDTO $hostageDTO): Hostage
+    public function createHostage(HostageDTO $hostageDTO, array $images = []): Hostage
     {
         $hostage = $this->hostageRepository->createHostage($hostageDTO->toArray());
 
         $this->addLogEntry($hostage);
 
+        // Handle image uploads if provided
+        if (!empty($images)) {
+            $imageService = app(\App\Services\Image\ImageService::class);
+            $imageService->uploadImagesForModel(
+                $images,
+                $hostage,
+                'hostages',
+                's3_public'
+            );
+
+            // Refresh the hostage model to include the newly attached images
+            $hostage->refresh();
+        }
+
+        // Dispatch event after images are processed
         event(new HostageCreatedEvent($hostage));
         return $hostage;
     }

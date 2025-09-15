@@ -34,13 +34,13 @@
 		/** @var int The ID of the negotiation */
 		public int $negotiationId;
 
- 	/** @var Demand|null The demand being edited */
- 	public $demandToEdit;
+		/** @var Demand|null The demand being edited */
+		public $demandToEdit;
 
- 	public CreateDemandForm $form;
-	
- 	/** @var string The field to sort demands by */
- 	public string $sortBy = 'created_at';
+		public CreateDemandForm $form;
+
+		/** @var string The field to sort demands by */
+		public string $sortBy = 'created_at';
 
 		/**
 		 * Initialize the component with the negotiation data
@@ -143,60 +143,60 @@
 			app(DemandDestructionService::class)->deleteDemand($demandId);
 		}
 
- 	/**
- 	 * Close all modal dialogs and refresh the component
- 	 *
- 	 * This method is triggered by the 'close-modal' event
- 	 *
- 	 * @return void
- 	 */
- 	#[On('close-modal')]
- 	public function closeModal():void
- 	{
- 		$this->showCreateDemandModal = false;
- 		$this->showEditDemandModal = false;
+		/**
+		 * Close all modal dialogs and refresh the component
+		 *
+		 * This method is triggered by the 'close-modal' event
+		 *
+		 * @return void
+		 */
+		#[On('close-modal')]
+		public function closeModal():void
+		{
+			$this->showCreateDemandModal = false;
+			$this->showEditDemandModal = false;
 
- 		// Reload the primary subject with fresh demands data
- 		$this->primarySubject = $this->primarySubject->fresh(['demands']);
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands']);
 
- 		// Force a refresh of the component
- 		$this->dispatch('refresh');
+			// Force a refresh of the component
+			$this->dispatch('refresh');
 
- 		// Ensure the component is re-rendered
- 		$this->render();
- 	}
-	
- 	/**
- 	 * Update the sort field and refresh the demands
- 	 *
- 	 * @param  string  $field  The field to sort by
- 	 *
- 	 * @return void
- 	 */
- 	public function updateSort(string $field):void
- 	{
- 		$this->sortBy = $field;
- 	}
+			// Ensure the component is re-rendered
+			$this->render();
+		}
 
- 	/**
- 	 * Get the sorted demands collection
- 	 *
- 	 * @return \Illuminate\Support\Collection
- 	 */
- 	public function getSortedDemands():\Illuminate\Support\Collection
- 	{
- 		return $this->primarySubject->demands->sortBy($this->sortBy);
- 	}
+		/**
+		 * Update the sort field and refresh the demands
+		 *
+		 * @param  string  $field  The field to sort by
+		 *
+		 * @return void
+		 */
+		public function updateSort(string $field):void
+		{
+			$this->sortBy = $field;
+		}
 
- }
+		/**
+		 * Get the sorted demands collection
+		 *
+		 * @return \Illuminate\Support\Collection
+		 */
+		public function getSortedDemands():\Illuminate\Support\Collection
+		{
+			return $this->primarySubject->demands->sortBy($this->sortBy);
+		}
+
+	}
 
 ?>
 
 <div
 		class=""
 		x-data="{ showDemands: true }">
-	<div class="bg-primary-600 dark:bg-primary-700 px-4 py-2 rounded-lg flex items-center justify-between">
-		<h3 class="text-sm font-semibold text-white">Demands <span
+	<div class="bg-indigo-600 dark:bg-indigo-700 px-4 py-2 rounded-lg flex items-center justify-between">
+		<h3 class="text-sm font-semibold">Demands <span
 					x-show="!showDemands"
 					x-transition>({{ $primarySubject->demands->count() }})</span></h3>
 		<div class="flex items-center gap-2">
@@ -234,10 +234,10 @@
 						wire:key="tsui-card-{{ $demand->id }}">
 					<x-card color="secondary">
 						<x-slot:header>
-							<div class="p-3 flex items-center justify-between bg-primary-500 dark:bg-primary-600 text-dark-100 rounded-t-lg">
+							<div class="p-3 flex items-center justify-between bg-indigo-500 dark:bg-indigo-700">
 								<div>
 									<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
-									<p class="text-gray-100 dark:text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
+									<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
 								</div>
 								<div class="text-right">
 									<x-badge
@@ -248,7 +248,7 @@
 											position="left">
 										<span class="text-xs">{{ $demand->priority_level?->label() ?? 'No Priority' }}</span>
 									</x-badge>
-									<p class="text-gray-100 dark:text-gray-300 text-xs mt-1">{{ $demand->created_by ?? 'Unknown' }}</p>
+									<p class="text-gray-300 text-xs mt-1">{{ $demand->created_by ?? 'Unknown' }}</p>
 								</div>
 							</div>
 						</x-slot:header>
@@ -311,8 +311,8 @@
 			@endforeach
 		@else
 			<div class="col-span-3 text-center py-8">
-				<p class="text-gray-500 dark:text-gray-400 mb-4">No demands available for this subject.</p>
-				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new demand.</p>
+				<p class="text-gray-500 mb-4">No demands available for this subject.</p>
+				<p class="text-sm text-gray-400">Click the + button above to create a new demand.</p>
 			</div>
 		@endif
 

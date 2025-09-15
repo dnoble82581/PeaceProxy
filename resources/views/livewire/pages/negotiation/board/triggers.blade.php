@@ -33,9 +33,9 @@
 		/** @var int The ID of the negotiation */
 		public int $negotiationId;
 
-  /** @var Trigger|null The trigger being edited */
+		/** @var Trigger|null The trigger being edited */
 		public $triggerToEdit;
-		
+
 		/** @var string The field to sort triggers by */
 		public string $sortBy = 'created_at';
 
@@ -127,7 +127,7 @@
 			app(TriggerDestructionService::class)->deleteTrigger($triggerId);
 		}
 
- 	/**
+		/**
 		 * Close all modal dialogs
 		 *
 		 * This method is triggered by the 'close-modal' event
@@ -141,7 +141,7 @@
 			$this->showEditTriggerModal = false;
 			$this->triggerToEdit = null; // Reset the trigger being edited
 		}
-		
+
 		/**
 		 * Update the sort field and refresh the triggers
 		 *
@@ -171,7 +171,7 @@
 <div
 		class=""
 		x-data="{ showTriggers: true }">
- <div class="bg-primary-600 dark:bg-primary-700 px-4 py-2 rounded-lg flex items-center justify-between">
+	<div class="bg-rose-600 dark:bg-rose-700 px-4 py-2 rounded-lg flex items-center justify-between">
 		<h3 class="text-sm font-semibold text-white">Triggers <span
 					x-show="!showTriggers"
 					x-transition>({{ $primarySubject->triggers->count() }})</span></h3>
@@ -211,7 +211,7 @@
 						wire:key="tsui-card-{{ $trigger->id }}">
 					<x-card color="secondary">
 						<x-slot:header>
-       <div class="p-3 flex items-center justify-between bg-primary-500 dark:bg-primary-600 text-dark-100 rounded-t-lg">
+							<div class="p-3 flex items-center justify-between bg-rose-400 dark:bg-rose-500 text-dark-100 rounded-t-lg">
 								<div>
 									<p class="capitalize font-semibold text-lg">{{ $trigger->title }}</p>
 									<p class="text-gray-100 dark:text-gray-300 text-xs">{{ $trigger->source }}</p>
@@ -255,9 +255,10 @@
 				</div>
 			@endforeach
 		@else
-   <div class="col-span-3 text-center py-8">
+			<div class="col-span-3 text-center py-8">
 				<p class="text-gray-500 dark:text-gray-400 mb-4">No triggers available for this subject.</p>
-				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new trigger.</p>
+				<p class="text-sm text-gray-400 dark:text-gray-500">Click the + button above to create a new
+				                                                    trigger.</p>
 			</div>
 		@endif
 	</div>

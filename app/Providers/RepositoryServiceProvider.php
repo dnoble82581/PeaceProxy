@@ -17,6 +17,9 @@ use App\Contracts\NegotiationRepositoryInterface;
 use App\Contracts\NoteRepositoryInterface;
 use App\Contracts\ObjectiveRepositoryInterface;
 use App\Contracts\PinRepositoryInterface;
+use App\Contracts\RequestForInformationRecipientRepositoryInterface;
+use App\Contracts\RequestForInformationReplyRepositoryInterface;
+use App\Contracts\RequestForInformationRepositoryInterface;
 use App\Contracts\RiskAssessmentQuestionResponseRepositoryInterface;
 use App\Contracts\RiskAssessmentQuestionsRepositoryInterface;
 use App\Contracts\RiskAssessmentRepositoryInterface;
@@ -38,6 +41,9 @@ use App\Repositories\Negotiation\NegotiationRepository;
 use App\Repositories\Note\NoteRepository;
 use App\Repositories\Objective\ObjectiveRepository;
 use App\Repositories\Pin\PinRepository;
+use App\Repositories\RequestForInformation\RequestForInformationRepository;
+use App\Repositories\RequestForInformationRecipient\RequestForInformationRecipientRepository;
+use App\Repositories\RequestForInformationReply\RequestForInformationReplyRepository;
 use App\Repositories\RiskAssessment\RiskAssessmentQuestionResponseRepository;
 use App\Repositories\RiskAssessment\RiskAssessmentQuestionsRepository;
 use App\Repositories\RiskAssessment\RiskAssessmentRepository;
@@ -180,6 +186,26 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             LogRepositoryInterface::class,
             LogRepository::class
+        );
+
+        $this->app->bind(
+            RequestForInformationRepositoryInterface::class,
+            RequestForInformationRepository::class,
+        );
+
+        $this->app->bind(
+            RequestForInformationRepositoryInterface::class,
+            RequestForInformationRepository::class,
+        );
+
+        $this->app->bind(
+            RequestForInformationRecipientRepositoryInterface::class,
+            RequestForInformationRecipientRepository::class,
+        );
+
+        $this->app->bind(
+            RequestForInformationReplyRepositoryInterface::class,
+            RequestForInformationReplyRepository::class,
         );
     }
 
