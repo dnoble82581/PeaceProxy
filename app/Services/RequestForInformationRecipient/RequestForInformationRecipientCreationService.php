@@ -4,6 +4,7 @@ namespace App\Services\RequestForInformationRecipient;
 
 use App\Contracts\RequestForInformationRecipientRepositoryInterface;
 use App\DTOs\RequestForInformationRecipient\RequestForInformationRecipientDTO;
+use App\Models\RequestForInformation;
 use App\Models\RequestForInformationRecipient;
 
 class RequestForInformationRecipientCreationService
@@ -12,7 +13,7 @@ class RequestForInformationRecipientCreationService
     {
     }
 
-    public function createRecipient(RequestForInformationRecipientDTO $recipientDTO)
+    public function createRecipient(RequestForInformationRecipientDTO $recipientDTO, RequestForInformation $rfi)
     {
         $recipient = $this->recipientRepository->createRecipient($recipientDTO->toArray());
 
