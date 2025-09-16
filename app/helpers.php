@@ -2,6 +2,7 @@
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Negotiation\NegotiationFetchingService;
 
 function tenant(): ?Tenant
 {
@@ -32,6 +33,15 @@ function authUserRole($negotiation)
         ->first()?->pivot->role; // Retrieve the role from the pivot data
 
     // $role will now contain the role as a string.
+}
+
+function userRole($user, $negotiationId)
+{
+    $negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
+
+    return $negotiation->users()
+        ->where('user_id', $user->id)
+        ->first()?->pivot->role;
 }
 
 function truncateString($string, $maxLength)

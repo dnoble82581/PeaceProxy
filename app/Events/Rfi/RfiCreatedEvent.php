@@ -21,7 +21,7 @@ class RfiCreatedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel("private.negotiation.{$this->rfi->negotiation_id}.rfi.{$this->rfi->negotiation_id}");
+        return new PrivateChannel("private.negotiation.{$this->rfi->tenant_id}.{$this->rfi->negotiation_id}");
     }
 
     public function broadcastAs(): string

@@ -13,14 +13,18 @@ class RequestForInformationReplyCreationService
     {
     }
 
-    public function createReply(RequestForInformationReplyDTO $replyDTO)
+    public function createReply(RequestForInformationReplyDTO $replyDTO, int $negotiationId)
     {
-        $reply = $this->replyRepository->createReply($replyDTO->toArray());
+        // Ensure is_read is set to false for new replies
+        $replyData = $replyDTO->toArray();
+        $replyData['is_read'] = false;
+
+        $reply = $this->replyRepository->createReply($replyData);
 
         $this->addLogEntry($reply);
 
         // Dispatch event
-        event(new RfiReplyPostedEvent($reply));
+        event(new RfiReplyPostedEvent($reply, $negotiationId));
 
         return $reply;
     }

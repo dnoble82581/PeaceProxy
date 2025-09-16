@@ -34,7 +34,7 @@
 
 			return redirect(route('dashboard.negotiations', tenant()->subdomain));
 		}
-		
+
 		public function endNegotiation():Redirector
 		{
 			if ($this->negotiation) {
@@ -42,21 +42,21 @@
 					// Update ended_at if it's not already set
 					if (is_null($this->negotiation->ended_at)) {
 						$now = now();
-						
+
 						// Calculate duration in minutes if started_at is set
 						$durationInMinutes = null;
 						if ($this->negotiation->started_at) {
 							$startedAt = Carbon::parse($this->negotiation->started_at);
 							$durationInMinutes = $startedAt->diffInMinutes($now);
 						}
-						
+
 						// Update the negotiation
 						$this->negotiation->update([
 							'ended_at' => $now,
 							'duration' => $durationInMinutes
 						]);
 					}
-					
+
 					// Also mark all users as having left the negotiation
 					$this->negotiation->users()
 						->wherePivot('left_at', null)
@@ -71,7 +71,7 @@
 					// Log the error or handle it as needed
 				}
 			}
-			
+
 			return redirect(route('dashboard.negotiations', tenant()->subdomain));
 		}
 	}
@@ -95,7 +95,9 @@
 	</div>
 	<div
 			class="flex items-center gap-2">
-		<x-theme-switch only-icons />
+		<x-theme-switch
+				@click="alert('clicked')"
+				only-icons />
 		<x-dropdown>
 			<x-slot:action>
 				<x-button
