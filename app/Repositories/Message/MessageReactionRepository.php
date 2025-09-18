@@ -10,9 +10,6 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
 {
     /**
      * Add a reaction to a message.
-     *
-     * @param array $data
-     * @return MessageReaction
      */
     public function addReaction(array $data): MessageReaction
     {
@@ -32,8 +29,6 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
     /**
      * Remove a reaction from a message.
      *
-     * @param int $messageReactionId
-     * @return void
      * @throws Exception
      */
     public function removeReaction(int $messageReactionId): void
@@ -44,11 +39,6 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
 
     /**
      * Remove a specific reaction type from a message by a user.
-     *
-     * @param int $messageId
-     * @param int $userId
-     * @param string $reactionType
-     * @return void
      */
     public function removeReactionByType(int $messageId, int $userId, string $reactionType): void
     {
@@ -60,20 +50,21 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
 
     /**
      * Get a message reaction by ID.
-     *
-     * @param int $messageReactionId
-     * @return MessageReaction|null
      */
     public function getMessageReaction(int $messageReactionId): ?MessageReaction
     {
         return MessageReaction::find($messageReactionId);
     }
 
+    public function getMessageReactionCount(int $messageId, string $reactionType)
+    {
+        $message = app(\App\Services\Message\MessageFetchingService::class)->getMessage($messageId);
+
+        return $message->reactions->where('reaction_type', $reactionType)->count();
+    }
+
     /**
      * Get reactions for a message.
-     *
-     * @param int $messageId
-     * @return array
      */
     public function getReactionsByMessage(int $messageId): array
     {
@@ -85,9 +76,6 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
 
     /**
      * Get reactions by a specific user.
-     *
-     * @param int $userId
-     * @return array
      */
     public function getReactionsByUser(int $userId): array
     {
@@ -99,11 +87,6 @@ class MessageReactionRepository implements MessageReactionRepositoryInterface
 
     /**
      * Check if a user has already reacted to a message with a specific reaction type.
-     *
-     * @param int $messageId
-     * @param int $userId
-     * @param string $reactionType
-     * @return bool
      */
     public function hasUserReacted(int $messageId, int $userId, string $reactionType): bool
     {
