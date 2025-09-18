@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html
 		lang="en"
-		x-data="tallstackui_darkTheme()">
+		x-data="tallstackui_darkTheme({ default: 'dark' })">
 <head>
 	@include('layouts.partials._head')
 </head>

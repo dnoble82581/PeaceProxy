@@ -14,6 +14,13 @@ class RequestForInformationReply extends Model
 
     protected $guarded = ['id'];
 
+    protected function casts(): array
+    {
+        return [
+            'is_read' => 'boolean',
+        ];
+    }
+
     public function rfi()
     {
         return $this->belongsTo(RequestForInformation::class, 'request_for_information_id');

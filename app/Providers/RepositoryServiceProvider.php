@@ -11,6 +11,7 @@ use App\Contracts\DocumentRepositoryInterface;
 use App\Contracts\HookRepositoryInterface;
 use App\Contracts\HostageRepositoryInterface;
 use App\Contracts\LogRepositoryInterface;
+use App\Contracts\MessageReactionRepositoryInterface;
 use App\Contracts\MessageRepositoryInterface;
 use App\Contracts\MoodLogRepositoryInterface;
 use App\Contracts\NegotiationRepositoryInterface;
@@ -35,6 +36,7 @@ use App\Repositories\Document\DocumentRepository;
 use App\Repositories\Hook\HookRepository;
 use App\Repositories\Hostage\HostageRepository;
 use App\Repositories\Log\LogRepository;
+use App\Repositories\Message\MessageReactionRepository;
 use App\Repositories\Message\MessageRepository;
 use App\Repositories\MoodLog\MoodLogRepository;
 use App\Repositories\Negotiation\NegotiationRepository;
@@ -206,6 +208,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             RequestForInformationReplyRepositoryInterface::class,
             RequestForInformationReplyRepository::class,
+        );
+
+        $this->app->bind(
+            MessageReactionRepositoryInterface::class,
+            MessageReactionRepository::class,
         );
     }
 

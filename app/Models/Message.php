@@ -6,6 +6,8 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Message extends Model
@@ -99,4 +101,29 @@ class Message extends Model
         // Whispers are only visible to the sender and recipient
         return $this->user_id == $userId || $this->whisper_to == $userId;
     }
+
+    /**
+     * Get the document attachments for the message.
+     */
+    public function messageDocuments(): HasMany
+    {
+        return $this->hasMany(MessageDocument::class);
+    }
+
+    /**
+     * Get the documents attached to the message.
+     */
+    public function documents(): HasManyThrough
+    {
+        return $this->hasManyThrough(Document::class, MessageDocument::class, 'message_id', 'id', 'id', 'document_id');
+    }
+
+    /**
+     * Get the reactions for the message.
+     */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+
 }

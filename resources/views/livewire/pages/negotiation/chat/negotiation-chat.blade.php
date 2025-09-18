@@ -2,6 +2,7 @@
 
 	use App\DTOs\Conversation\ConversationDTO;
 	use App\DTOs\Message\MessageDTO;
+	use App\DTOs\MessageReaction\MessageReactionDTO;
 	use App\Events\Conversation\ConversationCreatedEvent;
 	use App\Models\Conversation;
 	use App\Models\Message;
@@ -12,6 +13,7 @@
 	use App\Services\Conversation\ConversationFetchingService;
 	use App\Services\Conversation\ConversationReadService;
 	use App\Services\Message\MessageCreationService;
+	use App\Services\Message\MessageReactionService;
 	use Illuminate\Database\Eloquent\Collection;
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\On;
@@ -37,6 +39,13 @@
 		 * @var string
 		 */
 		public string $messageInput = '';
+
+		/**
+		 * The selected document for attachment
+		 *
+		 * @var array|null
+		 */
+		public $documentToAttach = null;
 
 		/**
 		 * The ID of the selected conversation
@@ -302,7 +311,7 @@
 		 */
 		public function sendMessage():void
 		{
-			if (empty(trim($this->messageInput)) || !$this->currentConversation()) {
+			if (empty(trim($this->messageInput)) && !$this->documentToAttach || !$this->currentConversation()) {
 				return;
 			}
 
@@ -328,25 +337,104 @@
 			}
 
 			$messageDTO = MessageDTO::fromArray($messageData);
-			app(MessageCreationService::class)->createMessage($messageDTO);
+			$message = app(MessageCreationService::class)->createMessage($messageDTO);
 
-			$this->reset('messageInput', 'isWhisper', 'whisperToUserId', 'isUrgent', 'isEmergency');
+			// Attach document if one is selected
+			if ($this->documentToAttach) {
+				$this->attachDocumentToMessage($message->id, $this->documentToAttach['id']);
+			}
+
+			$this->reset('messageInput', 'isWhisper', 'whisperToUserId', 'isUrgent', 'isEmergency', 'documentToAttach');
 
 			// Dispatch event to trigger scroll
 			$this->dispatch('new-message');
 		}
 
 		/**
-		 * Select a conversation by ID
-		 *
-		 * @param  int  $conversationId  The ID of the conversation to select
-		 *
-		 * @return void
+		 * Attach a document to a message
 		 */
-		public function selectConversation(int $conversationId):void
+		public function attachDocumentToMessage(int $messageId, int $documentId):void
 		{
-			$this->selectedConversationId = $conversationId;
+			$messageDocumentData = [
+				'message_id' => $messageId,
+				'document_id' => $documentId,
+				'tenant_id' => tenant()->id,
+				'negotiation_id' => $this->negotiationId,
+				'uploaded_by_id' => auth()->id(),
+			];
+
+			$messageDocumentDTO = \App\DTOs\MessageDocument\MessageDocumentDTO::fromArray($messageDocumentData);
+			app(\App\Services\Message\MessageDocumentService::class)->attachDocument($messageDocumentDTO);
 		}
+
+		/**
+		 * Select a document to attach to the message
+		 */
+		public function selectDocument(int $documentId):void
+		{
+			$document = \App\Models\Document::find($documentId);
+			if ($document) {
+				$this->documentToAttach = [
+					'id' => $document->id,
+					'name' => $document->name,
+					'file_type' => $document->file_type,
+				];
+			}
+		}
+
+		/**
+		 * Clear the selected document
+		 */
+		public function clearSelectedDocument():void
+		{
+			$this->documentToAttach = null;
+		}
+
+		/**
+		 * Toggle a reaction on a message
+		 */
+		public function toggleReaction(int $messageId, string $reactionType):void
+		{
+			$messageReactionData = [
+				'message_id' => $messageId,
+				'user_id' => auth()->id(),
+				'tenant_id' => tenant()->id,
+				'negotiation_id' => $this->negotiationId,
+				'reaction_type' => $reactionType,
+			];
+
+			$messageReactionDTO = MessageReactionDTO::fromArray($messageReactionData);
+			app(MessageReactionService::class)->toggleReaction($messageReactionDTO);
+		}
+
+		/**
+		 * Get reactions for a message grouped by type
+		 */
+		public function getMessageReactions(int $messageId):array
+		{
+			return app(MessageReactionService::class)->getReactionsGroupedByType($messageId);
+		}
+
+//		/**
+//		 * Check if the current user has reacted to a message with a specific reaction type
+//		 */
+//		public function hasUserReacted(int $messageId, string $reactionType):bool
+//		{
+//			return app(\App\Contracts\MessageReactionRepositoryInterface::class)
+//				->hasUserReacted($messageId, auth()->id(), $reactionType);
+//		}
+//
+//		/**
+//		 * Select a conversation by ID
+//		 *
+//		 * @param  int  $conversationId  The ID of the conversation to select
+//		 *
+//		 * @return void
+//		 */
+//		public function selectConversation(int $conversationId):void
+//		{
+//			$this->selectedConversationId = $conversationId;
+//		}
 
 		/**
 		 * Set the active tab and select the appropriate conversation
@@ -481,11 +569,19 @@
 
 				// optional but recommended for list badges/snippets
 				"echo-presence:negotiation.{$this->negotiationId},.MessageSent" => 'handleMessageSent',
+
+				// Document and reaction events
+				"echo-presence:negotiation.{$this->negotiationId},.DocumentAttached" => 'handleDocumentAttached',
+				"echo-presence:negotiation.{$this->negotiationId},.ReactionAdded" => 'handleReactionAdded',
+				"echo-presence:negotiation.{$this->negotiationId},.ReactionRemoved" => 'handleReactionRemoved',
 			];
 
 			// live stream for the currently open thread
 			if ($this->selectedConversationId) {
 				$listeners["echo-private:conversation.{$this->selectedConversationId},.MessageSent"] = 'handleMessageSent';
+				$listeners["echo-private:conversation.{$this->selectedConversationId},.DocumentAttached"] = 'handleDocumentAttached';
+				$listeners["echo-private:conversation.{$this->selectedConversationId},.ReactionAdded"] = 'handleReactionAdded';
+				$listeners["echo-private:conversation.{$this->selectedConversationId},.ReactionRemoved"] = 'handleReactionRemoved';
 			}
 
 			return $listeners;
@@ -553,7 +649,69 @@
 
 				// Force a re-render to ensure the UI is updated
 				$this->dispatch('conversation-list-updated');
+			}
+		}
 
+		/**
+		 * Handle a document attached event
+		 *
+		 * @param  array  $data  The event data
+		 *
+		 * @return void
+		 */
+		public function handleDocumentAttached(array $data):void
+		{
+			$conversationId = (int) ($data['conversation_id'] ?? 0);
+			$messageId = (int) ($data['message_id'] ?? 0);
+			$senderId = (int) ($data['sender_id'] ?? 0);
+
+			if (!$conversationId || !$messageId) return;
+
+			// If this is the active conversation, trigger a refresh
+			if ($conversationId === (int) $this->selectedConversationId) {
+				$this->dispatch('new-message');
+			}
+		}
+
+		/**
+		 * Handle a reaction added event
+		 *
+		 * @param  array  $data  The event data
+		 *
+		 * @return void
+		 */
+		public function handleReactionAdded(array $data):void
+		{
+			$conversationId = (int) ($data['conversation_id'] ?? 0);
+			$messageId = (int) ($data['message_id'] ?? 0);
+			$userId = (int) ($data['user_id'] ?? 0);
+
+			if (!$conversationId || !$messageId) return;
+
+			// If this is the active conversation, trigger a refresh
+			if ($conversationId === (int) $this->selectedConversationId) {
+				$this->dispatch('new-message');
+			}
+		}
+
+		/**
+		 * Handle a reaction removed event
+		 *
+		 * @param  array  $data  The event data
+		 *
+		 * @return void
+		 */
+		public function handleReactionRemoved(array $data):void
+		{
+			$conversationId = (int) ($data['conversation_id'] ?? 0);
+			$messageId = (int) ($data['message_id'] ?? 0);
+			$userId = (int) ($data['user_id'] ?? 0);
+
+			if (!$conversationId || !$messageId) return;
+
+			// If this is the active conversation, trigger a refresh
+			if ($conversationId === (int) $this->selectedConversationId) {
+				$this->dispatch('new-message');
 			}
 		}
 	}
@@ -863,69 +1021,140 @@
 							$msgs = $this->messages();
 						@endphp
 						@foreach($msgs as $message)
-							@php
-								// First decrypt the message content
-								$decryptedContent = decrypt($message->content);
-								
-								// Then check for special prefixes in the decrypted content
-								$isUrgent = str_starts_with($decryptedContent, '[URGENT] ');
-								$isEmergency = str_starts_with($decryptedContent, '[EMERGENCY] ');
-								
-								// Remove the prefixes from the decrypted content if needed
-								$displayContent = $decryptedContent;
-								if ($isUrgent) {
-									$displayContent = substr($decryptedContent, 9); // Remove [URGENT] prefix
-								} elseif ($isEmergency) {
-									$displayContent = substr($decryptedContent, 12); // Remove [EMERGENCY] prefix
-								}
-							@endphp
-							<div class="flex {{ $message->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
-								<div class="flex items-center max-w-xs md:max-w-md space-x-2 {{ $message->user_id === auth()->id() ? 'flex-row-reverse space-x-reverse' : '' }}">
-									<div class="flex-shrink-0">
-										<x-avatar
-												image="{{ $message->user->avatarUrl() }}"
-												sm />
-									</div>
-									<div>
-										<div class="flex items-end space-x-1">
-											<div class="font-medium dark:text-white flex items-end text-dark-800 text-xs {{ $message->user_id === auth()->id() ? 'text-right' : '' }}">
-												<span>{{ $message->user->name }}</span>
-												@if($message->is_whisper)
-													<span class="text-primary-500 dark:text-primary-400 text-xs">
-                                                        whispered to {{ $message->whisperRecipient->name }}
-                                                    </span>
-												@endif
-												@if($isUrgent)
-													<span class="text-yellow-500 dark:text-yellow-400 text-xs ml-1">
-														<x-icon
-																name="exclamation-triangle"
-																class="w-3 h-3 inline" />
-													</span>
-												@endif
-												@if($isEmergency)
-													<span class="text-red-500 dark:text-red-400 text-xs ml-1">
-														<x-icon
-																name="exclamation-circle"
-																class="w-3 h-3 inline" />
-													</span>
-												@endif
-											</div>
-											<div class="text-xs text-gray-500 dark:text-dark-300">
-												{{ $message->created_at->setTimezone(auth()->user()->timezone)->format('g:i A') }}
-											</div>
-										</div>
+							<livewire:pages.negotiation.chat.negotiation-chat-message
+									:messageId="$message->id"
+									:key="$message->id" />
+							{{--							@php--}}
+							{{--								// First decrypt the message content--}}
+							{{--								$decryptedContent = decrypt($message->content);--}}
+							{{--								--}}
+							{{--								// Then check for special prefixes in the decrypted content--}}
+							{{--								$isUrgent = str_starts_with($decryptedContent, '[URGENT] ');--}}
+							{{--								$isEmergency = str_starts_with($decryptedContent, '[EMERGENCY] ');--}}
+							{{--								--}}
+							{{--								// Remove the prefixes from the decrypted content if needed--}}
+							{{--								$displayContent = $decryptedContent;--}}
+							{{--								if ($isUrgent) {--}}
+							{{--									$displayContent = substr($decryptedContent, 9); // Remove [URGENT] prefix--}}
+							{{--								} elseif ($isEmergency) {--}}
+							{{--									$displayContent = substr($decryptedContent, 12); // Remove [EMERGENCY] prefix--}}
+							{{--								}--}}
+							{{--							@endphp--}}
+							{{--							<div class="flex {{ $message->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">--}}
+							{{--								<div class="flex items-center max-w-xs md:max-w-md space-x-2 {{ $message->user_id === auth()->id() ? 'flex-row-reverse space-x-reverse' : '' }}">--}}
+							{{--									<div class="flex-shrink-0">--}}
+							{{--										<x-avatar--}}
+							{{--												image="{{ $message->user->avatarUrl() }}"--}}
+							{{--												sm />--}}
+							{{--									</div>--}}
+							{{--									<div>--}}
+							{{--										<div class="flex items-end space-x-1">--}}
+							{{--											<div class="font-medium dark:text-white flex items-end text-dark-800 text-xs {{ $message->user_id === auth()->id() ? 'text-right' : '' }}">--}}
+							{{--												<span>{{ $message->user->name }}</span>--}}
+							{{--												@if($message->is_whisper)--}}
+							{{--													<span class="text-primary-500 dark:text-primary-400 text-xs">--}}
+							{{--                                                        whispered to {{ $message->whisperRecipient->name }}--}}
+							{{--                                                    </span>--}}
+							{{--												@endif--}}
+							{{--												@if($isUrgent)--}}
+							{{--													<span class="text-yellow-500 dark:text-yellow-400 text-xs ml-1">--}}
+							{{--														<x-icon--}}
+							{{--																name="exclamation-triangle"--}}
+							{{--																class="w-3 h-3 inline" />--}}
+							{{--													</span>--}}
+							{{--												@endif--}}
+							{{--												@if($isEmergency)--}}
+							{{--													<span class="text-red-500 dark:text-red-400 text-xs ml-1">--}}
+							{{--														<x-icon--}}
+							{{--																name="exclamation-circle"--}}
+							{{--																class="w-3 h-3 inline" />--}}
+							{{--													</span>--}}
+							{{--												@endif--}}
+							{{--											</div>--}}
+							{{--											<div class="text-xs text-gray-500 dark:text-dark-300">--}}
+							{{--												{{ $message->created_at->setTimezone(auth()->user()->timezone)->format('g:i A') }}--}}
+							{{--											</div>--}}
+							{{--										</div>--}}
 
-										<div
-												class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm
-											{{ $isUrgent ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' :
-											   ($isEmergency ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
-											   ($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') :
-											   ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">
-											{{ $displayContent }}
-										</div>
-									</div>
-								</div>
-							</div>
+							{{--										<div--}}
+							{{--												class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm--}}
+							{{--											{{ $isUrgent ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' :--}}
+							{{--											   ($isEmergency ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :--}}
+							{{--											   ($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') :--}}
+							{{--											   ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">--}}
+							{{--											{{ $displayContent }}--}}
+							{{--											--}}
+							{{--											<!-- Document Attachments -->--}}
+							{{--											@php--}}
+							{{--												$attachedDocuments = $message->messageDocuments()->with('document')->get();--}}
+							{{--											@endphp--}}
+							{{--											--}}
+							{{--											@if($attachedDocuments->count() > 0)--}}
+							{{--												<div class="mt-2 pt-2 border-t border-gray-200 dark:border-dark-500">--}}
+							{{--													@foreach($attachedDocuments as $attachment)--}}
+							{{--														<a --}}
+							{{--															href="{{ route('documents.download', $attachment->document_id) }}" --}}
+							{{--															class="flex items-center p-1 rounded hover:bg-gray-100 dark:hover:bg-dark-500 text-blue-600 dark:text-blue-400"--}}
+							{{--															target="_blank">--}}
+							{{--															<x-icon--}}
+							{{--																name="{{ str_ends_with($attachment->document->file_type, 'pdf') ? 'document-text' : 'document' }}"--}}
+							{{--																class="w-4 h-4 mr-2" />--}}
+							{{--															<span class="text-xs truncate">{{ $attachment->document->name }}</span>--}}
+							{{--															<x-icon--}}
+							{{--																name="arrow-down-tray"--}}
+							{{--																class="w-3 h-3 ml-1" />--}}
+							{{--														</a>--}}
+							{{--													@endforeach--}}
+							{{--												</div>--}}
+							{{--											@endif--}}
+							{{--											--}}
+							{{--											<!-- Message Reactions -->--}}
+							{{--											<div class="mt-2 flex flex-wrap gap-1">--}}
+							{{--												<!-- Reaction Buttons -->--}}
+							{{--												<div class="flex items-center">--}}
+							{{--													<button --}}
+							{{--														wire:click="toggleReaction({{ $message->id }}, '👍')"--}}
+							{{--														class="text-xs p-1 hover:bg-gray-100 dark:hover:bg-dark-500 rounded-full {{ $this->hasUserReacted($message->id, '👍') ? 'bg-gray-100 dark:bg-dark-500' : '' }}">--}}
+							{{--														👍--}}
+							{{--													</button>--}}
+							{{--													<button --}}
+							{{--														wire:click="toggleReaction({{ $message->id }}, '👎')"--}}
+							{{--														class="text-xs p-1 hover:bg-gray-100 dark:hover:bg-dark-500 rounded-full {{ $this->hasUserReacted($message->id, '👎') ? 'bg-gray-100 dark:bg-dark-500' : '' }}">--}}
+							{{--														👎--}}
+							{{--													</button>--}}
+							{{--													<button --}}
+							{{--														wire:click="toggleReaction({{ $message->id }}, '❤️')"--}}
+							{{--														class="text-xs p-1 hover:bg-gray-100 dark:hover:bg-dark-500 rounded-full {{ $this->hasUserReacted($message->id, '❤️') ? 'bg-gray-100 dark:bg-dark-500' : '' }}">--}}
+							{{--														❤️--}}
+							{{--													</button>--}}
+							{{--													<button --}}
+							{{--														wire:click="toggleReaction({{ $message->id }}, '😂')"--}}
+							{{--														class="text-xs p-1 hover:bg-gray-100 dark:hover:bg-dark-500 rounded-full {{ $this->hasUserReacted($message->id, '😂') ? 'bg-gray-100 dark:bg-dark-500' : '' }}">--}}
+							{{--														😂--}}
+							{{--													</button>--}}
+							{{--													<button --}}
+							{{--														wire:click="toggleReaction({{ $message->id }}, '😮')"--}}
+							{{--														class="text-xs p-1 hover:bg-gray-100 dark:hover:bg-dark-500 rounded-full {{ $this->hasUserReacted($message->id, '😮') ? 'bg-gray-100 dark:bg-dark-500' : '' }}">--}}
+							{{--														😮--}}
+							{{--													</button>--}}
+							{{--												</div>--}}
+							{{--												--}}
+							{{--												<!-- Display Reactions -->--}}
+							{{--												@php--}}
+							{{--													$reactions = $this->getMessageReactions($message->id);--}}
+							{{--												@endphp--}}
+							{{--												--}}
+							{{--												@foreach($reactions as $type => $reaction)--}}
+							{{--													<div class="flex items-center bg-gray-100 dark:bg-dark-500 rounded-full px-2 py-0.5 text-xs">--}}
+							{{--														<span>{{ $type }}</span>--}}
+							{{--														<span class="ml-1 text-gray-600 dark:text-gray-300">{{ $reaction['count'] }}</span>--}}
+							{{--													</div>--}}
+							{{--												@endforeach--}}
+							{{--											</div>--}}
+							{{--										</div>--}}
+							{{--									</div>--}}
+							{{--								</div>--}}
+							{{--							</div>--}}
 						@endforeach
 					</div>
 
@@ -965,6 +1194,55 @@
 										name="chat-bubble-bottom-center-text"
 										class="w-4 h-4" />
 							</button>
+
+							<!-- Document Attachment Button -->
+							<button
+									type="button"
+									x-data="{ showDocumentSelector: false }"
+									@click="showDocumentSelector = !showDocumentSelector"
+									:class="{ 'text-blue-500': $wire.documentToAttach, 'text-gray-400': !$wire.documentToAttach }"
+									class="hover:cursor-pointer transition-colors duration-300 ease-in-out relative">
+								<x-icon
+										name="paper-clip"
+										class="w-4 h-4" />
+
+								<!-- Document Selector Dropdown -->
+								<div
+										x-show="showDocumentSelector"
+										@click.away="showDocumentSelector = false"
+										class="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-dark-700 rounded-md shadow-lg p-2 z-10">
+									<div class="text-sm font-medium mb-2">Attach Document</div>
+
+									@php
+										$documents = \App\Models\Document::where('negotiation_id', $this->negotiationId)
+											->where(function($query) {
+												$query->where('is_private', false)
+													->orWhere('uploaded_by_id', auth()->id());
+											})
+											->orderBy('created_at', 'desc')
+											->limit(10)
+											->get();
+									@endphp
+
+									@if($documents->count() > 0)
+										<div class="max-h-48 overflow-y-auto">
+											@foreach($documents as $document)
+												<div
+														wire:click="selectDocument({{ $document->id }})"
+														@click="showDocumentSelector = false"
+														class="p-2 hover:bg-gray-100 dark:hover:bg-dark-600 rounded cursor-pointer flex items-center">
+													<x-icon
+															name="{{ $document->file_type === 'pdf' ? 'document-text' : 'document' }}"
+															class="w-4 h-4 mr-2 text-gray-500" />
+													<span class="text-sm truncate">{{ $document->name }}</span>
+												</div>
+											@endforeach
+										</div>
+									@else
+										<div class="text-sm text-gray-500 p-2">No documents available</div>
+									@endif
+								</div>
+							</button>
 						</div>
 						@if($isWhisper && $whisperToUserId)
 							@php
@@ -982,28 +1260,47 @@
 							</div>
 						@endif
 
-						<div class="flex items-center">
-							<div class="relative flex-1">
-								<input
-										wire:model="messageInput"
-										wire:keydown.enter="sendMessage"
-										type="text"
-										placeholder="Type your message..."
-										:class="{
-                                                    'bg-yellow-200/20': selectedButton === 'isUrgent',
-                                                    'bg-rose-200/20': selectedButton === 'isEmergency',
-                                                    'bg-indigo-400/20': selectedButton === 'whisperTo',
-                                                    'bg-dark-200 dark:bg-dark-600': !selectedButton
+						<div class="flex flex-col">
+							<!-- Selected Document Display -->
+							@if($documentToAttach)
+								<div class="mb-2 flex items-center bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md">
+									<x-icon
+											name="{{ str_ends_with($documentToAttach['file_type'], 'pdf') ? 'document-text' : 'document' }}"
+											class="w-4 h-4 mr-2 text-blue-500" />
+									<span class="text-sm text-blue-700 dark:text-blue-300 truncate flex-1">{{ $documentToAttach['name'] }}</span>
+									<button
+											wire:click="clearSelectedDocument"
+											class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+										<x-icon
+												name="x-mark"
+												class="w-4 h-4" />
+									</button>
+								</div>
+							@endif
+
+							<div class="flex items-center">
+								<div class="relative flex-1">
+									<input
+											wire:model="messageInput"
+											wire:keydown.enter="sendMessage"
+											type="text"
+											placeholder="{{ $documentToAttach ? 'Add a message (optional)' : 'Type your message...' }}"
+											:class="{
+													'bg-yellow-200/20': selectedButton === 'isUrgent',
+													'bg-rose-200/20': selectedButton === 'isEmergency',
+													'bg-indigo-400/20': selectedButton === 'whisperTo',
+													'bg-dark-200 dark:bg-dark-600': !selectedButton
 												}"
-										x-on:input="onInput($event)"
-										class="w-full rounded-md border-0 py-2 pl-3 pr-10 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-dark-400 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 text-dark-800 dark:text-gray-100">
+											x-on:input="onInput($event)"
+											class="w-full rounded-md border-0 py-2 pl-3 pr-10 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-dark-400 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 text-dark-800 dark:text-gray-100">
+								</div>
+								<x-button
+										icon="paper-airplane"
+										wire:click="sendMessage"
+										class="ml-3 inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+									Send
+								</x-button>
 							</div>
-							<x-button
-									icon="paper-airplane"
-									wire:click="sendMessage"
-									class="ml-3 inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
-								Send
-							</x-button>
 						</div>
 
 						<!-- Whisper options -->
