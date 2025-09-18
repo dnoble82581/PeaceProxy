@@ -19,7 +19,6 @@
 		public \App\Models\Subject $primarySubject;
 		public $phoneNumbers = [];
 
-
 		public function mount($negotiation)
 		{
 			$this->negotiation = $negotiation;
@@ -41,7 +40,7 @@
 		/**
 		 * Load all phone numbers for the primary subject
 		 */
-		public function loadPhoneNumbers()
+		public function loadPhoneNumbers():void
 		{
 			if ($this->primarySubject) {
 				// Get all contact points for the subject

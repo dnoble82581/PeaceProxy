@@ -1,5 +1,7 @@
 <?php
 
+	use Illuminate\Contracts\View\View;
+	use Illuminate\Database\Eloquent\Builder;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use App\DTOs\RequestForInformation\RequestForInformationDTO;
@@ -15,11 +17,12 @@
 	use App\Services\RequestForInformationRecipient\RequestForInformationRecipientUpdateService;
 	use Carbon\Carbon;
 	use Illuminate\Support\Facades\Auth;
+	use Livewire\WithPagination;
 
 	new class extends Component {
+		use WithPagination;
+
 		public $rfis = [];
-		public $headers = [];
-		public $rows = [];
 		public $showCreateModal = false;
 		public $showEditModal = false;
 		public $showResponsesModal = false;
@@ -36,8 +39,21 @@
 		public $replies = [];
 		public $replyBody = '';
 		public int $tenantId;
-		public $sortField = 'created_at';
-		public $sortDirection = 'desc';
+		public ?int $quantity = 10;     // per page
+		public ?string $search = null;  // search box
+
+		protected array $queryString = [
+			'search' => ['except' => null],
+			'quantity' => ['except' => 10],
+			'sort' => ['except' => ['column' => 'created_at', 'direction' => 'desc']],
+			'page' => ['except' => 1],
+		];
+
+		public array $sort = [
+			'column' => 'created_at',
+			'direction' => 'desc',
+		];
+
 
 		public function mount($negotiationId = null)
 		{
@@ -46,14 +62,78 @@
 			$this->loadRfis();
 			$this->loadAvailableUsers();
 
-			$this->headers = [
-				['index' => 'id', 'label' => '#', 'sortable' => true],
-				['index' => 'title', 'label' => 'Title', 'sortable' => true],
-				['index' => 'status', 'label' => 'Status', 'sortable' => true],
-				['index' => 'replies_count', 'label' => 'Responses', 'sortable' => true],
-				['index' => 'created_at', 'label' => 'Created', 'sortable' => true],
-				['index' => 'action', 'label' => 'Action']
+		}
+
+
+		public function with():array
+		{
+			$authUserId = auth()->id();
+
+			$headers = [
+				['index' => 'id', 'label' => '#'],
+				['index' => 'title', 'label' => 'Title'],
+				['index' => 'status', 'label' => 'Status'],
+				['index' => 'unread_replies_count', 'label' => 'Unread'],
+				['index' => 'show_alert', 'label' => 'Alert'],
+				['index' => 'created_at', 'label' => 'Created'],
+				['index' => 'replies_count', 'label' => 'Replies'],
+				// You can add an 'action' column and fill it via @interact if you want buttons
+				['index' => 'action', 'label' => ''],
 			];
+
+			// Base query with eager counts
+			$query = \App\Models\RequestForInformation::query()
+				->withCount('replies')
+				->when($this->search, function (Builder $q) {
+					$term = '%'.trim($this->search).'%';
+					// adjust fields as needed to match your rfiMatchesSearch() logic
+					$q->where(function (Builder $sub) use ($term) {
+						$sub->where('title', 'like', $term)
+							->orWhere('status', 'like', $term);
+					});
+				});
+
+			// Sorting from TallStackUI $sort prop
+			if (!empty($this->sort['column']) && !empty($this->sort['direction'])) {
+				$query->orderBy($this->sort['column'], $this->sort['direction']);
+			}
+
+			// Return a paginator and transform each item to the shape your table expects.
+			// The `through()` keeps pagination metadata intact.
+			$rows = $query
+				->paginate(max(1, (int) $this->quantity))
+				->withQueryString()
+				->through(function (\App\Models\RequestForInformation $rfi) use ($authUserId) {
+					$repliesCount = (int) ($rfi->replies_count ?? $rfi->replies()->count());
+
+					$recipient = app(RequestForInformationRecipientFetchingService::class)
+						->getRecipientByRfiIdAndUserId($rfi->id, $authUserId);
+
+					$unreadRepliesCount = 0;
+					$showAlert = false;
+
+					if ($recipient && !$recipient->is_read) {
+						$unreadRepliesCount = $repliesCount;
+						$showAlert = true;
+					} elseif ($recipient) {
+						$unreadRepliesCount = (int) $rfi->replies()->where('is_read', false)->count();
+						$showAlert = $unreadRepliesCount > 0;
+					}
+
+					return [
+						'id' => $rfi->id,
+						'title' => $rfi->title,
+						'status' => $rfi->status,
+						'replies_count' => $repliesCount,
+						'unread_replies_count' => $unreadRepliesCount,
+						'show_alert' => $showAlert,
+						'created_at' => $rfi->created_at->format('Y-m-d H:i'),
+					];
+				});
+
+//			dd($rows->items(), $headers);
+
+			return compact('headers', 'rows');
 		}
 
 		public function loadRfis()
@@ -63,33 +143,42 @@
 			} else {
 				$this->rfis = app(RequestForInformationFetchingService::class)->getAllRfis();
 			}
-
-			$this->prepareRows();
 		}
 
-		public function prepareRows()
+		public function updatedSearch()
 		{
-			$this->rows = [];
+			$this->resetPage();
+		}
 
-			foreach ($this->rfis as $rfi) {
-				$repliesCount = $rfi->replies->count();
-
-				$this->rows[] = [
-					'id' => $rfi->id,
-					'title' => $rfi->title,
-					'status' => $rfi->status,
-					'replies_count' => $repliesCount,
-					'created_at' => $rfi->created_at->format('Y-m-d H:i'),
-					'rfi' => $rfi
-				];
+		public function updatedPerPage()
+		{
+			// Ensure perPage is always a positive integer
+			if (empty($this->perPage) || intval($this->perPage) <= 0) {
+				$this->perPage = 10; // Default to 10 if invalid value
 			}
 
-			// Sort the rows
-			if ($this->sortField && $this->sortDirection) {
-				$this->rows = collect($this->rows)->sortBy([
-					[$this->sortField, $this->sortDirection]
-				])->values()->all();
+			$this->resetPage();
+		}
+
+		private function rfiMatchesSearch($rfi, $searchTerm)
+		{
+			// Convert search term to lowercase for case-insensitive comparison
+			$searchTerm = strtolower($searchTerm);
+
+			// Check if search term is in title, status, or ID
+			if (str_contains(strtolower($rfi->title), $searchTerm) ||
+				str_contains(strtolower($rfi->status), $searchTerm) ||
+				str_contains((string) $rfi->id, $searchTerm) ||
+				str_contains(strtolower($rfi->body), $searchTerm)) {
+				return true;
 			}
+
+			// Check if search term is in sender's name
+			if (str_contains(strtolower($rfi->sender->name), $searchTerm)) {
+				return true;
+			}
+
+			return false;
 		}
 
 		public function sort($field)
@@ -106,9 +195,29 @@
 
 		public function loadAvailableUsers()
 		{
-			// In a real implementation, you would load users from the database
-			// For now, we'll use a simple array of users
-			$this->availableUsers = \App\Models\User::where('tenant_id', $this->tenantId)->get();
+			// Load all users from the tenant except the current authenticated user
+			$users = \App\Models\User::where('tenant_id', $this->tenantId)
+				->where('id', '!=', auth()->id())
+				->get();
+
+			// If we have a negotiation ID, load the negotiation roles for each user
+			if ($this->negotiationId) {
+				foreach ($users as $user) {
+					// Get the negotiation_user pivot record for this user and negotiation
+					$negotiationUser = \App\Models\NegotiationUser::where('user_id', $user->id)
+						->where('negotiation_id', $this->negotiationId)
+						->first();
+
+					// If the user has a role in this negotiation, add it to the user object
+					if ($negotiationUser && $negotiationUser->role) {
+						$user->negotiation_role = $negotiationUser->role->label();
+					} else {
+						$user->negotiation_role = null;
+					}
+				}
+			}
+
+			$this->availableUsers = $users;
 		}
 
 		public function openCreateModal()
@@ -126,6 +235,12 @@
 				'status' => 'required|string',
 				'selectedRecipients' => 'required|array|min:1',
 			]);
+
+			// Ensure the current user is not in the selected recipients
+			if (in_array(auth()->id(), $this->selectedRecipients)) {
+				$this->addError('selectedRecipients', 'You cannot send a request for information to yourself.');
+				return;
+			}
 
 			$rfiDTO = new RequestForInformationDTO(
 				null,
@@ -157,7 +272,7 @@
 					null // deleted_at
 				);
 
-				app(RequestForInformationRecipientCreationService::class)->createRecipient($recipientDTO);
+				app(RequestForInformationRecipientCreationService::class)->createRecipient($recipientDTO, $rfi);
 			}
 
 			$this->reset('title', 'body', 'status', 'selectedRecipients');
@@ -188,6 +303,12 @@
 				'status' => 'required|string',
 				'selectedRecipients' => 'required|array|min:1',
 			]);
+
+			// Ensure the current user is not in the selected recipients
+			if (in_array(auth()->id(), $this->selectedRecipients)) {
+				$this->addError('selectedRecipients', 'You cannot send a request for information to yourself.');
+				return;
+			}
 
 			$rfi = app(RequestForInformationFetchingService::class)->getRfiById($this->editingRfiId);
 
@@ -259,6 +380,28 @@
 			if ($recipient && !$recipient->is_read) {
 				app(RequestForInformationRecipientUpdateService::class)->updateReadStatus($recipient->id, true);
 			}
+
+			// Mark all replies as read
+			if ($recipient) {
+				// Get all unread replies for this RFI
+				$unreadReplies = $this->viewingRfi->replies()->where('is_read', false)->get();
+
+				// Mark each reply as read
+				foreach ($unreadReplies as $reply) {
+					$reply->is_read = true;
+					$reply->save();
+				}
+
+//				ToDO:Fix this piece in the table
+				// Update the row data to reflect that all replies are now read
+				foreach ($this->rows as &$row) {
+					if ($row['id'] === $rfiId) {
+						$row['unread_replies_count'] = 0;
+						$row['show_alert'] = false;
+						break;
+					}
+				}
+			}
 		}
 
 		public function loadReplies()
@@ -282,15 +425,64 @@
 				$this->viewingRfiId,
 				auth()->id(),
 				$this->replyBody,
+				false,
 				Carbon::now(),
 				Carbon::now(),
 				null // deleted_at
 			);
 
-			app(RequestForInformationReplyCreationService::class)->createReply($replyDTO);
+			app(RequestForInformationReplyCreationService::class)->createReply($replyDTO, $this->negotiationId);
 
 			$this->replyBody = '';
+		}
+
+		public function getListeners()
+		{
+			$tenantId = tenant()->id;
+
+			return [
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiCreated" => 'handleRfiCreated',
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiReplyPosted" => 'handleReplyPosted',
+			];
+		}
+
+		public function handleRfiCreated(array $data)
+		{
+			$this->loadRfis();
+		}
+
+		public function handleReplyPosted(array $data)
+		{
 			$this->loadReplies();
+			$authUserId = auth()->id();
+
+			foreach ($this->rows as &$row) {
+				if ($row['id'] === $data['request_for_information_id']) {
+					$row['replies_count'] = $data['replies_count'];
+
+					// Check if the authenticated user is a recipient of this RFI
+					$recipient = app(RequestForInformationRecipientFetchingService::class)
+						->getRecipientByRfiIdAndUserId($row['id'], $authUserId);
+
+					// If the user is a recipient and hasn't read the RFI, update unread count and show alert
+					if ($recipient && !$recipient->is_read) {
+						$row['unread_replies_count'] = $data['replies_count'];
+						$row['show_alert'] = true;
+					} // If the user is a recipient and has read the RFI, check for unread replies
+					elseif ($recipient) {
+						// Get the RFI
+						$rfi = app(RequestForInformationFetchingService::class)->getRfiById($row['id']);
+						// Count unread replies
+						$unreadReplies = $rfi->replies()->where('is_read', false)->count();
+						if ($unreadReplies > 0) {
+							$row['unread_replies_count'] = $unreadReplies;
+							$row['show_alert'] = true;
+						}
+					}
+
+					break;
+				}
+			}
 		}
 
 		/**
@@ -330,6 +522,9 @@
 		<x-table
 				:$headers
 				:$rows
+				paginate
+				:quantity="[2,5,10]"
+				filter
 				striped>
 
 			@interact('column_action', $row)
@@ -337,117 +532,53 @@
 				<x-button.circle
 						sm
 						icon="eye"
-						wire:click="openResponsesModal({{ $row['id'] }})"
+						wire:click="openResponsesModal({{ is_array($row) ? $row['id'] : $row->id }})"
 						title="View Request Details"
 				/>
 				<x-button.circle
 						sm
 						icon="pencil-square"
-						wire:click="openEditModal({{ $row['id'] }})"
+						wire:click="openEditModal({{ is_array($row) ? $row['id'] : $row->id }})"
 						title="Edit RFI"
 				/>
 				<x-button.circle
 						sm
 						color="red"
 						icon="trash"
-						wire:click="deleteRfi({{ $row['id'] }})"
+						wire:click="deleteRfi({{ is_array($row) ? $row['id'] : $row->id }})"
 						title="Delete RFI"
 				/>
 			</div>
 			@endinteract
 
 			@interact('column_replies_count', $row)
-			<x-link
-					class="font-semibold"
-					wire:click="openResponsesModal({{ $row['id'] }})"
-					href="javascript:void(0)">View Responses ({{ $row['replies_count'] }})
-			</x-link>
-			@endinteract
-
-			@interact('column_test', $column)
-
 			@php
-				// Deep resolve: execute any Closures (even nested in arrays), and normalize to safe strings for known text keys.
-				$deepResolve = function ($v) use (&$deepResolve) {
-					while ($v instanceof \Closure) {
-						$v = $v();
-					}
-					if (is_array($v)) {
-						return array_map($deepResolve, $v);
-					}
-					if ($v instanceof \Illuminate\Contracts\Support\Htmlable) {
-						// leave as Htmlable; we'll render with {!! !!} where appropriate
-						return $v;
-					}
-					if ($v instanceof \Stringable) {
-						return (string) $v;
-					}
-					return is_scalar($v) ? $v : '';
-				};
-
-				$column = $deepResolve($column);
-
-				// Pull common fields as strings
-				$label    = $column['label']   instanceof \Illuminate\Contracts\Support\Htmlable ? $column['label']->toHtml() : (string) ($column['label'] ?? '');
-				$index    = (string) ($column['index'] ?? '');
-				$sortable = (bool)   ($column['sortable'] ?? false);
+				$id   = is_array($row) ? $row['id']   : $row->id;
+				$un   = is_array($row) ? $row['unread_replies_count'] : ($row->unread_replies_count ?? 0);
+				$all  = is_array($row) ? $row['replies_count']        : ($row->replies_count ?? 0);
+				$show = is_array($row) ? $row['show_alert']           : ($row->show_alert ?? false);
 			@endphp
-
-			@if($sortable)
-				<div
-						class="flex items-center cursor-pointer"
-						@if($index !== '')
-							wire:click="sort('{{ e($index) }}')"
-						@endif
-				>
-					Label: already html-escaped or html-safe
-					{!! $label !!}
-
-					@if($sortField === $index)
-						<span class="ml-1">
-			                    @if($sortDirection === 'asc')
-								<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-4 w-4"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-			                            <path
-					                            stroke-linecap="round"
-					                            stroke-width="2"
-					                            d="M5 15l7-7 7 7" />
-			                        </svg>
-							@else
-								<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-4 w-4"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-			                            <path
-					                            stroke-linecap="round"
-					                            stroke-linejoin="round"
-					                            stroke-width="2"
-					                            d="M19 9l-7 7-7-7" />
-			                        </svg>
-							@endif
-			                </span>
-					@endif
-				</div>
-			@else
-				{!! $label !!}
-			@endif
-
+			<div class="relative inline">
+				<x-button
+						color="sky"
+						xs
+						flat
+						class="font-semibold"
+						:text="'Replies ('.($un > 0 ? $un : $all).')'"
+						wire:click="openResponsesModal({{ $id }})"
+				/>
+				@if($show)
+					<div class="absolute top-0 -right-4">
+			                    <span class="relative flex size-3">
+			                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+			                        <span class="relative inline-flex size-3 rounded-full bg-rose-500"></span>
+			                    </span>
+					</div>
+				@endif
+			</div>
 			@endinteract
-
-
 		</x-table>
 
-		@if(count($rows) === 0)
-			<div class="text-center py-4">
-				<p class="text-gray-500">No requests for information found. Click "Create RFI" to create one.</p>
-			</div>
-		@endif
 	</div>
 
 	<!-- Create RFI Modal -->
@@ -476,7 +607,14 @@
 								<x-checkbox
 										wire:model="selectedRecipients"
 										value="{{ $user->id }}" />
-								<span class="ml-2">{{ is_string($user->name) ? $user->name : '' }}</span>
+								<span class="ml-2">
+									{{ is_string($user->name) ? $user->name : '' }}
+									@if(userRole($user, $negotiationId))
+										<x-badge
+												text="{{ userRole($user, $negotiationId)->label() }}"
+												color="cyan" />
+									@endif
+								</span>
 							</label>
 						@endforeach
 					</div>
@@ -524,7 +662,12 @@
 								<x-checkbox
 										wire:model="selectedRecipients"
 										value="{{ $user->id }}" />
-								<span class="ml-2">{{ is_string($user->name) ? $user->name : '' }}</span>
+								<span class="ml-2">
+									{{ is_string($user->name) ? $user->name : '' }}
+									@if(userRole($user, $negotiationId))
+										<span class="text-sm text-gray-400 ml-1">({{ userRole($user, $negotiationId)->label() }})</span>
+									@endif
+								</span>
 							</label>
 						@endforeach
 					</div>
@@ -548,6 +691,7 @@
 
 	<!-- View Request Details and Responses Modal -->
 	<x-modal
+			size="6xl"
 			id="view-responses-modal"
 			wire="showResponsesModal"
 			x-on:hidden.window="$wire.closeModal()">
