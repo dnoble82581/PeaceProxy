@@ -36,8 +36,8 @@ Broadcast::channel('negotiation.{conversationId}', function (User $user, int $co
     ];
 });
 
-Broadcast::channel('users.{userId}', function ($user, $userId) {
-    return (int) $user->id === (int) $userId; // only the owner can listen
+Broadcast::channel('private.users.{userId}', function ($user, $userId) {
+    return true;
 });
 
 Broadcast::channel('private.negotiation.{tenantId}.{negotiationId}', function (User $user, $tenantId, $negotiationId) {

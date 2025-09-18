@@ -3,8 +3,10 @@
 namespace App\Services\Message;
 
 use App\Contracts\MessageReactionRepositoryInterface;
+use App\Events\Message\MessageReactionChangedEvent;
 use App\Models\Message;
 use App\Models\MessageReaction;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class MessageReactionService
@@ -59,12 +61,14 @@ class MessageReactionService
         return $grouped;
     }
 
-    /**
-     * Get reactions for a message.
-     */
-    public function getReactionsByMessage(int $messageId): array
+    public function getMessageReactionCounts(int $messageId): array
     {
-        return $this->messageReactionRepository->getReactionsByMessage($messageId);
+        return DB::table('message_reactions')
+            ->where('message_id', $messageId)
+            ->select('reaction_type', DB::raw('count(*) as count'))
+            ->groupBy('reaction_type')
+            ->pluck('count', 'reaction_type')
+            ->all();
     }
 
     /**
@@ -78,40 +82,99 @@ class MessageReactionService
                 ->where('user_id', $userId)
                 ->first();
 
+            $oldEmoji = $current?->reaction_type;   // ← capture before changes
             $changed = false;
 
+            // CASE A: clear reaction (toggle off)
             if (is_null($emoji)) {
                 if ($current) {
                     $current->delete();
                     $changed = true;
                 }
 
+                // fresh counts after change
+                $message = Message::findOrFail($messageId);
+                $reactor = User::findOrFail($userId);
+                /** @var MessageReactionService $svc */
+                $svc = app(MessageReactionService::class);
+
+                $oldEmojiCount = $oldEmoji
+                    ? $svc->getMessageReactionCount($messageId, $oldEmoji)
+                    : null;
+
+                // newEmoji is null because it was cleared
+                event(new MessageReactionChangedEvent(
+                    message: $message,
+                    emoji: null,
+                    oldEmoji: $oldEmoji,
+                    reactor: $reactor,
+                    oldCount: $oldEmojiCount,
+                    newCount: null,
+                ));
+
                 return ['changed' => $changed, 'emoji' => null];
             }
 
+            // CASE B: set or switch reaction
             if ($current) {
                 if ($current->reaction_type !== $emoji) {
+                    // switching emoji
                     $current->update(['reaction_type' => $emoji]);
                     $changed = true;
+                } else {
+                    // clicking the same emoji again? if you want that to clear instead, you can:
+                    // $current->delete(); $emoji = null; $changed = true;
                 }
             } else {
                 $negotiationId = Message::findOrFail($messageId)->negotiation_id;
+
                 MessageReaction::create([
                     'tenant_id' => tenant()->id,
                     'negotiation_id' => $negotiationId,
                     'reaction_type' => $emoji,
                     'message_id' => $messageId,
                     'user_id' => $userId,
-                    'type' => $emoji,
+                    'type' => $emoji, // (optional/duplicated field)
                 ]);
+
                 $changed = true;
             }
+
+            // Broadcast authoritative counts for both the new and old emoji
+            $message = Message::findOrFail($messageId);
+            $reactor = User::findOrFail($userId);
+            /** @var MessageReactionService $svc */
+            $svc = app(MessageReactionService::class);
+
+            $newEmoji = $emoji;
+            $newCount = $newEmoji
+                ? $svc->getMessageReactionCount($messageId, $newEmoji)
+                : null;
+
+            $oldCount = $oldEmoji
+                ? $svc->getMessageReactionCount($messageId, $oldEmoji)
+                : null;
+
+            event(new MessageReactionChangedEvent(
+                message: $message,
+                emoji: $newEmoji,
+                oldEmoji: $oldEmoji,
+                reactor: $reactor,
+                oldCount: $oldCount,
+                newCount: $newCount,
+            ));
 
             return ['changed' => $changed, 'emoji' => $emoji];
         });
     }
 
-
+    public function getMessageReactionCount(int $messageId, string $emoji): int
+    {
+        return MessageReaction::query()
+            ->where('message_id', $messageId)
+            ->where('reaction_type', $emoji)
+            ->count();
+    }
 
     private function addLogEntry(MessageReaction $messageReaction, string $action): void
     {
@@ -130,6 +193,4 @@ class MessageReactionService
             ],
         );
     }
-
-
 }

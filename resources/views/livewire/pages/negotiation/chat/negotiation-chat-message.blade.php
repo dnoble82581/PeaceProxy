@@ -13,13 +13,14 @@
 		public bool $isEmergency = false;
 		public bool $isWhisper;
 		public int $negotiationId;
-
+		public array $reactions = [];
 
 		public function mount(int $messageId)
 		{
 			$this->message = $this->fetchMessage($messageId);
 			$this->negotiationId = $this->message->negotiation_id;
 			$this->formattedMessage = $this->formatMessage($this->message);
+			$this->reactions = app(MessageReactionService::class)->getMessageReactionCounts($messageId);
 		}
 
 		public function fetchMessage(int $messageId):Message
@@ -33,7 +34,7 @@
 			$this->isUrgent = str_starts_with($decryptedMessage, '[URGENT] ');
 			$this->isEmergency = str_starts_with($decryptedMessage, '[EMERGENCY] ');
 			$this->isWhisper = $message->is_whisper;
-//			dd($decryptedMessage, $this->isUrgent, $this->isEmergency, $this->isUrgent);
+			// dd($decryptedMessage, $this->isUrgent, $this->isEmergency, $this->isUrgent);
 
 			if ($this->isUrgent) {
 				return substr($decryptedMessage, 9); // Remove [URGENT] prefix
@@ -70,25 +71,45 @@
 			return app(MessageReactionService::class)->getReactionsGroupedByType($messageId);
 		}
 
-		public function getListeners():array
+		public function getMessageReactionCounts()
 		{
-			$userId = authUser()->id;
-			// This component only needs to listen for events related to its specific message
-			// The parent component (negotiation-chat) handles conversation-level events
-			return [
-				// Listen for reaction updates for this specific message
-				"reaction-updated-{$this->message->id}" => '$refresh',
-				"echo-private:private.users.$userId,.MessageReactionChanged" => 'handleReactionChanged',
-			];
+			return app(MessageReactionService::class)->getMessageReactionCounts($this->message->id);
 		}
 
-		public function handleReactionChanged()
+		public function getMessageReactionCount($emoji)
 		{
-			logger('reaction changed');
+			return app(MessageReactionService::class)->getMessageReactionCount($this->message->id, $emoji);
 		}
 
+ 	public function getListeners():array
+ 	{
+ 		$userId = authUser()->id;
+ 		$tenantId = tenant()->id;
+ 		$negotiationId = $this->negotiationId;
+		
+ 		return [
+ 			// Listen for reaction updates on user's private channel
+ 			"echo-private:private.users.$userId,.MessageReactionChanged" => 'handleReactionChanged',
+ 			// Listen for reaction updates on the negotiation channel
+ 			"echo-private:private.negotiation.$tenantId.$negotiationId,.MessageReactionChanged" => 'handleReactionChanged',
+ 		];
+ 	}
+
+		public function handleReactionChanged($payload):void
+		{
+			// Ensure this is for THIS message
+			if (($payload['message_id'] ?? null) !== $this->message->id) return;
+
+			// Re-emit as a DOM event so Alpine updates counts immediately
+			$this->dispatch("reaction-updated-{$this->message->id}",
+				newEmoji: $payload['newEmoji'] ?? ($payload['emoji'] ?? null),
+				newEmojiCount: $payload['newEmojiCount'] ?? ($payload['count'] ?? null),
+				oldEmoji: $payload['oldEmoji'] ?? null,
+				oldEmojiCount: $payload['oldEmojiCount'] ?? null,
+				reactor: $payload['reactor'] ?? null,
+			);
+		}
 	}
-
 ?>
 
 <div class="flex {{ $message->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
@@ -129,10 +150,10 @@
 
 			<div
 					class="mt-1 rounded-lg px-3 py-1 text-sm shadow-sm
-											{{ $isUrgent ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' :
-											   ($isEmergency ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
-											   ($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') :
-											   ($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">
+				{{ $isUrgent ? 'bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' :
+				($isEmergency ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
+				($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') :
+				($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">
 				{{ $formattedMessage }}
 
 				<!-- Document Attachments -->
@@ -158,30 +179,52 @@
 						@endforeach
 					</div>
 				@endif
-
-				<!-- Message Reactions -->
-
-				<div class="mt-1 flex gap-2 text-xs text-gray-500">
-					@foreach (['👍','👎','❤️','😂','😮'] as $e)
-						{{-- @php($count = $this->reactionCount($message->id, $e)) --}}
-						{{-- @if($count > 0) --}}
-						{{-- <span wire:key="rc-{{ $message->id }}-{{ $e }}">{{ $e }} 0</span> --}}
-						{{-- @endif --}}
-					@endforeach
-				</div>
 			</div>
-			<div
+   <div
 					wire:ignore
 					x-data="{
-							messageId: {{ $message->id }},
-							active: @js($this->userReactionType($message->id)), // '❤️' | null
-							emojis: ['👍','👎','❤️','😂','😮'],
-							set(e) {
-								this.active = (this.active === e) ? null : e; // toggle same emoji clears
-								$wire.setReaction(this.messageId, this.active);
-							}
-						}"
-					@reaction-updated-{{ $message->id }}.window="if ($event.detail && 'active' in $event.detail) active = $event.detail.active;"
+    messageId: {{ $message->id }},
+    userId: @js(auth()->id()),
+    emojis: ['👍','👎','❤️','😂','😮'],
+    counts: @js($this->getMessageReactionCounts($message->id)), // { '👍': 3, '😂': 1, ... }
+    active: @js($this->userReactionType($message->id)),
+
+    handleReactionChanged(e) {
+      const d = e.detail || {};
+      
+      // Track the last processed event to avoid duplicate processing
+      if (this._lastEventId && this._lastEventId === `${d.message_id}-${d.reactor?.id}-${d.newEmoji}`) {
+        return; // Skip duplicate events
+      }
+      
+      // Store this event's unique identifier
+      this._lastEventId = `${d.message_id}-${d.reactor?.id}-${d.newEmoji}`;
+      
+      // Update counts from authoritative server data
+      if (d.newEmoji != null) this.counts[d.newEmoji] = d.newEmojiCount ?? 0;
+      if (d.oldEmoji != null) this.counts[d.oldEmoji] = d.oldEmojiCount ?? 0;
+      
+      // Only update active state if this event is about the current user
+      if (d.reactor?.id === this.userId) {
+        this.active = d.newEmoji ?? null;
+      }
+    },
+
+    set(emoji) {
+      const next = (this.active === emoji) ? null : emoji;
+      
+      // Reset the last event ID to ensure we process the upcoming server response
+      this._lastEventId = null;
+      
+      // Don't update counts locally - let the server provide the authoritative count
+      // Just update the active state for immediate UI feedback
+      this.active = next;
+
+      $wire.setReaction(this.messageId, this.active);
+    }
+  }"
+					{{-- IMPORTANT: use the *same* event name, with the id interpolated in Blade --}}
+					@reaction-updated-{{ $message->id }}.window="handleReactionChanged($event)"
 			>
 				<div class="flex items-center gap-1 select-none">
 					<template
@@ -192,9 +235,13 @@
 								x-on:click="set(emoji)"
 								:data-active="active === emoji ? 'true' : 'false'"
 								:aria-pressed="active === emoji ? 'true' : 'false'"
-								class="text-xs p-1 rounded-full transition hover:bg-gray-100 dark:hover:bg-neutral-800 data-[active=true]:bg-gray-100 data-[active=true]:dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-1"
-								x-text="emoji"
-						></button>
+								class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full transition hover:bg-gray-100 dark:hover:bg-neutral-800 data-[active=true]:bg-gray-100 data-[active=true]:dark:bg-neutral-800"
+						>
+							<span x-text="emoji"></span>
+							<span
+									class="tabular-nums"
+									x-text="counts[emoji] ?? 0"></span>
+						</button>
 					</template>
 				</div>
 			</div>
