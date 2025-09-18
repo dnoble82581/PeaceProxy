@@ -94,7 +94,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Warning::class, 'created_by_id');
     }
-
     /**
      * Get the conversations created by this user.
      */
