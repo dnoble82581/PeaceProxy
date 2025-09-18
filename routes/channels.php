@@ -36,6 +36,10 @@ Broadcast::channel('negotiation.{conversationId}', function (User $user, int $co
     ];
 });
 
+Broadcast::channel('users.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId; // only the owner can listen
+});
+
 Broadcast::channel('private.negotiation.{tenantId}.{negotiationId}', function (User $user, $tenantId, $negotiationId) {
     return true;
 });
@@ -43,5 +47,3 @@ Broadcast::channel('private.negotiation.{tenantId}.{negotiationId}', function (U
 Broadcast::channel('tenants.{tenantId}.notifications', function ($user, $tenantId) {
     return (int) $user->tenant_id === (int) $tenantId; // adapt to your tenant resolver
 });
-
-Broadcast::channel('debug', fn () => true);
