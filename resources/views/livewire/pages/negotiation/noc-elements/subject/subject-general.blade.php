@@ -196,7 +196,7 @@
 	}
 ?>
 
-<div class="py-4 px-6 grid grid-cols-1 md:grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] gap-6 dark:bg-dark-800 bg-white rounded-lg shadow-sm">
+<div class="py-4 px-2 grid grid-cols-1 md:grid-cols-[150px_1fr_1fr_1fr_1fr_20px] gap-4 dark:bg-dark-800 bg-white rounded-lg shadow-sm">
 	<div
 			x-data="{
 			activeSlide: 0,
