@@ -164,6 +164,18 @@
 			$negotiationData = $this->negotiations->firstWhere('id', $negotiationId);
 			$title = $negotiationData? $negotiationData->title : '';
 
+			// Redirect based on selected role
+			if (in_array($this->choseRole, [
+				\App\Enums\User\UserNegotiationRole::TacticalUser->value,
+				\App\Enums\User\UserNegotiationRole::TacticalCommander->value,
+			])) {
+				$this->redirect(route('negotiation.tactical-noc', [
+					'tenantSubdomain' => tenant()->subdomain,
+					'negotiation' => $title
+				]));
+				return;
+			}
+
 			$this->redirect(route('negotiation-noc', [
 				'tenantSubdomain' => tenant()->subdomain,
 				'negotiation' => $title

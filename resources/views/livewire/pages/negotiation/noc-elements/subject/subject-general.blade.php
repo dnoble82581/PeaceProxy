@@ -173,15 +173,56 @@
 
 		public function getListeners()
 		{
+			$negotiationId = (int) $this->negotiationId;
+			$tenantId = (int) (tenant()->id ?? 0);
+
+			// Subscribe this component to both presence and private negotiation channels
+			// and listen to a wide set of negotiation events that are already broadcasted
+			// in the app. On any of these, refresh images and related data without polling.
 			return [
-				"echo-private:negotiation.$this->negotiationId,.MoodCreated" => 'handleMoodCreated',
+				// Presence channel events (no tenant prefix)
+				"echo-presence:negotiation.$negotiationId,.ConversationCreated" => 'refreshSubjectAssets',
+				"echo-presence:negotiation.$negotiationId,.ConversationClosed" => 'refreshSubjectAssets',
+				"echo-presence:negotiation.$negotiationId,.MessageSent" => 'refreshSubjectAssets',
+				"echo-presence:negotiation.$negotiationId,.MoodCreated" => 'handleMoodCreated',
+
+				// Private channel events (tenant + negotiation scoped)
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.DemandCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.DemandUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.DemandDestroyed" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HookCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HookUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HookDestroyed" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.TriggerCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.TriggerUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.TriggerDestroyed" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.HostageDestroyed" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.NoteCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.ObjectiveCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.ObjectivePinned" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.ObjectiveUnpinned" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.RfiCreated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.RfiUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.RfiDeleted" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.RfiReplyPosted" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.CallUpdated" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.DocumentAttached" => 'refreshSubjectAssets',
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.MessageReactionChanged" => 'refreshSubjectAssets',
 			];
 		}
 
 		public function handleMoodCreated($event)
 		{
-			// Refresh the component when a conversation is closed
 			$this->loadRecentMoods();
+			$this->loadImageUrls();
+		}
+
+		public function refreshSubjectAssets(): void
+		{
+			// When any negotiation activity occurs, refresh subject-related assets that may change
+			$this->loadImageUrls();
 		}
 
 		public function openPhoneIntegrationModal()

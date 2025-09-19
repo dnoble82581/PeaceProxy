@@ -17,7 +17,7 @@ enum QuestionCategories: string
     {
         return match ($this) {
             self::subject => 'Subject Risk',
-            self::tactical => 'Tactical Risk',
+            self::tactical => 'tactical Risk',
             self::operational => 'Operational Risk',
             self::strategic => 'Strategic Risk',
             self::environmental => 'Environmental Risk',
