@@ -12,11 +12,6 @@ class DemandFetchingService
     {
     }
 
-    public function getDemandById($demandId)
-    {
-        return $this->demandRepository->getDemand($demandId);
-    }
-
     public function getAllDemands()
     {
         return $this->demandRepository->getDemands();
@@ -41,5 +36,10 @@ class DemandFetchingService
         }
 
         return DemandDTO::fromArray($demand->toArray());
+    }
+
+    public function getDemandById($demandId, ?array $with = [])
+    {
+        return $this->demandRepository->getDemand($demandId, $with);
     }
 }

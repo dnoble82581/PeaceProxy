@@ -349,47 +349,7 @@
 			// Dispatch event to trigger scroll
 			$this->dispatch('new-message');
 		}
-
-		/**
-		 * Attach a document to a message
-		 */
-		public function attachDocumentToMessage(int $messageId, int $documentId):void
-		{
-			$messageDocumentData = [
-				'message_id' => $messageId,
-				'document_id' => $documentId,
-				'tenant_id' => tenant()->id,
-				'negotiation_id' => $this->negotiationId,
-				'uploaded_by_id' => auth()->id(),
-			];
-
-			$messageDocumentDTO = \App\DTOs\MessageDocument\MessageDocumentDTO::fromArray($messageDocumentData);
-			app(\App\Services\Message\MessageDocumentService::class)->attachDocument($messageDocumentDTO);
-		}
-
-		/**
-		 * Select a document to attach to the message
-		 */
-		public function selectDocument(int $documentId):void
-		{
-			$document = \App\Models\Document::find($documentId);
-			if ($document) {
-				$this->documentToAttach = [
-					'id' => $document->id,
-					'name' => $document->name,
-					'file_type' => $document->file_type,
-				];
-			}
-		}
-
-		/**
-		 * Clear the selected document
-		 */
-		public function clearSelectedDocument():void
-		{
-			$this->documentToAttach = null;
-		}
-
+		
 		/**
 		 * Toggle a reaction on a message
 		 */
@@ -1024,7 +984,7 @@
 							<livewire:pages.negotiation.chat.negotiation-chat-message
 									:messageId="$message->id"
 									:key="$message->id" />
-							
+
 						@endforeach
 					</div>
 
@@ -1065,54 +1025,7 @@
 										class="w-4 h-4" />
 							</button>
 
-							<!-- Document Attachment Button -->
-							<button
-									type="button"
-									x-data="{ showDocumentSelector: false }"
-									@click="showDocumentSelector = !showDocumentSelector"
-									:class="{ 'text-blue-500': $wire.documentToAttach, 'text-gray-400': !$wire.documentToAttach }"
-									class="hover:cursor-pointer transition-colors duration-300 ease-in-out relative">
-								<x-icon
-										name="paper-clip"
-										class="w-4 h-4" />
-
-								<!-- Document Selector Dropdown -->
-								<div
-										x-show="showDocumentSelector"
-										@click.away="showDocumentSelector = false"
-										class="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-dark-700 rounded-md shadow-lg p-2 z-10">
-									<div class="text-sm font-medium mb-2">Attach Document</div>
-
-									@php
-										$documents = \App\Models\Document::where('negotiation_id', $this->negotiationId)
-											->where(function($query) {
-												$query->where('is_private', false)
-													->orWhere('uploaded_by_id', auth()->id());
-											})
-											->orderBy('created_at', 'desc')
-											->limit(10)
-											->get();
-									@endphp
-
-									@if($documents->count() > 0)
-										<div class="max-h-48 overflow-y-auto">
-											@foreach($documents as $document)
-												<div
-														wire:click="selectDocument({{ $document->id }})"
-														@click="showDocumentSelector = false"
-														class="p-2 hover:bg-gray-100 dark:hover:bg-dark-600 rounded cursor-pointer flex items-center">
-													<x-icon
-															name="{{ $document->file_type === 'pdf' ? 'document-text' : 'document' }}"
-															class="w-4 h-4 mr-2 text-gray-500" />
-													<span class="text-sm truncate">{{ $document->name }}</span>
-												</div>
-											@endforeach
-										</div>
-									@else
-										<div class="text-sm text-gray-500 p-2">No documents available</div>
-									@endif
-								</div>
-							</button>
+							<!-- Whisper -->
 						</div>
 						@if($isWhisper && $whisperToUserId)
 							@php

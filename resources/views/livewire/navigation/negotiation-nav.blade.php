@@ -53,7 +53,7 @@
 						// Update the negotiation
 						$this->negotiation->update([
 							'ended_at' => $now,
-							'duration' => $durationInMinutes
+							'duration_minutes' => $durationInMinutes
 						]);
 					}
 

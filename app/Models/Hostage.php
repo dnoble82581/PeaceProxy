@@ -71,6 +71,13 @@ class Hostage extends Model
         return $image;
     }
 
+    public function deliveryPlans()
+    {
+        return $this->morphToMany(DeliveryPlan::class, 'planable', 'delivery_planables')
+            ->withPivot(['role','notes'])->withTimestamps();
+    }
+
+
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');

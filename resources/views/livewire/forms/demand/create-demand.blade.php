@@ -33,16 +33,11 @@
 			$validated = $this->form->validate();
 
 			// Create the demand
-//			$demand = Demand::create($validated);
+
 			$dto = DemandDTO::fromArray($validated);
 			$demand = app(DemandCreationService::class)->createDemand($dto);
 
-
 			$this->dispatch('close-modal', $demand->id);
-
-
-			// Dispatch event
-//			event(new DemandCreatedEvent($demand));
 
 			// Reset the form
 			$this->form->reset();

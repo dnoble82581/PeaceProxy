@@ -5,6 +5,7 @@
 	use App\Models\MessageReaction;
 	use App\Services\Message\MessageReactionService;
 	use Illuminate\Support\Collection;
+	use Livewire\Attributes\On;
 
 	new class extends \Livewire\Volt\Component {
 		public Message $message;
@@ -81,19 +82,25 @@
 			return app(MessageReactionService::class)->getMessageReactionCount($this->message->id, $emoji);
 		}
 
- 	public function getListeners():array
- 	{
- 		$userId = authUser()->id;
- 		$tenantId = tenant()->id;
- 		$negotiationId = $this->negotiationId;
-		
- 		return [
- 			// Listen for reaction updates on user's private channel
- 			"echo-private:private.users.$userId,.MessageReactionChanged" => 'handleReactionChanged',
- 			// Listen for reaction updates on the negotiation channel
- 			"echo-private:private.negotiation.$tenantId.$negotiationId,.MessageReactionChanged" => 'handleReactionChanged',
- 		];
- 	}
+		#[On('attachDocumentToMessage')]
+		public function attachDocumentToMessage()
+		{
+			dd('here');
+		}
+
+		public function getListeners():array
+		{
+			$userId = authUser()->id;
+			$tenantId = tenant()->id;
+			$negotiationId = $this->negotiationId;
+
+			return [
+				// Listen for reaction updates on user's private channel
+				"echo-private:private.users.$userId,.MessageReactionChanged" => 'handleReactionChanged',
+				// Listen for reaction updates on the negotiation channel
+				"echo-private:private.negotiation.$tenantId.$negotiationId,.MessageReactionChanged" => 'handleReactionChanged',
+			];
+		}
 
 		public function handleReactionChanged($payload):void
 		{
@@ -155,32 +162,8 @@
 				($message->is_whisper ? ($message->user_id === auth()->id() ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-indigo-200 dark:bg-indigo-700 text-indigo-800 dark:text-indigo-200') :
 				($message->user_id === auth()->id() ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200' : 'bg-white dark:bg-dark-600 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-500'))) }}">
 				{{ $formattedMessage }}
-
-				<!-- Document Attachments -->
-				@php
-					$attachedDocuments = $message->messageDocuments()->with('document')->get();
-				@endphp
-
-				@if($attachedDocuments->count() > 0)
-					<div class="mt-2 pt-2 border-t border-gray-200 dark:border-dark-500">
-						@foreach($attachedDocuments as $attachment)
-							<a
-									href="{{ route('documents.download', $attachment->document_id) }}"
-									class="flex items-center p-1 rounded hover:bg-gray-100 dark:hover:bg-dark-500 text-blue-600 dark:text-blue-400"
-									target="_blank">
-								<x-icon
-										name="{{ str_ends_with($attachment->document->file_type, 'pdf') ? 'document-text' : 'document' }}"
-										class="w-4 h-4 mr-2" />
-								<span class="text-xs truncate">{{ $attachment->document->name }}</span>
-								<x-icon
-										name="arrow-down-tray"
-										class="w-3 h-3 ml-1" />
-							</a>
-						@endforeach
-					</div>
-				@endif
 			</div>
-   <div
+			<div
 					wire:ignore
 					x-data="{
     messageId: {{ $message->id }},
@@ -226,7 +209,9 @@
 					{{-- IMPORTANT: use the *same* event name, with the id interpolated in Blade --}}
 					@reaction-updated-{{ $message->id }}.window="handleReactionChanged($event)"
 			>
-				<div class="flex items-center gap-1 select-none">
+				<div
+						class="flex items-center gap-1 select-none mt-1">
+
 					<template
 							x-for="emoji in emojis"
 							:key="emoji">

@@ -85,6 +85,12 @@ class Subject extends Model
         return 0;
     }
 
+    public function deliveryPlans()
+    {
+        return $this->morphToMany(DeliveryPlan::class, 'planable', 'delivery_planables')
+            ->withPivot(['role','notes'])->withTimestamps();
+    }
+
     public function riskAssessments(): HasMany
     {
         return $this->hasMany(Assessment::class, 'subject_id');

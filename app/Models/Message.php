@@ -103,14 +103,6 @@ class Message extends Model
     }
 
     /**
-     * Get the document attachments for the message.
-     */
-    public function messageDocuments(): HasMany
-    {
-        return $this->hasMany(MessageDocument::class);
-    }
-
-    /**
      * Get the documents attached to the message.
      */
     public function documents(): HasManyThrough
