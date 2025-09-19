@@ -384,17 +384,22 @@
 //				->hasUserReacted($messageId, auth()->id(), $reactionType);
 //		}
 //
-//		/**
-//		 * Select a conversation by ID
-//		 *
-//		 * @param  int  $conversationId  The ID of the conversation to select
-//		 *
-//		 * @return void
-//		 */
-//		public function selectConversation(int $conversationId):void
-//		{
-//			$this->selectedConversationId = $conversationId;
-//		}
+/**
+		 * Select a conversation by ID
+		 *
+		 * @param  int  $conversationId  The ID of the conversation to select
+		 *
+		 * @return void
+		 */
+		public function selectConversation(int $conversationId):void
+		{
+			$this->selectedConversationId = $conversationId;
+			// reset unread count and mark as read for current user
+			unset($this->unread[$conversationId]);
+			app(ConversationReadService::class)->markConversationRead(auth()->user(), $conversationId);
+			// bump list version so lists refresh if relying on it
+			$this->listVersion++;
+		}
 
 		/**
 		 * Set the active tab and select the appropriate conversation

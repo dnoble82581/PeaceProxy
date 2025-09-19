@@ -16,6 +16,7 @@ return new class () extends Migration {
             $table->unsignedBigInteger('tenant_id')->index();
             $table->string('title')->unique();
             $table->text('summary')->nullable();
+            $table->string('case_number')->nullable();
             $table->dateTime('started_at')->nullable();
             $table->dateTime('ended_at')->nullable();
             $table->string('location')->nullable();
