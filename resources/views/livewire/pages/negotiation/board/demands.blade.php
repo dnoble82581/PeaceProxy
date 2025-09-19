@@ -2,11 +2,13 @@
 
 	use App\Livewire\Forms\CreateDemandForm;
 	use App\Models\Demand;
+	use App\Models\DeliveryPlan;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
 	use App\Services\Demand\DemandDestructionService;
 	use App\Services\Demand\DemandFetchingService;
 	use App\Services\Negotiation\NegotiationFetchingService;
+	use Illuminate\Support\Facades\Auth;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 
@@ -25,6 +27,12 @@
 		/** @var bool Flag to control the visibility of the edit demand modal */
 		public bool $showEditDemandModal = false;
 
+		/** @var bool Flag to control the visibility of the create delivery plan modal */
+		public bool $showCreateDeliveryModal = false;
+
+		/** @var bool Flag to control the visibility of the edit delivery plan modal */
+		public bool $showEditDeliveryModal = false;
+
 		/** @var Negotiation The negotiation being viewed */
 		public Negotiation $negotiation;
 
@@ -37,7 +45,16 @@
 		/** @var Demand|null The demand being edited */
 		public $demandToEdit;
 
+		/** @var DeliveryPlan|null The delivery plan being edited */
+		public $deliveryPlanToEdit;
+
+		/** @var int|null The ID of the demand for which to create a delivery plan */
+		public ?int $selectedDemandId = null;
+
 		public CreateDemandForm $form;
+
+		public bool $showViewDeliveryPlansModal = false;
+
 
 		/** @var string The field to sort demands by */
 		public string $sortBy = 'created_at';
@@ -56,7 +73,7 @@
 			$this->negotiationId = $this->negotiation->id;
 
 			// Eager load demands with their relationships to prevent N+1 queries
-			$this->primarySubject->load('demands');
+			$this->primarySubject->load(['demands.deliveryPlans']);
 		}
 
 		/**
@@ -71,6 +88,9 @@
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanCreated" => 'handleDeliveryPlanCreated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanUpdated" => 'handleDeliveryPlanUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanDestroyed" => 'handleDeliveryPlanDestroyed',
 				'refresh' => '$refresh',
 			];
 		}
@@ -84,8 +104,8 @@
 		 */
 		public function handleDemandCreated(array $data):void
 		{
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+			// Reload the primary subject with fresh demands data including delivery plans
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 
 			// Force a refresh of the component
 			$this->dispatch('refresh');
@@ -108,7 +128,7 @@
 
 		public function handleDemandDestroyed(array $data)
 		{
-			$this->primarySubject = $this->primarySubject->fresh('demands');
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 		}
 
 		/**
@@ -155,9 +175,15 @@
 		{
 			$this->showCreateDemandModal = false;
 			$this->showEditDemandModal = false;
+			$this->showCreateDeliveryModal = false;
+			$this->showEditDeliveryModal = false;
 
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands']);
+			// Reset selected demand and delivery plan
+			$this->selectedDemandId = null;
+			$this->deliveryPlanToEdit = null;
+
+			// Reload the primary subject with fresh demands data including delivery plans
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 
 			// Force a refresh of the component
 			$this->dispatch('refresh');
@@ -187,6 +213,129 @@
 		{
 			return $this->primarySubject->demands->sortBy($this->sortBy);
 		}
+
+		/**
+		 * Handle the DeliveryPlanCreated event by refreshing the component
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleDeliveryPlanCreated(array $data):void
+		{
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+
+			// Force a refresh of the component
+			$this->dispatch('refresh');
+
+			// Ensure the component is re-rendered
+			$this->render();
+		}
+
+		/**
+		 * Handle the DeliveryPlanUpdated event by refreshing the component
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleDeliveryPlanUpdated(array $data):void
+		{
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+
+			// Force a refresh of the component
+			$this->dispatch('refresh');
+		}
+
+		/**
+		 * Handle the DeliveryPlanDestroyed event by refreshing the component
+		 *
+		 * @param  array  $data  Event data
+		 *
+		 * @return void
+		 */
+		public function handleDeliveryPlanDestroyed(array $data):void
+		{
+			// Reload the primary subject with fresh demands data
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+
+			// Force a refresh of the component
+			$this->dispatch('refresh');
+		}
+
+		/**
+		 * Show the create delivery plan modal for a specific demand
+		 *
+		 * @param  int  $demandId  The ID of the demand to create a delivery plan for
+		 *
+		 * @return void
+		 */
+		public function showCreateDeliveryPlan($demandId)
+		{
+			$this->selectedDemandId = $demandId;
+//			dd($this->selectedDemandId);
+			$this->showCreateDeliveryModal = true;
+		}
+
+		/**
+		 * Show the edit delivery plan modal
+		 *
+		 * @param  int  $deliveryPlanId  The ID of the delivery plan to edit
+		 *
+		 * @return void
+		 */
+		public function editDeliveryPlan($deliveryPlanId)
+		{
+			// Reset the delivery plan being edited before setting a new one
+			$this->deliveryPlanToEdit = null;
+
+			$deliveryPlan = DeliveryPlan::findOrFail($deliveryPlanId);
+
+			// Check if the user is authorized to update this delivery plan
+			if (Auth::user()->can('update', $deliveryPlan)) {
+				$this->deliveryPlanToEdit = $deliveryPlan;
+				$this->showEditDeliveryModal = true;
+			} else {
+				// Show an error message if the user is not authorized
+				session()->flash('error', 'You are not authorized to edit this delivery plan.');
+			}
+		}
+
+		/**
+		 * Delete a delivery plan
+		 *
+		 * @param  int  $deliveryPlanId  The ID of the delivery plan to delete
+		 *
+		 * @return void
+		 */
+		public function deleteDeliveryPlan($deliveryPlanId)
+		{
+			$deliveryPlan = DeliveryPlan::findOrFail($deliveryPlanId);
+
+			// Check if the user is authorized to delete this delivery plan
+			if (Auth::user()->can('delete', $deliveryPlan)) {
+				// Delete the delivery plan
+				$deliveryPlan->delete();
+
+				// Reload the primary subject with fresh demands data
+				$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+
+				// Force a refresh of the component
+				$this->dispatch('refresh');
+			} else {
+				// Show an error message if the user is not authorized
+				session()->flash('error', 'You are not authorized to delete this delivery plan.');
+			}
+		}
+
+		public function showDeliveryPlans(int $demandId)
+		{
+			$this->selectedDemandId = $demandId;
+			$this->showViewDeliveryPlansModal = true;
+		}
+
 
 	}
 
@@ -252,9 +401,74 @@
 								</div>
 							</div>
 						</x-slot:header>
-						<p class="text-sm">
-							{{ $demand->content }}
-						</p>
+						<div class="flex">
+							<div class="flex-1">
+								<p class="text-sm">
+									{{ $demand->content }}
+								</p>
+							</div>
+							<div>
+								<button
+										wire:click="showDeliveryPlans({{ $demand->id }})"
+										class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">
+									<div class="flex items-center">
+										<x-ui.delivery-van-svg />
+										<span class="ml-1 text-sm">
+											{{ $demand->deliveryPlans->count() }}
+								        </span>
+									</div>
+								</button>
+							</div>
+						</div>
+						<!-- Display delivery plans if any -->
+						{{--						@if($demand->deliveryPlans->isNotEmpty())--}}
+						{{--							<div class="mt-3 border-t border-gray-200 dark:border-gray-700 pt-2">--}}
+						{{--								<h4 class="text-sm font-semibold flex items-center">--}}
+						{{--									<x-ui.delivery-van-svg class="w-4 h-4 mr-1" />--}}
+						{{--									Delivery Plans--}}
+						{{--								</h4>--}}
+						{{--								<div class="space-y-2 mt-1">--}}
+						{{--									@foreach($demand->deliveryPlans as $plan)--}}
+						{{--										<div class="bg-gray-50 dark:bg-gray-800 p-2 rounded-md text-xs">--}}
+						{{--											<div class="flex justify-between items-start">--}}
+						{{--												<div>--}}
+						{{--													<span class="font-medium">{{ $plan->title }}</span>--}}
+						{{--													@if($plan->scheduled_at)--}}
+						{{--														<span class="text-gray-500 ml-2">--}}
+						{{--															{{ \Carbon\Carbon::parse($plan->scheduled_at)->format('M d, Y') }}--}}
+						{{--														</span>--}}
+						{{--													@endif--}}
+						{{--												</div>--}}
+						{{--												<div class="flex space-x-1">--}}
+						{{--													@can('update', $plan)--}}
+						{{--														<x-button--}}
+						{{--																icon="pencil-square"--}}
+						{{--																wire:click="editDeliveryPlan({{ $plan->id }})"--}}
+						{{--																class="text-blue-500 hover:text-blue-700">--}}
+						{{--														</x-button>--}}
+						{{--													@endcan--}}
+						{{--													@can('delete', $plan)--}}
+						{{--														<x-button--}}
+						{{--																icon="trash"--}}
+						{{--																wire:click="deleteDeliveryPlan({{ $plan->id }})"--}}
+						{{--																class="text-red-500 hover:text-red-700">--}}
+						{{--														</x-button>--}}
+						{{--													@endcan--}}
+						{{--												</div>--}}
+						{{--											</div>--}}
+						{{--											@if($plan->summary)--}}
+						{{--												<p class="text-gray-600 dark:text-gray-400 mt-1">{{ Str::limit($plan->summary, 100) }}</p>--}}
+						{{--											@endif--}}
+						{{--											<div class="mt-1">--}}
+						{{--												<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-{{ $plan->status === 'completed' ? 'green' : ($plan->status === 'in_progress' ? 'blue' : 'gray') }}-100 text-{{ $plan->status === 'completed' ? 'green' : ($plan->status === 'in_progress' ? 'blue' : 'gray') }}-800">--}}
+						{{--													{{ ucfirst(str_replace('_', ' ', $plan->status)) }}--}}
+						{{--												</span>--}}
+						{{--											</div>--}}
+						{{--										</div>--}}
+						{{--									@endforeach--}}
+						{{--								</div>--}}
+						{{--							</div>--}}
+						{{--						@endif--}}
 						<x-slot:footer>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center space-x-2">
@@ -288,7 +502,12 @@
 										</x-badge>
 									@endif
 								</div>
-								<div>
+								<div class="flex items-center gap-2">
+									<button
+											wire:click="showCreateDeliveryPlan({{ $demand->id }})"
+											class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">
+										<x-ui.delivery-van-svg class="w-4 h-4" />
+									</button>
 									<x-button
 											wire:click="editDemand({{ $demand->id }})"
 											color="cyan"
@@ -338,4 +557,37 @@
 					:key="'demand-'.$demandToEdit->id" />
 		@endif
 	</x-modal>
+
+	{{--	SHOW DELIVERY PLANS MODAL--}}
+	<x-slide
+			size="5xl"
+			center
+			title="View Plans"
+			wire="showViewDeliveryPlansModal">
+		<livewire:forms.delivery.showDeliveryPlans
+				:demand-id="$selectedDemandId"
+				:key="'show-plans-'.$selectedDemandId" />
+	</x-slide>
+	<x-slide
+			size="5xl"
+			id="create-delivery-modal"
+			wire="showCreateDeliveryModal"
+			title="Create Delivery Plan">
+		<livewire:forms.delivery.create-delivery-plan
+				:demand-id="$selectedDemandId"
+				:key="'create-delivery-plan-'.$selectedDemandId" />
+	</x-slide>
+
+	<x-slide
+			z-index="z-10"
+			size="5xl"
+			id="edit-delivery-modal"
+			wire="showEditDeliveryModal"
+			title="Edit Delivery Plan">
+		@if($deliveryPlanToEdit)
+			<livewire:forms.delivery.edit-delivery-plan
+					:deliveryPlanId="$deliveryPlanToEdit->id"
+					:key="'edit-delivery-plan-'.$deliveryPlanToEdit->id" />
+		@endif
+	</x-slide>
 </div>

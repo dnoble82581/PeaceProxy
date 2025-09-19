@@ -6,6 +6,8 @@ use App\Contracts\CallRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
 use App\Contracts\ConversationRepositoryInterface;
 use App\Contracts\ConversationUserRepositoryInterface;
+use App\Contracts\DeliveryPlannablesRepositoryInterface;
+use App\Contracts\DeliveryPlanRepositoryInterface;
 use App\Contracts\DemandRepositoryInterface;
 use App\Contracts\DocumentRepositoryInterface;
 use App\Contracts\HookRepositoryInterface;
@@ -31,6 +33,8 @@ use App\Repositories\Call\CallRepository;
 use App\Repositories\Contact\ContactRepository;
 use App\Repositories\Conversation\ConversationRepository;
 use App\Repositories\ConversationUser\ConversationUserRepository;
+use App\Repositories\DeliveryPlan\DeliveryPlanRepository;
+use App\Repositories\DeliveryPlannables\DeliveryPlannablesRepository;
 use App\Repositories\Demand\DemandRepository;
 use App\Repositories\Document\DocumentRepository;
 use App\Repositories\Hook\HookRepository;
@@ -213,6 +217,18 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             MessageReactionRepositoryInterface::class,
             MessageReactionRepository::class,
+        );
+
+        // Bind DeliveryPlan repository
+        $this->app->bind(
+            DeliveryPlanRepositoryInterface::class,
+            DeliveryPlanRepository::class
+        );
+
+        // Bind DeliveryPlannables repository
+        $this->app->bind(
+            DeliveryPlannablesRepositoryInterface::class,
+            DeliveryPlannablesRepository::class
         );
     }
 

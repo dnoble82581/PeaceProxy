@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Demand extends Model
 {
-    use HasFactory;
     use BelongsToTenant;
+    use HasFactory;
 
     protected $guarded = ['id'];
 
@@ -34,10 +34,16 @@ class Demand extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    //    public function responses(): MorphMany
-    //    {
-    //        return $this->morphMany(Response::class, 'respondable');
-    //    }
+    public function deliveryPlans()
+    {
+        return $this->morphToMany(DeliveryPlan::class, 'planable', 'delivery_planables')
+            ->withPivot(['role', 'notes'])->withTimestamps();
+    }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Log::class, 'loggable');
+    }
 
     protected function casts(): array
     {
@@ -51,10 +57,5 @@ class Demand extends Model
             'channel' => Channels::class,
             'deadline_date' => 'date',
         ];
-    }
-
-    public function logs(): MorphMany
-    {
-        return $this->morphMany(Log::class, 'loggable');
     }
 }

@@ -25,9 +25,10 @@ class DemandRepository implements DemandRepositoryInterface
         return $demand;
     }
 
-    public function getDemand($id)
+    public function getDemand($id, ?array $with = [])
     {
-        return Demand::find($id);
+        logger($with);
+        return Demand::with($with)->find($id);
     }
 
     public function deleteDemand($id)

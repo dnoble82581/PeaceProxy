@@ -6,37 +6,20 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Document extends Model
 {
-    use HasFactory;
     use BelongsToTenant;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'negotiation_id',
-        'tenant_id',
-        'name',
-        'file_path',
-        'file_type',
-        'file_size',
-        'storage_disk',
-        'documentable_id',
-        'documentable_type',
-        'category',
-        'description',
-        'is_private',
-        'tags',
-        'uploaded_by_id',
-        'encrypted',
-        'access_token',
-        'presigned_url_expires_at',
-    ];
+    protected $guarded = ['id'];
 
     /**
      * The attributes that should be cast.
@@ -50,6 +33,11 @@ class Document extends Model
         'tags' => 'array',
         'presigned_url_expires_at' => 'datetime',
     ];
+
+    public function deliveryPlans()
+    {
+        return $this->morphedByMany(DeliveryPlan::class, 'documentable')->withTimestamps();
+    }
 
     /**
      * Get the negotiation that owns the document.
