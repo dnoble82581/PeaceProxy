@@ -187,13 +187,16 @@
 						<span class="text-zinc-900">Mood</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="">Our integrated mood tracking feature uses advanced voice analysis and behavioral cues to
-					            generate a real-time line chart that reflects the subject’s emotional state over the
-					            course of the interaction. This visual tool supports negotiators and command staff by
-					            providing critical context during dynamic conversations.</p>
+					<p class="text-dark-800">Our integrated mood tracking feature uses advanced voice analysis and
+					                         behavioral cues to
+					                         generate a real-time line chart that reflects the subject’s emotional state
+					                         over the
+					                         course of the interaction. This visual tool supports negotiators and
+					                         command staff by
+					                         providing critical context during dynamic conversations.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
 					<li class="list-disc">
 						<span class="font-semibold">Monitor De-escalation Progress:</span>
 						<span>See fluctuations in stress, agitation, or cooperation levels as negotiations unfold.</span>
@@ -300,12 +303,14 @@
 						<span class="text-zinc-900">Objective</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="">Track mission-critical objectives in real time with our comprehensive tracking system.
-					            Monitor progress, assign responsibilities, and ensure accountability across your entire
-					            operation.</p>
+					<p class="text-dark-800">Track mission-critical objectives in real time with our comprehensive
+					                         tracking system.
+					                         Monitor progress, assign responsibilities, and ensure accountability across
+					                         your entire
+					                         operation.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
 					<li class="list-disc">
 						<span class="font-semibold">Goal-Based Framework:</span>
 						<span>Define clear, measurable objectives with customizable success criteria and timeline tracking.</span>
@@ -416,12 +421,14 @@
 						<span class="text-zinc-900">Hostage</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="">Monitor and manage hostage situations with our comprehensive tracking system. Keep
-					            detailed records of all individuals involved, track negotiations, and coordinate
-					            response efforts efficiently.</p>
+					<p class="text-dark-800">Monitor and manage hostage situations with our comprehensive tracking
+					                         system. Keep
+					                         detailed records of all individuals involved, track negotiations, and
+					                         coordinate
+					                         response efforts efficiently.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
 					<li class="list-disc">
 						<span class="font-semibold">Comprehensive Profile Management:</span>
 						<span>Maintain detailed profiles of all individuals involved, including hostages, suspects, and response personnel.</span>
@@ -522,12 +529,14 @@
 						<span class="text-zinc-900">Phone</span>
 						<span class="text-primary-500">Integration</span>
 					</h2>
-					<p class="">Seamlessly integrate phone communications into your crisis management workflow. Our
-					            platform provides robust telephony features designed specifically for high-stakes
-					            negotiations and emergency response scenarios.</p>
+					<p class="text-dark-800">Seamlessly integrate phone communications into your crisis management
+					                         workflow. Our
+					                         platform provides robust telephony features designed specifically for
+					                         high-stakes
+					                         negotiations and emergency response scenarios.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
 					<li class="list-disc">
 						<span class="font-semibold">Secure Call Routing:</span>
 						<span>Direct incoming calls to the appropriate team members with role-based routing and call queuing capabilities.</span>

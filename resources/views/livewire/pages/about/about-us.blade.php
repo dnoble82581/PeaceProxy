@@ -129,7 +129,7 @@
 				<!-- Introduction Card -->
 				<div class="bg-white rounded-lg shadow-md p-6 mb-8">
 					<h2 class="text-2xl font-semibold text-primary-600 mb-4">The Journey</h2>
-					<div class="prose prose-lg max-w-none">
+					<div class="prose prose-lg max-w-none dark:text-dark-800">
 
 						<p>
 							Hi, I'm the creator of Peace Proxy — a tool built from the front lines of crisis and
@@ -154,7 +154,7 @@
 				<!-- Why Peace Proxy Card -->
 				<div class="bg-white rounded-lg shadow-md p-6 mb-8">
 					<h2 class="text-2xl font-semibold text-primary-600 mb-4">Why Peace Proxy</h2>
-					<div class="prose prose-lg max-w-none">
+					<div class="prose prose-lg max-w-none dark:text-dark-800">
 						<p>
 							That's why I built Peace Proxy.
 						</p>
@@ -175,7 +175,7 @@
 				<!-- Personal Philosophy Card -->
 				<div class="bg-white rounded-lg shadow-md p-6 mb-8">
 					<h2 class="text-2xl font-semibold text-primary-600 mb-4">Personal Philosophy</h2>
-					<div class="prose prose-lg max-w-none">
+					<div class="prose prose-lg max-w-none dark:text-dark-800">
 						<p>
 							My faith is the foundation of everything I do. It fuels my desire to serve, to listen,
 							to lead with humility, and to stand in the gap when others are hurting. I also happen to
@@ -204,13 +204,13 @@
 				</div>
 
 				<!-- Mission Statement Card -->
-				<div class="bg-primary-50 border-l-4 border-primary-500 rounded-lg shadow-md p-6">
+				<div class="bg-primary-50/70 border-l-4 border-primary-500 rounded-lg shadow-md p-6">
 					<h2 class="text-2xl font-bold mb-4">
 						<span class="text-zinc-900">Our</span>
 						<span class="text-primary-500">Mission</span>
 					</h2>
 
-					<p class="text-lg">
+					<p class="text-lg dark:text-dark-800">
 						At Peace Proxy, our mission is to empower crisis negotiation teams with innovative tools
 						that enhance communication, improve situational awareness, and increase the likelihood
 						of peaceful resolutions in high-stakes scenarios.
