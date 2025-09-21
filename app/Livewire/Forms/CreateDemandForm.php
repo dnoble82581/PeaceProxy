@@ -57,4 +57,7 @@ class CreateDemandForm extends Form
 
     #[Validate(['nullable', 'date'])]
     public $deleted_at = null;
+
+    #[Validate(['nullable', 'date'])]
+    public $created_at = null;
 }

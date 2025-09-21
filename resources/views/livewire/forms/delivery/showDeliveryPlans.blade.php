@@ -1,9 +1,6 @@
 <?php
 
-	use App\Enums\DeliveryPlan\ContingencyStatus;
 	use App\Models\Demand;
-	use App\Models\DeliveryPlan;
-	use Illuminate\Support\Str;
 
 	new class extends \Livewire\Volt\Component {
 
@@ -11,9 +8,6 @@
 		public bool $showViewDeliveryPlanModal = false;
 		public bool $showAddContingencyModal = false;
 		public ?int $selectedDeliveryPlan = null;
-		/** @var array<string, mixed> */
-		public array $newContingency = [];
-		public array $contingencyStatusOptions = [];
 
 		public function mount(?int $demandId = null):void
 		{
@@ -21,15 +15,9 @@
 				$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId,
 					['deliveryPlans']);
 			}
-
-			// Build status options from enum
-			$this->contingencyStatusOptions = collect(ContingencyStatus::cases())
-				->map(fn($c) => ['label' => $c->label(), 'value' => $c->value])
-				->values()
-				->all();
 		}
 
-		public function showDeliveryPlan(int $deliveryPlanId)
+		public function showDeliveryPlan(int $deliveryPlanId):void
 		{
 			$this->selectedDeliveryPlan = $deliveryPlanId;
 			$this->showViewDeliveryPlanModal = true;
@@ -38,60 +26,7 @@
 		public function startAddContingency(int $deliveryPlanId):void
 		{
 			$this->selectedDeliveryPlan = $deliveryPlanId;
-			$this->resetNewContingency();
 			$this->showAddContingencyModal = true;
-		}
-
-		protected function resetNewContingency():void
-		{
-			$this->newContingency = [
-				'id' => (string) Str::uuid(),
-				'title' => '',
-				'triggers' => '',
-				'actions' => '',
-				'_resources_input' => '',
-				'resources' => [],
-				'comms' => '',
-				'criteria' => '',
-				'notes' => '',
-				'status' => ContingencyStatus::draft->value,
-			];
-		}
-
-		public function saveContingency():void
-		{
-			if (empty(trim((string) ($this->newContingency['title'] ?? '')))) {
-				session()->flash('error', 'Title is required for a contingency.');
-				return;
-			}
-
-			$plan = DeliveryPlan::find($this->selectedDeliveryPlan);
-			if (!$plan) {
-				session()->flash('error', 'Delivery plan not found.');
-				return;
-			}
-
-			// Transform resources from comma list
-			$list = $this->newContingency['_resources_input'] ?? '';
-			$this->newContingency['resources'] = collect(explode(',', (string) $list))
-				->map(fn($s) => trim($s))
-				->filter()
-				->values()
-				->all();
-			unset($this->newContingency['_resources_input']);
-
-			$existing = is_array($plan->contingencies)? $plan->contingencies : [];
-			$existing[] = $this->newContingency;
-			$plan->contingencies = array_values($existing);
-			$plan->save();
-
-			// Refresh demand and close modal
-			if ($this->demand) {
-				$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($this->demand->id,
-					['deliveryPlans']);
-			}
-			$this->showAddContingencyModal = false;
-			$this->dispatch('refresh');
 		}
 	}
 
@@ -192,7 +127,9 @@
 		</ul>
 	@endif
 	<x-modal
+			id="view-delivery-plan-modal"
 			center
+			z-index="z-60"
 			title="View Delivery Plan"
 			wire="showViewDeliveryPlanModal">
 		<livewire:forms.delivery.show-delivery-plan
@@ -201,53 +138,14 @@
 	</x-modal>
 
 	<x-slide
-			z-index="z-50"
+			id="add-contingency-slide"
+			z-index="z-60"
 			left
 			title="Add Contingency"
 			x-cloak
 			wire="showAddContingencyModal">
-		<div class="space-y-3">
-			<x-input
-					label="Title *"
-					wire:model.live="newContingency.title" />
-			<div class="grid sm:grid-cols-2 gap-3">
-				<x-textarea
-						label="Triggers"
-						wire:model.live="newContingency.triggers"
-						rows="2" />
-				<x-textarea
-						label="Actions"
-						wire:model.live="newContingency.actions"
-						rows="2" />
-			</div>
-			<x-input
-					label="Resources (comma separated)"
-					wire:model.live="newContingency._resources_input"
-					placeholder="Team 2, Truck 14" />
-			<div class="grid sm:grid-cols-3 gap-3">
-				<x-input
-						label="Comms"
-						wire:model.live="newContingency.comms" />
-				<x-input
-						label="Criteria"
-						wire:model.live="newContingency.criteria" />
-				<x-select.styled
-						label="Status"
-						wire:model.live="newContingency.status"
-						:options="$contingencyStatusOptions" />
-			</div>
-			<x-textarea
-					label="Notes"
-					wire:model.live="newContingency.notes"
-					rows="2" />
-
-			<div class="flex justify-end gap-2 pt-2">
-				<x-button
-						variant="secondary"
-						x-on:click="$dispatch('close')">Cancel
-				</x-button>
-				<x-button wire:click="saveContingency">Save</x-button>
-			</div>
-		</div>
+		<livewire:forms.delivery.create-contingencies
+				:delivery-plan-id="$selectedDeliveryPlan"
+				:key="'create-contingencies-'.$selectedDeliveryPlan" />
 	</x-slide>
 </div>

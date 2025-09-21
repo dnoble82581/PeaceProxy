@@ -20,9 +20,9 @@ enum RiskLevels: string
     public function color(): string
     {
         return match ($this) {
-            self::low => 'sky',
-            self::medium => 'blue',
-            self::high => 'red',
+            self::low => 'bg-sky-600 dark:bg-sky-700',
+            self::medium => 'bg-orange-600 dark:bg-orange-700',
+            self::high => 'bg-pink-600 dark:bg-pink-700',
         };
     }
 

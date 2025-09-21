@@ -1,9 +1,8 @@
 <?php
 
 use App\Models\Conversation;
-use App\Models\Subject;
-use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Channels\Subject;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -16,13 +15,44 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, int $c
     return $conversation->users()->whereKey($user->id)->exists();
 });
 
-Broadcast::channel('tenants.{tenant}.subjects.{subject}.moods', function ($user, Tenant $tenant, Subject $subject) {
-    // Must belong to the tenant AND be allowed to view this subject
-    return (int) $user->tenant_id === (int) $tenant->id
-        && (int) $subject->tenant_id === (int) $tenant->id
-        && $user->can('view', $subject);
+Broadcast::channel(Subject::SUBJECT_MOOD_PATTERN, function (User $user, int $subjectId) {
+    // Retrieve the subject instance
+    $subject = App\Models\Subject::find($subjectId);
+
+    // Check if the subject exists and authorize the user using the 'view' policy
+    if (! $subject || $user->cannot('view', $subject)) {
+        return false; // Unauthorized
+    }
+
+    // Authorized: return the user data or true
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+    ];
+
 });
 
+Broadcast::channel(Subject::SUBJECT_WARNING_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
+
+Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
+    // Retrieve the subject instance
+    $subject = App\Models\Subject::find($subjectId);
+
+    // Check if the subject exists and authorize the user using the 'view' policy
+    if (! $subject || $user->cannot('view', $subject)) {
+        return false; // Unauthorized
+    }
+
+    // Authorized: return the user data or true
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+    ];
+});
+
+// Used for conversations and messages.
 Broadcast::channel('negotiation.{conversationId}', function (User $user, int $conversationId) {
     // TODO: ensure the user can access this conversation before returning data.
     //    return $user->conversations()->whereKey($conversationId)->exists()

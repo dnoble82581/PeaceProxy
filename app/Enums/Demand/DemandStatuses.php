@@ -10,6 +10,7 @@ enum DemandStatuses: string
     case cancelled = 'cancelled';
     case expired = 'expired';
     case negotiating = 'negotiating';
+    case approved = 'approved';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum DemandStatuses: string
             self::cancelled => 'Cancelled',
             self::expired => 'Expired',
             self::negotiating => 'Negotiating',
+            self::approved => 'Approved',
         };
     }
 
@@ -32,6 +34,7 @@ enum DemandStatuses: string
             self::cancelled => 'The demand has been cancelled.',
             self::expired => 'The demand has expired.',
             self::negotiating => 'The demand is currently being negotiated.',
+            self::approved => 'The demand has been approved.',
         };
     }
 
@@ -44,6 +47,7 @@ enum DemandStatuses: string
             self::cancelled => 'blue',
             self::expired => 'rose',
             self::negotiating => 'sky',
+            self::approved => 'teal',
         };
     }
 }

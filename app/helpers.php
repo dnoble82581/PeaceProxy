@@ -52,3 +52,8 @@ function truncateString($string, $maxLength)
 
     return $tuncatedString;
 }
+
+function isAuthUser($userId)
+{
+    return authUser()->id == $userId;
+}

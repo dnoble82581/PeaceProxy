@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Events\Mood;
+namespace App\Events\Subject;
 
-use App\Models\moodLog;
 use App\Support\Channels\Subject;
 use App\Support\EventNames\SubjectEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -11,38 +10,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MoodCreatedEvent implements ShouldBroadcastNow
+class SubjectUpdatedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public MoodLog $mood)
+    public function __construct(public int $subjectId)
     {
+
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Subject::subjectMood($this->mood->subject_id)),
+            new PrivateChannel(Subject::subject($this->subjectId)),
         ];
     }
 
     public function broadcastAs(): string
     {
-        return SubjectEventNames::MOOD_CREATED;
+        return SubjectEventNames::SUBJECT_UPDATED;
     }
 
     public function broadcastWith(): array
     {
         return [
-            'mood' => [
-                'id' => $this->mood->id,
-                'subject_id' => $this->mood->subject_id,
-                'mood_level' => $this->mood->mood_level,
-                'created_at' => $this->mood->created_at->toDateTimeString(),
-                'logged_by_id' => $this->mood->logged_by_id,
-            ],
+            'subjectId' => $this->subjectId,
         ];
     }
 }

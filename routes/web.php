@@ -53,8 +53,6 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
             'pages.negotiation.noc'
         )->name('negotiation-noc');
 
-        Volt::route('/{negotiation:title}/tactical-noc', 'pages.tactical.tactical-noc')->name('negotiation.tactical-noc');
-
         Volt::route('/create', 'forms.negotiation.create')
             ->name('negotiation.create');
     });
@@ -101,6 +99,12 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
 
         Volt::route('/{negotiationId}/subject/{subjectId}/warning/{warningId}/edit', 'forms.warning.edit-warning')
             ->name('warning.edit');
+    });
+
+    //	TACTICAL NEGOTIATION ROUTES
+    Route::prefix('/negotiation')->group(function () {
+        Volt::route('/{negotiation:title}/tactical-noc', 'pages.tactical.tactical-noc')->name('negotiation.tactical-noc');
+        Volt::route('/{negotiation:title}/tactical-noc/create-delivery-plan', 'forms.create-delivery-plan')->name('negotiation.create-delivery-plan');
     });
 
 });

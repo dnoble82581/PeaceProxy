@@ -1,76 +1,70 @@
 <?php
 
 	use App\DTOs\Demand\DemandDTO;
-	use App\Events\Demand\DemandCreatedEvent;
 	use App\Livewire\Forms\CreateDemandForm;
 	use App\Enums\Demand\DemandCategories;
 	use App\Enums\Demand\DemandStatuses;
 	use App\Enums\General\Channels;
 	use App\Enums\General\RiskLevels;
 	use App\Models\Demand;
-	use App\Services\Demand\DemandCreationService;
+	use App\Services\Demand\DemandUpdateService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 
 	new class extends Component {
 		public CreateDemandForm $form;
+		public Demand $demand;
 
-		public function mount($subjectId, $negotiationId):void
+		public function mount(Demand $demand):void
 		{
-			// Set default values
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by = Auth::user()->name;
-			$this->form->subject_id = $subjectId;
-			$this->form->negotiation_id = $negotiationId;
-			$this->form->status = DemandStatuses::pending->value;
-			$this->form->priority_level = RiskLevels::low->value;
-			$this->form->channel = Channels::phone->value;
-			$this->form->category = DemandCategories::substantive->value;
+			$this->demand = $demand;
+
+			// Reset the form before filling it with the new demand data
+			$this->form->reset();
+			$this->form->fill($this->demand);
 		}
 
-		public function saveDemand():void
+		public function updateDemand()
 		{
-			$this->form->created_at = now();
-			$this->form->communicated_at = now();
-			$validated = $this->form->validate();
+			$this->demand->update([
+				'updated_at' => now(),
+				'updated_by' => authUser()->name,
+				'responded_at' => now(),
+				'resolved_at' => now(),
+				'status' => DemandStatuses::approved,
+			]);
+		}
 
-			// Create the demand
-
-			$dto = DemandDTO::fromArray($validated);
-			$demand = app(DemandCreationService::class)->createDemand($dto);
-
-			$this->dispatch('close-modal', $demand->id);
-
-			// Reset the form
-			$this->form->reset();
-
-			// Set default values again
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by = Auth::user()->name;
+		public function cancel()
+		{
+			$this->dispatch('closeViewDemandModal');
 		}
 	}
 
 ?>
 
 <div>
+	{{ $errors }}
 	<form
-			id="createDemandForm"
-			wire:submit.prevent="saveDemand"
+			id="editDemandForm"
+			wire:submit.prevent="updateDemand"
 			class="space-y-6">
 
 		<!-- Basic Information -->
 		<div class="mb-6">
 			<h2 class="text-lg font-semibold text-white">Demand Information</h2>
-			<p class="mb-4 text-sm text-gray-400">Enter the details about this demand</p>
+			<p class="mb-4 text-sm text-gray-400">Edit the details about this demand</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-input
+						disabled
 						icon="document-text"
 						label="Title *"
 						wire:model="form.title"
 						placeholder="Enter demand title" />
 
 				<x-select.styled
+						disabled
 						class="w-full"
 						icon="tag"
 						label="Category *"
@@ -101,6 +95,7 @@
 					])->toArray()" />
 
 				<x-select.styled
+						disabled
 						class="w-full"
 						icon="phone"
 						label="Channel *"
@@ -111,11 +106,13 @@
 					])->toArray()" />
 
 				<x-date
+						disabled
 						label="Deadline Date"
 						wire:model="form.deadline_date"
 						placeholder="Select deadline date" />
 
 				<x-time
+						disabled
 						format="24"
 						label="Deadline Time"
 						wire:model="form.deadline_time"
@@ -133,10 +130,11 @@
 		<!-- Content -->
 		<div class="mb-6">
 			<h2 class="text-lg font-semibold text-white">Demand Content</h2>
-			<p class="mb-4 text-sm text-gray-400">Provide the content of the demand</p>
+			<p class="mb-4 text-sm text-gray-400">Edit the content of the demand</p>
 
 			<div class="grid grid-cols-1 gap-4">
 				<x-textarea
+						disabled
 						label="Content *"
 						wire:model="form.content"
 						placeholder="Enter the content of the demand"
@@ -147,25 +145,19 @@
 		<!-- Submit Button -->
 		<div class="flex items-center justify-end gap-4">
 			<x-button
+					sm
+					primary
 					type="submit"
-					primary>Create Demand
+					primary>Save
 			</x-button>
 			<x-button
+					wire:click="cancel"
 					type="button"
-					color="secondary"
-					x-on:click="$modalClose('create-demand-modal')">
+					sm
+					type="button"
+					color="secondary">
 				Cancel
 			</x-button>
 		</div>
 	</form>
 </div>
-@push('scripts')
-	<script>
-		// Prevent form submission on Enter key press
-		document.getElementById('createDemandForm').addEventListener('keydown', function (event) {
-			if (event.key === 'Enter') {
-				event.preventDefault() // Stop the form from submitting
-			}
-		})
-	</script>
-@endpush

@@ -6,7 +6,7 @@
 	use App\Models\DeliveryPlan;
 	use Illuminate\Support\Facades\Auth;
 
-	new class extends \Livewire\Volt\Component {
+	new #[\Livewire\Attributes\Layout('layouts.negotiation')] class extends \Livewire\Volt\Component {
 		public \App\Livewire\Forms\DeliveryPlanForm $form;
 		public ?int $demandId = null;
 		public ?Demand $demand = null;

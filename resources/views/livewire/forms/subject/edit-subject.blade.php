@@ -1,5 +1,6 @@
 <?php
 
+	use App\Events\Subject\SubjectUpdatedEvent;
 	use App\Livewire\Forms\CreateSubjectForm;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
@@ -174,6 +175,7 @@
 			// Update the subject
 			$this->subject->update($validated);
 
+
 			// Handle contact information
 			$this->updateContactInformation();
 
@@ -192,6 +194,8 @@
 				);
 			}
 
+			event(new SubjectUpdatedEvent($this->subject->id));
+
 			// Redirect back to the subject page or negotiation page
 			if ($this->negotiation) {
 				return redirect()->route('negotiation-noc', [
@@ -199,7 +203,6 @@
 					'tenantSubdomain' => tenant()->subdomain
 				]);
 			}
-
 			return redirect()->route('dashboard.negotiations', tenant()->subdomain);
 		}
 

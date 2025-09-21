@@ -1,135 +1,118 @@
 <?php
 
-	use App\Livewire\Forms\CreateWarningForm;
-	use App\Models\Negotiation;
-	use App\Models\Subject;
-	use App\Models\Warning;
-	use App\Enums\General\RiskLevels;
-	use App\Enums\Warning\WarningTypes;
-	use App\Services\Negotiation\NegotiationFetchingService;
-	use App\Services\Subject\SubjectFetchingService;
-	use App\Services\Warning\WarningFetchingService;
-	use App\Services\Warning\WarningUpdateService;
 	use App\DTOs\Warning\WarningDTO;
-	use Livewire\Attributes\Layout;
+	use App\Livewire\Forms\CreateWarningForm;
+
+	// reuse for validation
+	use App\Models\Warning;
+	use App\Services\Warning\WarningUpdatingService;
+	use Illuminate\Support\Facades\Auth;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
-		public Negotiation $negotiation;
-		public Subject $subject;
-		public Warning $warning;
+	new class extends Component {
 		public CreateWarningForm $form;
+		public int $warningId;
+		public Warning $warning;
 
-		public function mount($negotiationId, $subjectId, $warningId)
+		public function mount($warningId):void
 		{
-			$this->negotiation = app(NegotiationFetchingService::class)
-				->getNegotiationById($negotiationId);
+			$this->warningId = (int) $warningId;
+			$warning = Warning::findOrFail($this->warningId);
+			$this->warning = $warning;
 
-			$this->subject = app(SubjectFetchingService::class)
-				->fetchSubjectById($subjectId);
 
-			$this->warning = app(WarningFetchingService::class)
-				->fetchWarningById($warningId);
-
-			// Fill the form with the warning data
-			// Extract the value property from enum instances for risk_level and warning_type
-			$this->form->fill([
-				'tenant_id' => $this->warning->tenant_id,
-				'subject_id' => $this->warning->subject_id,
-				'created_by_id' => $this->warning->created_by_id,
-				'risk_level' => $this->warning->risk_level->value,
-				'warning_type' => $this->warning->warning_type->value,
-				'warning' => $this->warning->warning,
-			]);
+			// Pre-fill form fields
+			$this->form->subject_id = $warning->subject_id;
+			$this->form->tenant_id = Auth::user()->tenant_id; // keep tenant scoped to current
+			$this->form->created_by_id = $warning->created_by_id ?? Auth::user()->id;
+			$this->form->risk_level = $warning->risk_level->value ?? 'low';
+			$this->form->warning_type = $warning->warning_type->value ?? 'other';
+			$this->form->warning = $warning->warning;
 		}
 
-		public function updateWarning()
+		public function updateWarning():void
 		{
+			// Ensure tenant/creator preserved
+			$this->form->tenant_id = Auth::user()->tenant_id;
+			if (empty($this->form->created_by_id)) {
+				$this->form->created_by_id = Auth::user()->id;
+			}
+
 			$validated = $this->form->validate();
+			$dto = WarningDTO::fromArray($validated);
+			$service = app(WarningUpdatingService::class);
+			$service->updateWarning($dto, $this->warningId);
 
-			$warningDTO = new WarningDTO(
-				$this->warning->id,
-				$validated['subject_id'],
-				$validated['tenant_id'],
-				$validated['created_by_id'],
-				$validated['risk_level'],
-				$validated['warning_type'],
-				$validated['warning'],
-				$this->warning->created_at,
-				now()
-			);
-
-			app(WarningUpdateService::class)->updateWarning($this->warning->id, $warningDTO);
-
-			return $this->redirect(route('negotiation-noc',
-				['tenantSubdomain' => tenant()->subdomain, 'negotiation' => $this->negotiation]));
+			event(new \App\Events\Warning\WarningUpdatedEvent($this->warning->subject_id));
+			$this->dispatch('close-edit-warning-modal');
 		}
-	}
+	};
 
 ?>
-<div class="max-w-7xl mx-auto bg-dark-700 p-8 mt-4 rounded-lg">
-	<div class="px-4 sm:px-8 text-center space-y-3">
-		<h1 class="text-2xl text-gray-400 font-semibold uppercase">Edit Warning</h1>
-		<p class="text-xs">Editing warning for:
-			<span class="text-primary-400">{{ $subject->name }}</span></p>
-	</div>
+
+<div>
 	<form
-			wire:submit="updateWarning"
-			class="space-y-6 mt-6">
-		<h2 class="text-lg font-semibold text-white mb-4">Warning Information</h2>
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-			<!-- Warning Type -->
-			<div>
+			id="editWarningForm"
+			wire:submit.prevent="updateWarning"
+			class="space-y-6">
+		<!-- Basic Information -->
+		<div class="mb-6">
+			<h2 class="text-lg font-semibold text-white">Edit Warning</h2>
+			<p class="mb-4 text-sm text-gray-400">Update the details for this warning</p>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-select.styled
-						label="Warning Type"
+						class="w-full"
+						icon="tag"
+						label="Type *"
 						wire:model="form.warning_type"
-						:options="collect(App\Enums\Warning\WarningTypes::cases())->map(fn($type) => ['value' => $type->value, 'label' => $type->label()])->toArray()"
-						class="w-full">
-				</x-select.styled>
-			</div>
+						:options="collect(App\Enums\Warning\WarningTypes::cases())->map(fn($t) => ['label' => $t->label(), 'value' => $t->value])->toArray()" />
 
-			<!-- Risk Level -->
-			<div>
 				<x-select.styled
-						label="Risk Level"
+						class="w-full"
+						icon="shield-exclamation"
+						label="Risk Level *"
 						wire:model="form.risk_level"
-						:options="collect(App\Enums\General\RiskLevels::cases())->map(fn($level) => ['value' => $level->value, 'label' => $level->label()])->toArray()"
-						class="w-full">
-				</x-select.styled>
-			</div>
-
-			<!-- Warning Content -->
-			<div class="col-span-2">
-				<x-textarea
-						label="Warning"
-						placeholder="Enter detailed warning information here..."
-						wire:model="form.warning"
-						rows="5"
-						class="w-full" />
+						:options="collect(App\Enums\General\RiskLevels::cases())->map(fn($r) => ['label' => $r->label(), 'value' => $r->value])->toArray()" />
 			</div>
 		</div>
 
-		<!-- Navigation Buttons -->
-		<div class="flex items-center justify-between gap-4 mt-8">
-			<div>
-				<!-- Left side empty for consistency -->
-			</div>
+		<!-- Description -->
+		<div class="mb-6">
+			<h2 class="text-lg font-semibold text-white">Details</h2>
+			<p class="mb-4 text-sm text-gray-400">Provide additional information about the warning</p>
 
-			<div class="flex items-center gap-4">
-				<x-button
-						sm
-						wire:navigate.hover
-						href="{{ route('negotiation-noc', ['tenantSubdomain' => tenant()->subdomain, 'negotiation' => $negotiation]) }}"
-						color="secondary">
-					Cancel
-				</x-button>
-				<x-button
-						sm
-						type="submit"
-						primary>
-					Update Warning
-				</x-button>
+			<div class="grid grid-cols-1 gap-4">
+				<x-textarea
+						label="Warning *"
+						wire:model="form.warning"
+						placeholder="Describe the warning"
+						rows="3" />
 			</div>
+		</div>
+
+		<!-- Submit Button -->
+		<div class="flex items-center justify-end gap-4">
+			<x-button
+					type="submit"
+					primary>
+				Update Warning
+			</x-button>
+			<x-button
+					type="button"
+					color="secondary"
+					x-on:click="$modalClose('EditWarningModal')">
+				Cancel
+			</x-button>
 		</div>
 	</form>
 </div>
+@push('scripts')
+	<script>
+		document.getElementById('editWarningForm')?.addEventListener('keydown', function (event) {
+			if (event.key === 'Enter') {
+				event.preventDefault()
+			}
+		})
+	</script>
+@endpush
