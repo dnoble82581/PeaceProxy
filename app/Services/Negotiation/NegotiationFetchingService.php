@@ -11,9 +11,9 @@ class NegotiationFetchingService
     {
     }
 
-    public function getNegotiationById($negotiationId)
+    public function getNegotiationById($negotiationId, ?array $with = [])
     {
-        return $this->negotiationRepository->getNegotiation($negotiationId);
+        return $this->negotiationRepository->getNegotiation($negotiationId, $with);
     }
 
     public function fetchByTenant($tenantId)

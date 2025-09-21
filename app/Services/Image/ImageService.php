@@ -2,6 +2,7 @@
 
 namespace App\Services\Image;
 
+use App\Events\Subject\SubjectUpdatedEvent;
 use App\Models\Image;
 use Exception;
 use Illuminate\Http\UploadedFile;
@@ -100,6 +101,11 @@ class ImageService
             if ($image) {
                 $images[] = $image;
             }
+        }
+        //		ToDo: Add more checks for other models
+
+        if ($model instanceof \App\Models\Subject) {
+            event(new SubjectUpdatedEvent($model->id));
         }
 
         return $images;

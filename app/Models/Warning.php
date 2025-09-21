@@ -33,4 +33,9 @@ class Warning extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
+
 }

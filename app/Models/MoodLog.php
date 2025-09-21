@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Subject\MoodLevels;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class MoodLog extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'mood_level' => MoodLevels::class,
     ];
 
     public function subject(): BelongsTo
@@ -29,7 +31,7 @@ class MoodLog extends Model
         return $this->belongsTo(User::class, 'logged_by_id');
     }
 
-    public function logs(): MorphMany
+    public function logs(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Log::class, 'loggable');
     }

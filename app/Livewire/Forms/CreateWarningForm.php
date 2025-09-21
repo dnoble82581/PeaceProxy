@@ -24,4 +24,10 @@ class CreateWarningForm extends Form
 
     #[Validate(['required', 'string'])]
     public $warning = '';
+
+    #[Validate(['nullable', 'date'])]
+    public $created_at = null;
+
+    #[Validate(['nullable', 'date'])]
+    public $updated_at = null;
 }

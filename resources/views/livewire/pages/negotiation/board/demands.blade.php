@@ -420,55 +420,6 @@
 								</button>
 							</div>
 						</div>
-						<!-- Display delivery plans if any -->
-						{{--						@if($demand->deliveryPlans->isNotEmpty())--}}
-						{{--							<div class="mt-3 border-t border-gray-200 dark:border-gray-700 pt-2">--}}
-						{{--								<h4 class="text-sm font-semibold flex items-center">--}}
-						{{--									<x-ui.delivery-van-svg class="w-4 h-4 mr-1" />--}}
-						{{--									Delivery Plans--}}
-						{{--								</h4>--}}
-						{{--								<div class="space-y-2 mt-1">--}}
-						{{--									@foreach($demand->deliveryPlans as $plan)--}}
-						{{--										<div class="bg-gray-50 dark:bg-gray-800 p-2 rounded-md text-xs">--}}
-						{{--											<div class="flex justify-between items-start">--}}
-						{{--												<div>--}}
-						{{--													<span class="font-medium">{{ $plan->title }}</span>--}}
-						{{--													@if($plan->scheduled_at)--}}
-						{{--														<span class="text-gray-500 ml-2">--}}
-						{{--															{{ \Carbon\Carbon::parse($plan->scheduled_at)->format('M d, Y') }}--}}
-						{{--														</span>--}}
-						{{--													@endif--}}
-						{{--												</div>--}}
-						{{--												<div class="flex space-x-1">--}}
-						{{--													@can('update', $plan)--}}
-						{{--														<x-button--}}
-						{{--																icon="pencil-square"--}}
-						{{--																wire:click="editDeliveryPlan({{ $plan->id }})"--}}
-						{{--																class="text-blue-500 hover:text-blue-700">--}}
-						{{--														</x-button>--}}
-						{{--													@endcan--}}
-						{{--													@can('delete', $plan)--}}
-						{{--														<x-button--}}
-						{{--																icon="trash"--}}
-						{{--																wire:click="deleteDeliveryPlan({{ $plan->id }})"--}}
-						{{--																class="text-red-500 hover:text-red-700">--}}
-						{{--														</x-button>--}}
-						{{--													@endcan--}}
-						{{--												</div>--}}
-						{{--											</div>--}}
-						{{--											@if($plan->summary)--}}
-						{{--												<p class="text-gray-600 dark:text-gray-400 mt-1">{{ Str::limit($plan->summary, 100) }}</p>--}}
-						{{--											@endif--}}
-						{{--											<div class="mt-1">--}}
-						{{--												<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-{{ $plan->status === 'completed' ? 'green' : ($plan->status === 'in_progress' ? 'blue' : 'gray') }}-100 text-{{ $plan->status === 'completed' ? 'green' : ($plan->status === 'in_progress' ? 'blue' : 'gray') }}-800">--}}
-						{{--													{{ ucfirst(str_replace('_', ' ', $plan->status)) }}--}}
-						{{--												</span>--}}
-						{{--											</div>--}}
-						{{--										</div>--}}
-						{{--									@endforeach--}}
-						{{--								</div>--}}
-						{{--							</div>--}}
-						{{--						@endif--}}
 						<x-slot:footer>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center space-x-2">
@@ -503,11 +454,11 @@
 									@endif
 								</div>
 								<div class="flex items-center gap-2">
-									<button
-											wire:click="showCreateDeliveryPlan({{ $demand->id }})"
-											class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">
-										<x-ui.delivery-van-svg class="w-4 h-4" />
-									</button>
+									{{--									<button--}}
+									{{--											wire:click="showCreateDeliveryPlan({{ $demand->id }})"--}}
+									{{--											class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">--}}
+									{{--										<x-ui.delivery-van-svg class="w-4 h-4" />--}}
+									{{--									</button>--}}
 									<x-button
 											wire:click="editDemand({{ $demand->id }})"
 											color="cyan"

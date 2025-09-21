@@ -63,6 +63,11 @@ class Negotiation extends Model
             ->using(NegotiationSubject::class);
     }
 
+    public function demands(): HasMany
+    {
+        return $this->hasmany(Demand::class);
+    }
+
     public function hostages()
     {
         return $this->hasMany(Hostage::class);

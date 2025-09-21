@@ -10,6 +10,7 @@
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
+	use TallStackUi\Traits\Interactions;
 
 
 	new #[Layout('layouts.negotiation'), \Livewire\Attributes\Title('NOC - Peace Proxy')] class extends Component {
@@ -18,6 +19,8 @@
 		public bool $showPhoneModal = false;
 		public \App\Models\Subject $primarySubject;
 		public $phoneNumbers = [];
+		use Interactions;
+
 
 		public function mount($negotiation)
 		{

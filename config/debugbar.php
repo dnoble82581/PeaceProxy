@@ -262,7 +262,7 @@ return [
         ],
         'events' => [
             'data' => env('DEBUGBAR_OPTIONS_EVENTS_DATA', false), // Collect events data, listeners
-            'excluded' => [], // Example: ['eloquent.*', 'composing', Illuminate\Cache\Events\CacheHit::class]
+            'excluded' => [], // Example: ['eloquent.*', 'composing', Illuminate\Cache\EventNames\CacheHit::class]
         ],
         'logs' => [
             'file' => env('DEBUGBAR_OPTIONS_LOGS_FILE', null),
