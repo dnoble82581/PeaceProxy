@@ -20,6 +20,7 @@ class WarrantFactory extends Factory
 
             'tenant_id' => Tenant::factory(),
             'subject_id' => Subject::factory(),
+            'created_by' => \App\Models\User::factory(),
         ];
     }
 }

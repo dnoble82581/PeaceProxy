@@ -16,7 +16,7 @@ class WarningUpdatedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $subjectId)
+    public function __construct(public int $subjectId, public int $warningId)
     {
     }
 
@@ -36,6 +36,7 @@ class WarningUpdatedEvent implements ShouldBroadcastNow
     {
         return [
             'subjectId' => $this->subjectId,
+            'warningId' => $this->warningId,
         ];
     }
 }

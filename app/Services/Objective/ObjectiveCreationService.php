@@ -20,7 +20,7 @@ class ObjectiveCreationService
     {
         $objective = $this->objectiveRepository->createObjective($objectiveDTO->toArray());
 
-        event(new ObjectiveCreatedEvent($objective));
+        event(new ObjectiveCreatedEvent($objective->negotiation_id, $objective->id));
         $this->addLogEntry($objective);
 
         return $objective;

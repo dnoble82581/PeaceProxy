@@ -24,7 +24,7 @@ class ObjectiveUpdatingService
         $this->addLogEntry($objective);
 
         // Dispatch event
-        event(new ObjectiveUpdatedEvent($objective));
+        event(new ObjectiveUpdatedEvent($objective->negotiation_id, $objective->id));
 
         return $objective;
     }

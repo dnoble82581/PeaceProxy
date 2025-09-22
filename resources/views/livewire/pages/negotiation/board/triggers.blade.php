@@ -8,6 +8,7 @@
 	use App\Services\Negotiation\NegotiationFetchingService;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	/**
 	 * Triggers Component
@@ -17,7 +18,8 @@
 	 * editing, and deleting triggers, as well as listening for real-time updates
 	 * through broadcast events.
 	 */
-	new class extends Component {
+ new class extends Component {
+ 		use Interactions;
 		/** @var bool Flag to control the visibility of the create trigger modal */
 		public bool $showCreateTriggerModal = false;
 
@@ -67,32 +69,79 @@
 			return [
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerDestroyed',
 			];
 		}
 
 		/**
-		 * Handle the TriggerCreated event by refreshing the triggers collection
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
+		 * Handle the TriggerCreated event: show a toast and refresh
 		 */
 		public function handleTriggerCreated(array $data):void
 		{
-			// Eager load triggers with their relationships to prevent N+1 queries
+			$triggerId = $data['triggerId'] ?? $data['trigger'] ?? null;
+			$trigger = $triggerId ? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
+
+			if ($trigger) {
+				$subjectName = $trigger->subject->name ?? ($this->primarySubject->name ?? 'the subject');
+				$actor = $trigger->user ?? null;
+				$title = $trigger->title ?? 'a trigger';
+				if ($actor && $actor->id === auth()->id()) {
+					$message = "You created a new '{$title}' trigger for {$subjectName}.";
+				} elseif ($actor) {
+					$message = "{$actor->name} created a new '{$title}' trigger for {$subjectName}.";
+				} else {
+					$message = "A new '{$title}' trigger was created for {$subjectName}.";
+				}
+			} else {
+				$message = "A trigger has been created.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
 			$this->primarySubject->load('triggers');
 		}
 
 		/**
-		 * Handle the TriggerUpdated or TriggerDestroyed event by refreshing the triggers collection
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
+		 * Handle the TriggerUpdated event: show a toast and refresh
 		 */
 		public function handleTriggerUpdated(array $data)
 		{
+			$triggerId = $data['triggerId'] ?? $data['trigger'] ?? null;
+			$trigger = $triggerId ? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
+
+			if ($trigger) {
+				$subjectName = $trigger->subject->name ?? ($this->primarySubject->name ?? 'the subject');
+				$actor = $trigger->user ?? null;
+				$title = $trigger->title ?? 'a trigger';
+				if ($actor && $actor->id === auth()->id()) {
+					$message = "You updated the '{$title}' trigger for {$subjectName}.";
+				} elseif ($actor) {
+					$message = "{$actor->name} updated the '{$title}' trigger for {$subjectName}.";
+				} else {
+					$message = "The '{$title}' trigger was updated for {$subjectName}.";
+				}
+			} else {
+				$message = "A trigger has been updated.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+			$this->primarySubject->load('triggers');
+		}
+
+		/**
+		 * Handle the TriggerDestroyed event by sending a toast
+		 */
+		public function handleTriggerDestroyed(array $data): void
+		{
+			$details = $data['details'] ?? null;
+			if ($details) {
+				$title = $details['title'] ?? 'a trigger';
+				$createdBy = $details['createdBy'] ?? 'Someone';
+				$subjectName = $details['subjectName'] ?? ($this->primarySubject->name ?? 'the subject');
+				$message = "{$createdBy} deleted '{$title}' for {$subjectName}.";
+			} else {
+				$message = "A trigger has been deleted.";
+			}
+			$this->toast()->timeout()->info($message)->send();
 			$this->primarySubject->load('triggers');
 		}
 

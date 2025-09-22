@@ -1,5 +1,6 @@
 <?php
 
+	use App\Factories\MessageFactory;
 	use App\Models\Subject;
 	use App\Models\User;
 	use App\Models\Warning;
@@ -9,6 +10,7 @@
 	use App\Services\Warning\WarningFetchingService;
 	use Carbon\Carbon;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		public Subject $subject;
@@ -18,6 +20,9 @@
 		public bool $showViewWarningModal = false;
 		public int $warningToEditId;
 		public ?int $warningToViewId = null;
+
+		use Interactions;
+
 
 		public function mount($subjectId, $negotiationId)
 		{
@@ -30,10 +35,11 @@
 			return app(SubjectFetchingService::class)->fetchSubjectById($subjectId);
 		}
 
-		#[\Livewire\Attributes\On('close-create-warning-modal')]
+		#[\Livewire\Attributes\On('close-modals')]
 		public function closeCreateModal()
 		{
 			$this->showCreateWarningModal = false;
+			$this->showEditWarningModal = false;
 		}
 
 		#[\Livewire\Attributes\On('close-edit-warning-modal')]
@@ -50,7 +56,6 @@
 		public function deleteWarning($warningId):void
 		{
 			app(WarningDeletionService::class)->deleteWarning($warningId);
-			event(new \App\Events\Warning\WarningDeletedEvent($this->subject->id));
 		}
 
 		public function editWarning(int $warningId)
@@ -84,8 +89,57 @@
 			return Carbon::parse($createdAt)->diffForHumans();
 		}
 
+
 		public function handleWarningUpdated(array $event)
 		{
+			$this->dispatch('refresh');
+
+			$warning = app(WarningFetchingService::class)->fetchWarningById($event['warningId']);
+
+			if (!$warning) {
+				return; // Exit if the warning is not found
+			}
+
+			// Generate the dynamic message
+			$messageFactory = app(MessageFactory::class);
+			$message = $messageFactory->generateMessage($warning, 'WarningUpdated');
+
+			// Display the toast notification
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function handleWarningCreated(array $event)
+		{
+			$this->dispatch('refresh');
+
+			$warning = app(WarningFetchingService::class)->fetchWarningById($event['warningId']);
+
+			if (!$warning) {
+				return; // Exit if the warning is not found
+			}
+
+			// Generate the dynamic message
+			$messageFactory = app(MessageFactory::class);
+			$message = $messageFactory->generateMessage($warning, 'WarningCreated');
+
+			// Display the toast notification
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function handleWarningDeleted(array $event)
+		{
+			$details = $event['details'] ?? null;
+			if ($details) {
+				// Create message dynamically with available details
+				$message = "{$details['createdBy']} deleted a {$details['label']} warning for {$details['subjectName']}.";
+			} else {
+				$message = "A warning has been deleted.";
+			}
+
+			// Show notification
+			$this->toast()->timeout()->info($message)->send();
+
+			// Optionally refresh the data (e.g., warning list)
 			$this->dispatch('refresh');
 		}
 
@@ -93,8 +147,8 @@
 		{
 			$subjectId = $this->subject->id;
 			return [
-				'echo-private:'.\App\Support\Channels\Subject::subjectWarning($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARNING_CREATED => 'handleWarningUpdated',
-				'echo-private:'.\App\Support\Channels\Subject::subjectWarning($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARNING_DELETED => 'handleWarningUpdated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarning($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARNING_CREATED => 'handleWarningCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarning($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARNING_DELETED => 'handleWarningDeleted',
 				'echo-private:'.\App\Support\Channels\Subject::subjectWarning($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARNING_UPDATED => 'handleWarningUpdated',
 			];
 		}
@@ -103,16 +157,17 @@
 ?>
 <div>
 	<div class="text-right px-4 pt-1">
-		<x-button
+		<x-button.circle
 				wire:click="$toggle('showCreateWarningModal')"
 				color=""
 				flat
+				sm
 				icon="plus"
 		/>
 	</div>
 	<ul
 			role="list"
-			class="grid grid-cols-1 gap-5 sm:grid-cols-4 sm:gap-6 lg:grid-cols-4">
+			class="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-2 lg:grid-cols-4">
 		@forelse($this->warnings as $warning)
 			<li
 					class="col-span-1 flex rounded-md shadow-xs dark:shadow-none overflow-visible"
@@ -187,7 +242,6 @@
 		</x-modal>
 	@endif
 	<x-modal
-
 			id="viewWarningModal"
 			wire="showViewWarningModal"
 			center>
@@ -222,7 +276,7 @@
 					</div>
 					<div class="text-right">
 						<span class="font-semibold">Created:</span>
-						{{ $this->warningToView->created_at?->format('M d, Y H:i') }}
+						{{ $this->warningToView->created_at?->setTimezone(auth()->user()->timezone)->format('M d, Y H:i') }}
 					</div>
 				</div>
 			</div>

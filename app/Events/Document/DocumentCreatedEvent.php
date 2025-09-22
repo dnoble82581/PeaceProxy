@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events\Warning;
+namespace App\Events\Document;
 
 use App\Support\Channels\Subject;
 use App\Support\EventNames\SubjectEventNames;
@@ -10,33 +10,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class WarningCreatedEvent implements ShouldBroadcastNow
+class DocumentCreatedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $subjectId, public int $warningId)
+    public function __construct(public int $subjectId, public int $documentId)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Subject::subjectWarning($this->subjectId)),
-        ];
-    }
-
-    public function broadcastWith()
-    {
-        return [
-            'subjectId' => $this->subjectId,
-            'warningId' => $this->warningId,
+            new PrivateChannel(Subject::subjectDocument($this->subjectId))
         ];
     }
 
     public function broadcastAs(): string
     {
-        return SubjectEventNames::WARNING_CREATED;
+        return SubjectEventNames::DOCUMENT_CREATED;
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'documentId' => $this->documentId,
+            'subjectId' => $this->subjectId,
+        ];
     }
 }

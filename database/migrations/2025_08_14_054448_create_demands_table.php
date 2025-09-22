@@ -16,6 +16,8 @@ return new class () extends Migration {
             $table->foreignId('negotiation_id');
             $table->foreignId('subject_id');
             $table->foreignId('tenant_id');
+            $table->foreignId('created_by_id');
+
             $table->string('title');
             $table->text('content');
             $table->date('deadline_date')->nullable();
@@ -39,13 +41,14 @@ return new class () extends Migration {
                 'channel',
                 array_map(fn ($channel) => $channel->value, Channels::cases())
             )->default(Channels::phone->value);
-            $table->string('created_by')->nullable();
+            //            $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
             // Foreign keys
             $table->foreign('negotiation_id')->references('id')->on('negotiations')->cascadeOnDelete();
+            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
             $table->foreign('subject_id')->references('id')->on('subjects')->cascadeOnDelete();
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
         });

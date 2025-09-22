@@ -34,6 +34,9 @@ class HostageDestroyedEvent implements ShouldBroadcastNow
     {
         return [
             'hostageId' => $this->hostage->id,
+            'details' => [
+                'hostageName' => $this->hostage->name ?? 'Hostage',
+            ],
         ];
     }
 }

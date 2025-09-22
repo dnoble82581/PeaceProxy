@@ -10,34 +10,37 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ObjectiveCreatedEvent implements ShouldBroadcastNow
+class ObjectiveDeletedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $negotiationId, public int $objectiveId)
+    public function __construct(public array $data)
     {
     }
 
     public function broadcastOn(): array
     {
-
         return [
-            new PrivateChannel(Negotiation::negotiationObjective($this->negotiationId)),
+            new PrivateChannel(Negotiation::negotiationObjective($this->data['negotiationId']))
         ];
     }
 
-    public function broadcastAs(): string
+    public function broadcastAs()
     {
-        return NegotiationEventNames::OBJECTIVE_CREATED;
+        return NegotiationEventNames::OBJECTIVE_DELETED;
     }
 
     public function broadcastWith(): array
     {
         return [
-            'objectiveId' => $this->objectiveId,
-            'negotiationId' => $this->negotiationId,
+            'objectiveId' => $this->data['objectiveId'],
+            'negotiationId' => $this->data['negotiationId'],
+            'actorId' => $this->data['actorId'],
+            'actorName' => $this->data['actorName'],
+            'priority' => $this->data['priority'],
+            'objectiveLabel' => $this->data['objectiveLabel'],
         ];
     }
 }

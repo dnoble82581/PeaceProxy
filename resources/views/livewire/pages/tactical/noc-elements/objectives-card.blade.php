@@ -7,11 +7,16 @@
 	use App\Services\Objective\ObjectiveCreationService;
 	use App\Services\Objective\ObjectiveUpdatingService;
 	use App\Services\Objective\ObjectiveDestructionService;
+	use App\Support\Channels\Negotiation;
+	use App\Support\EventNames\NegotiationEventNames;
 	use Livewire\Attributes\Computed;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Collection;
 
 	new class extends Component {
+
+		use \TallStackUi\Traits\Interactions;
+
 		public int $negotiationId;
 
 		// form state
@@ -48,16 +53,17 @@
 		{
 			$tenantId = (int) (tenant()->id ?? 0);
 			$nId = (int) $this->negotiationId;
+			$negotiationId = $this->negotiationId;
 			return [
 				"echo-private:private.negotiation.$tenantId.$nId,.ObjectiveCreated" => '$refresh',
-				"echo-private:private.negotiation.$tenantId.$nId,.ObjectiveUpdated" => '$refresh',
-				"echo-private:private.negotiation.$tenantId.$nId,.ObjectiveDestroyed" => '$refresh',
+				'echo-private:'.Negotiation::negotiationObjective($negotiationId).',.'.NegotiationEventNames::OBJECTIVE_CREATED => 'handleObjectiveCreated',
+				'echo-private:'.Negotiation::negotiationObjective($negotiationId).',.'.NegotiationEventNames::OBJECTIVE_DELETED => 'handleObjectiveDeleted',
 			];
 		}
 
 		public function handleObjectiveCreated()
 		{
-			logger('Objective Created');
+//			logger('Objective Created');
 		}
 
 		public function startCreate():void
@@ -97,6 +103,8 @@
 					updated_at: now()
 				);
 				app(ObjectiveUpdatingService::class)->updateObjective($dto, $this->editingId);
+				$this->toast()->success("Successfully updated Objective")->send();
+
 			} else {
 				$dto = new ObjectiveDTO(
 					tenant_id: authUser()->tenant_id,
@@ -108,7 +116,11 @@
 					created_at: now(),
 					updated_at: now()
 				);
-				app(ObjectiveCreationService::class)->createObjective($dto);
+				$objective = app(ObjectiveCreationService::class)->createObjective($dto);
+
+				$label = $objective->priority->label();
+
+				$this->toast()->info("You created a {$label} priority objective.")->send();
 			}
 
 			$this->reset('editingId', 'objective', 'priority', 'showForm');
@@ -116,7 +128,12 @@
 
 		public function delete(int $id):void
 		{
-			app(ObjectiveDestructionService::class)->deleteObjective($id);
+			$is_deleted = app(ObjectiveDestructionService::class)->deleteObjective($id);
+			if ($is_deleted) {
+				$this->toast()->success('You successfully deleted an objective')->send();
+			} else {
+				$this->toast()->timeout()->error('There was a problem when trying to delete your objective.')->send();
+			}
 		}
 
 		public function cancel():void
@@ -146,9 +163,11 @@
 		<x-card header="{{ $editingId ? 'Edit Objective' : 'Create Objective' }}">
 			<div class="p-4 space-y-3">
 				<x-input
+						label="Objective Label"
 						wire:model.defer="objective"
 						placeholder="Enter objective..." />
 				<x-select.styled
+						label="Priority"
 						wire:model.defer="priority"
 						:options="$this->getPriorityOptions()"
 						placeholder="Priority" />
@@ -158,7 +177,8 @@
 					<x-button
 							sm
 							wire:click="cancel"
-							color="slate">Cancel</x-button>
+							color="slate">Cancel
+					</x-button>
 					<x-button
 							sm
 							primary
@@ -168,16 +188,16 @@
 		</x-card>
 	</x-modal>
 
-	<div class="flow-root">
+	<div class="flow-root overflow-y-scroll h-[10rem]">
 		<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
 			<div class="inline-block min-w-full align-middle sm:px-4 lg:px-6">
-				<div class="overflow-hidden shadow-sm outline-1 outline-black/5 sm:rounded-lg dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
+				<div class="shadow-sm outline-1 outline-black/5 sm:rounded-lg dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
 					<table class="relative min-w-full divide-y divide-gray-300 dark:divide-white/15">
-						<thead class="bg-dark-50 dark:bg-dark-800/75 ">
-						<tr>
+						<thead class="bg-dark-50 dark:bg-dark-800/75 h-10">
+						<tr class="">
 							<th
 									scope="col"
-									class="py-1 pr-3 pl-4 text-left text-xs font-semibold text-gray-900 sm:pl-2 dark:text-dark-200">
+									class="py-1 pr-3 pl-4 text-left text-xs font-semibold text-gray-900 dark:text-dark-200">
 								Objective
 							</th>
 							<th
@@ -200,7 +220,8 @@
 						<tbody class="divide-y divide-dark-200 bg-white dark:divide-white/10 dark:bg-dark-800/50">
 						@forelse($this->objectives as $obj)
 							<tr>
-								<td class="py-2 pr-3 pl-4 text-xs font-medium whitespace-nowrap text-gray-900 sm:pl-6 dark:text-white">
+								<td
+										class="py-2 pr-3 pl-4 text-xs font-medium whitespace-nowrap text-gray-900 sm:pl-6 dark:text-white">
 									{{ $obj->objective }}</td>
 								<td class="px-1 py-2 text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">
 									<x-badge

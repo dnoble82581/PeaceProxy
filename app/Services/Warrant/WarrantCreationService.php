@@ -4,6 +4,7 @@ namespace App\Services\Warrant;
 
 use App\Contracts\WarrantRepositoryInterface;
 use App\DTOs\Warrant\WarrantDTO;
+use App\Events\Warrant\WarrantCreatedEvent;
 use App\Models\Warrant;
 
 class WarrantCreationService
@@ -16,8 +17,9 @@ class WarrantCreationService
     {
         $warrant = $this->warrantRepository->createWarrant($data->toArray());
 
-        $log = $this->addLogEntry($warrant);
-        logger($log);
+        event(new WarrantCreatedEvent($warrant->subject_id, $warrant->id));
+
+        $this->addLogEntry($warrant);
 
         return $warrant;
     }

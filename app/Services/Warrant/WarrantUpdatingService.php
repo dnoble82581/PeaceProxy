@@ -4,6 +4,8 @@ namespace App\Services\Warrant;
 
 use App\Contracts\WarrantRepositoryInterface;
 use App\DTOs\Warrant\WarrantDTO;
+use App\Events\Warrant\WarrantUpdatedEvent;
+use App\Models\Warrant;
 
 class WarrantUpdatingService
 {
@@ -15,12 +17,14 @@ class WarrantUpdatingService
     {
         $warrant = $this->warrantRepository->updateWarrant($warrantDataDTO->toArray(), $warrantId);
 
-        if (!$warrant) {
+        if (! $warrant) {
             return null;
         }
 
-        $log = $this->addLogEntry($warrant);
-        logger($log);
+        logger($warrant);
+        event(new WarrantUpdatedEvent($warrant->subject_id, $warrant->id));
+
+        $this->addLogEntry($warrant);
 
         return $warrant;
     }

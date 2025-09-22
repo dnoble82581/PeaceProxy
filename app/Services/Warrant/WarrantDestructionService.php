@@ -3,6 +3,8 @@
 namespace App\Services\Warrant;
 
 use App\Contracts\WarrantRepositoryInterface;
+use App\Events\Warrant\WarrantDeletedEvent;
+use App\Models\Warrant;
 
 class WarrantDestructionService
 {
@@ -15,12 +17,17 @@ class WarrantDestructionService
         // Get the warrant before deleting it
         $warrant = $this->warrantRepository->getWarrant($warrantId);
 
-        if (!$warrant) {
-            return null;
+        if ($warrant) {
+            $details = [
+                'label' => $warrant->type->label(),
+                'createdBy' => $warrant->createdBy->name ?? 'Unknown User',
+                'subjectName' => $warrant->subject->name,
+            ];
         }
 
-        $log = $this->addLogEntry($warrant);
-        logger($log);
+        event(new WarrantDeletedEvent($warrant->subject_id, $details));
+
+        $this->addLogEntry($warrant);
 
         return $this->warrantRepository->deleteWarrant($warrantId);
     }

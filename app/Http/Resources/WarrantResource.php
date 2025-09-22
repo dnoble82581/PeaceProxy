@@ -18,6 +18,7 @@ class WarrantResource extends JsonResource
 
             'tenant_id' => $this->tenant_id,
             'subject_id' => $this->subject_id,
+            'created_by' => $this->created_by,
 
             'tenant' => new TenantResource($this->whenLoaded('tenant')),
         ];

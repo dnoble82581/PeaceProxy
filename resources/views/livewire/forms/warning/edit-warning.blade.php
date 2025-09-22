@@ -43,8 +43,13 @@
 			$service = app(WarningUpdatingService::class);
 			$service->updateWarning($dto, $this->warningId);
 
-			event(new \App\Events\Warning\WarningUpdatedEvent($this->warning->subject_id));
+			event(new \App\Events\Warning\WarningUpdatedEvent($this->warning->subject_id, $this->warningId));
 			$this->dispatch('close-edit-warning-modal');
+		}
+
+		public function cancel()
+		{
+			$this->dispatch('close-modals');
 		}
 	};
 
@@ -57,7 +62,7 @@
 			class="space-y-6">
 		<!-- Basic Information -->
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold text-white">Edit Warning</h2>
+			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Edit Warning</h2>
 			<p class="mb-4 text-sm text-gray-400">Update the details for this warning</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -79,7 +84,7 @@
 
 		<!-- Description -->
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold text-white">Details</h2>
+			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Details</h2>
 			<p class="mb-4 text-sm text-gray-400">Provide additional information about the warning</p>
 
 			<div class="grid grid-cols-1 gap-4">
@@ -92,17 +97,18 @@
 		</div>
 
 		<!-- Submit Button -->
-		<div class="flex items-center justify-end gap-4">
+		<div class="space-y-2">
 			<x-button
+					class="w-full"
 					type="submit"
 					primary>
 				Update Warning
 			</x-button>
 			<x-button
-					type="button"
-					color="secondary"
-					x-on:click="$modalClose('EditWarningModal')">
-				Cancel
+					class="w-full"
+					color="slate"
+					wire:click="cancel"
+			>Cancel
 			</x-button>
 		</div>
 	</form>

@@ -30,4 +30,16 @@ class TriggerDestroyedEvent implements ShouldBroadcastNow
     {
         return 'TriggerDestroyed';
     }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'triggerId' => $this->trigger->id,
+            'details' => [
+                'title' => $this->trigger->title ?? 'Trigger',
+                'createdBy' => optional($this->trigger->user)->name ?? 'Someone',
+                'subjectName' => optional($this->trigger->subject)->name ?? 'the subject',
+            ],
+        ];
+    }
 }

@@ -14,6 +14,7 @@ return new class () extends Migration {
             $table->id();
             $table->foreignId('tenant_id');
             $table->foreignId('subject_id');
+            $table->foreignId('created_by')->constrained('users');
             $table->enum('type', array_column(WarrantType::cases(), 'value'))->default(WarrantType::unknown->value);
             $table->enum(
                 'status',

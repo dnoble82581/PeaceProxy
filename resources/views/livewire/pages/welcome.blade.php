@@ -169,9 +169,9 @@
 			<div class="w-full lg:w-1/2 flex justify-center lg:justify-end order-1 lg:order-2">
 				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[600px] bg-slate-700 rounded-lg flex items-center justify-center">
 					<img
-							class="rounded-lg""
-					                          src="{{ Vite::asset('resources/images/chat-light.png') }}"
-					                          alt="Image of chat interface">
+							class="rounded-lg"
+							src="{{ Vite::asset('resources/images/chat-light.png') }}"
+							alt="Image of chat interface">
 				</div>
 			</div>
 		</div>
@@ -179,24 +179,28 @@
 
 	<section
 			id="mood-tracking"
-			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 flex items-center">
+			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 dark:bg-dark-900 flex items-center">
 		<div class="flex flex-col lg:flex-row items-center w-full px-4 sm:px-8 md:px-12 lg:px-20 gap-8">
 			<div class="w-full lg:w-1/2 order-2 lg:order-2">
 				<div class="space-y-4 md:space-y-8">
 					<h2 class="text-3xl md:text-4xl font-bold">
-						<span class="text-zinc-900">Mood</span>
+						<span class="text-zinc-900 dark:text-white">Mood</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="text-dark-800">Our integrated mood tracking feature uses advanced voice analysis and
-					                         behavioral cues to
-					                         generate a real-time line chart that reflects the subject’s emotional state
-					                         over the
-					                         course of the interaction. This visual tool supports negotiators and
-					                         command staff by
-					                         providing critical context during dynamic conversations.</p>
+					<p class="text-dark-800 dark:text-white">Our integrated mood tracking feature uses advanced voice
+					                                         analysis and
+					                                         behavioral cues to
+					                                         generate a real-time line chart that reflects the subject’s
+					                                         emotional state
+					                                         over the
+					                                         course of the interaction. This visual tool supports
+					                                         negotiators and
+					                                         command staff by
+					                                         providing critical context during dynamic
+					                                         conversations.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800 dark:text-white">
 					<li class="list-disc">
 						<span class="font-semibold">Monitor De-escalation Progress:</span>
 						<span>See fluctuations in stress, agitation, or cooperation levels as negotiations unfold.</span>
@@ -295,22 +299,24 @@
 
 	<section
 			id="objective-tracking"
-			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 flex items-center justify-between">
+			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 dark:bg-dark-900 flex items-center justify-between">
 		<div class="flex flex-col lg:flex-row items-center w-full px-4 sm:px-8 md:px-12 lg:px-20 gap-8">
 			<div class="w-full lg:w-1/2 order-2 lg:order-1">
 				<div class="space-y-4 md:space-y-8">
 					<h2 class="text-3xl md:text-4xl font-bold">
-						<span class="text-zinc-900">Objective</span>
+						<span class="text-zinc-900 dark:text-white">Objective</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="text-dark-800">Track mission-critical objectives in real time with our comprehensive
-					                         tracking system.
-					                         Monitor progress, assign responsibilities, and ensure accountability across
-					                         your entire
-					                         operation.</p>
+					<p class="text-dark-800 dark:text-white">Track mission-critical objectives in real time with our
+					                                         comprehensive
+					                                         tracking system.
+					                                         Monitor progress, assign responsibilities, and ensure
+					                                         accountability across
+					                                         your entire
+					                                         operation.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800 dark:text-white">
 					<li class="list-disc">
 						<span class="font-semibold">Goal-Based Framework:</span>
 						<span>Define clear, measurable objectives with customizable success criteria and timeline tracking.</span>
@@ -413,22 +419,24 @@
 
 	<section
 			id="hostage-tracking"
-			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 flex items-center justify-between">
+			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 dark:bg-dark-900 flex items-center justify-between">
 		<div class="flex flex-col lg:flex-row items-center w-full px-4 sm:px-8 md:px-12 lg:px-20 gap-8">
 			<div class="w-full lg:w-1/2 order-2 lg:order-1">
 				<div class="space-y-4 md:space-y-8">
 					<h2 class="text-3xl md:text-4xl font-bold">
-						<span class="text-zinc-900">Hostage</span>
+						<span class="text-zinc-900 dark:text-white">Hostage</span>
 						<span class="text-primary-500">Tracking</span>
 					</h2>
-					<p class="text-dark-800">Monitor and manage hostage situations with our comprehensive tracking
-					                         system. Keep
-					                         detailed records of all individuals involved, track negotiations, and
-					                         coordinate
-					                         response efforts efficiently.</p>
+					<p class="text-dark-800 dark:text-white">Monitor and manage hostage situations with our
+					                                         comprehensive tracking
+					                                         system. Keep
+					                                         detailed records of all individuals involved, track
+					                                         negotiations, and
+					                                         coordinate
+					                                         response efforts efficiently.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800 dark:text-white">
 					<li class="list-disc">
 						<span class="font-semibold">Comprehensive Profile Management:</span>
 						<span>Maintain detailed profiles of all individuals involved, including hostages, suspects, and response personnel.</span>
@@ -521,22 +529,24 @@
 
 	<section
 			id="phone-integration"
-			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 flex items-center justify-between">
+			class="py-12 md:py-16 lg:py-20 min-h-screen bg-zinc-100 dark:bg-dark-900 flex items-center justify-between">
 		<div class="flex flex-col lg:flex-row items-center w-full px-4 sm:px-8 md:px-12 lg:px-20 gap-8">
 			<div class="w-full lg:w-1/2 order-2 lg:order-2">
 				<div class="space-y-4 md:space-y-8">
 					<h2 class="text-3xl md:text-4xl font-bold">
-						<span class="text-zinc-900">Phone</span>
+						<span class="text-zinc-900 dark:text-white">Phone</span>
 						<span class="text-primary-500">Integration</span>
 					</h2>
-					<p class="text-dark-800">Seamlessly integrate phone communications into your crisis management
-					                         workflow. Our
-					                         platform provides robust telephony features designed specifically for
-					                         high-stakes
-					                         negotiations and emergency response scenarios.</p>
+					<p class="text-dark-800 dark:text-white">Seamlessly integrate phone communications into your crisis
+					                                         management
+					                                         workflow. Our
+					                                         platform provides robust telephony features designed
+					                                         specifically for
+					                                         high-stakes
+					                                         negotiations and emergency response scenarios.</p>
 				</div>
 
-				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800">
+				<ul class="mt-4 p-4 space-y-4 md:space-y-8 text-dark-800 dark:text-white">
 					<li class="list-disc">
 						<span class="font-semibold">Secure Call Routing:</span>
 						<span>Direct incoming calls to the appropriate team members with role-based routing and call queuing capabilities.</span>
@@ -556,7 +566,7 @@
 				</ul>
 			</div>
 			<div class="w-full lg:w-1/2 flex justify-center lg:justify-start order-1 lg:order-1">
-				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[800px] rounded-lg flex items-center justify-center">
+				<div class="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full max-w-[500px] lg:max-w-[800px] rounded-lg flex items-center justify-center dark:bg-dark-800 p-3">
 					<img
 							src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/phone-example.webp"
 							alt="Phone Integration"
@@ -567,8 +577,207 @@
 			</div>
 		</div>
 	</section>
+	<section id="the-problem">
+		<div class="bg-dark-800 py-24 sm:py-32">
+			<div class="mx-auto max-w-7xl px-6 lg:px-8">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl md:text-4xl font-bold">
+						<span class="capitalize text-white">Insights </span>
+						<span class="text-primary-500 capitalize">That Matter</span>
+					</h2>
 
-	<footer class="bg-zinc-100 pt-12 pb-6">
+				</div>
+				<div class="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
+					<div class="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“The dynamics of crisis situations typically encountered by hostage negotiators
+									   are made more dangerous by fragmented communication channels between tactical,
+									   negotiation, and command elements.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Amy+Grubb+copy.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div>
+										<x-link
+												class="font-semibold"
+												href="https://www.academia.edu/1498232/modern_day_hostage_negotiation_the_evolution_of_an_art_form_within_the_policing_arena">
+											Dr Amy Rose
+											Grubb
+										</x-link>
+
+										<x-link
+												href="https://www.glos.ac.uk/staff/profile/amy-grubb/"
+												class="block">
+											University of Gloucestershire
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“Anim sit consequat culpa commodo eu do nisi commodo ut aute aliqua. Laborum esse
+									   duis tempor consectetur officia mollit fugiat. Exercitation qui elit minim minim
+									   quis fugiat ex.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Gregory+M+Vecchi+copy.webp"
+											alt=""
+											class="inline-block size-8 rounded-full ring-2 ring-white outline -outline-offset-1 outline-black/5 dark:ring-gray-900 dark:outline-white/10" />
+
+									<div>
+										<x-link
+												class="font-semibold"
+												href="https://www.sciencedirect.com/science/article/abs/pii/S1359178904000758?via%3Dihub">
+											Gregory M. Vecchi...
+										</x-link>
+										<x-link href="https://www.sciencedirect.com/science/article/abs/pii/S1359178904000758?via%3Dihub">
+											Aggression and Violent Behavior
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“Police officers in hostage situations consistently reported that communication
+									   breakdowns with other units created greater uncertainty than the behavior of the
+									   hostage taker.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Nicola+Power.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div class="flex flex-col">
+										<x-link
+												class="font-semibold"
+												href="https://www.researchgate.net/publication/257480359_Coping_with_uncertainty_Police_strategies_for_resilient_decision-making_and_action_implementation">
+											Nicola Power
+										</x-link>
+										<x-link href="https://www.researchgate.net/institution/Lancaster-University?_tp=eyJjb250ZXh0Ijp7ImZpcnN0UGFnZSI6InB1YmxpY2F0aW9uIiwicGFnZSI6InB1YmxpY2F0aW9uIn19">
+											Lancaster University
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“Many negotiation failures can be traced not to the negotiator’s skill, but to
+									   poor coordination and delayed communication with decision-makers outside the
+									   immediate scene.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Dr.+Matthew+Logan+copy.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div>
+										<x-link
+												href="file:///Users/dustynoble/Downloads/ubc_2001-714985.pdf-1.pdf"
+												class="font-semibold">
+											Matthew H. Logan, Ph.D.
+										</x-link>
+										<x-link href="https://www.mattloganhalo.com/">
+											Forensic Behavioural Specialist
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“Without a clear, unified channel, negotiators often found themselves ‘working
+									   blind,’ unaware of tactical or command shifts that altered the negotiation
+									   dynamic.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Terry+Royce+copy.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div class="flex flex-col">
+										<x-link
+												href="https://watermark02.silverchair.com/j.1571-9979.2005.00045.x.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAA0owggNGBgkqhkiG9w0BBwagggM3MIIDMwIBADCCAywGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM2L0cjzn8g0EsLy3nAgEQgIIC_RnDHiWnHmFkiP-AQqdlY77-9W0H6MSN7M-ubtJDRFLbRWRvsq2Iiget3B7DR9twHUK711G8k5bmNpvBb5Yuc4Z7oC4rzvjyCZ845K8l5M1LYRLvviMTyTLXPWa44RMy2lFlVQKgosY04CT0GMcaThXz7N3AZQja4taH9Fh9dUV1pZGNHxmr5WwAk6qIrN0p10KM22FmZxD0_piwcC1S-4o9UnbZzYL2X1fXMSNiw0PNQnvY7-FmyiUaonaItDfqTYKUGDwv-aaoJt09W7GL8rKNsbtAAIqoQnZ_j8hvaTMOS5IFo3-a2iK-FrgaqeEtiW7SMpEe5Wf5p11SVbCWQDKMLLg3TzmpecZXbchWD0PCJSeWiUhOO3ubRSlGJ92oljq-KEnYn9lwAtuMxKdy6gXdfEJux3_YagL9TetU143rfgO1p1si2A4hMRb3sSHX0O6ezyVVPtw1NerOfgSSLtTGGjHxDKHhMIaRind05GhmbIKJNUvt4BA1kNgnEVfBEl23dvJ2CGyvhSiIVEZGzl2Xto9eOP6ob6HQbghDIQywf1vjzg_auqm_dAjKdDY6CFIiKOKvv0csezqusiAzdciRT9Hfs394gScaxgF5DHcdAt3R3R5IkuN_NshxLmpAdMOhEB0LJWzUhSOP_lH4QuPc0IQZM6XawKzScFRaTMnv3vrdA4oLO7oZfB_-kNMbeCQBXAixXDhFf-lLWWneJOm7SL8HRg2rGhAvqxuAtH6ZupzJHrG7_BfFIfvPBAExnfezHABJSCumPUVNIJETe48bqdWCz8SrN8Ttm_pJsaROqjfQyqDwCZaNdbSyFT5TgcKacwEf8Uv5m7zK_NPcZFzuO0v517XymzELPogSVd3WgfjVhZwrBiJztsfZXoHi_Ws1qy6Eea49fIdCskAcZn7CLXkCeYRBP7UuCGDxqJUP5KVlfjDXh2s7XY_GBR1Hb8rhGB6bH7hgMlnnqII_LfGVquXns5Uhw60Z5Zy-RjnSNykKIxKUzugaksPOWQ"
+												class="font-semibold">
+											Terry Royce
+										</x-link>
+										<x-link href="https://profiles.uts.edu.au/Terry.Royce">
+											University of Technology Sydney
+										</x-link>
+
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“The greatest enemy of crisis resolution is not the perpetrator but the confusion
+									   within our own ranks when communication and intelligence are not integrated.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Thomas+Strentz+copy.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div>
+										<x-link
+												class="font-semibold"
+												href="https://public.ntoa.org/AppResources/publications/Articles/2289.pdf">
+											Thomas Strentz, Ph.D.
+										</x-link>
+										<x-link href="https://www.ntoa.org/people/thomas-strentz">Co-Founder, FBI
+										                                                          Behavioral Science
+										                                                          Unit
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
+								<blockquote class="text-gray-900 dark:text-gray-100">
+									<p>“Communication breakdowns with local unit commanders frequently led to
+									   operational errors, highlighting the need for integrated platforms that cross
+									   organizational boundaries.”</p>
+								</blockquote>
+								<figcaption class="mt-6 flex items-center gap-x-4">
+									<img
+											src="https://peace-proxy-pro.s3.us-east-1.amazonaws.com/public/assets/Citation+Images/Chris+Glacomantonio+copy.webp"
+											alt=""
+											class="size-10 rounded-full bg-gray-50 dark:bg-gray-800" />
+									<div>
+										<x-link
+												class="font-semibold"
+												href="https://www.tandfonline.com/doi/abs/10.1080/10439463.2013.784302">
+											Chris Glacomantonio
+										</x-link>
+										<x-link href="#">
+											Centre for Criminology, University of Oxford
+										</x-link>
+									</div>
+								</figcaption>
+							</figure>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</section>
+
+	<footer class="bg-zinc-100 dark:bg-dark-900 pt-12 pb-6">
 		<div class="container mx-auto px-4 sm:px-8 md:px-12 lg:px-20">
 			<!-- Footer top section with logo, links and info -->
 			<div class="flex flex-col md:flex-row justify-between items-center md:items-start mb-8 gap-8">
@@ -581,7 +790,7 @@
 
 				<!-- Quick links -->
 				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
-					<h3 class="text-lg font-bold text-zinc-900">Resources</h3>
+					<h3 class="text-lg font-bold text-zinc-900 dark:text-white">Resources</h3>
 					<ul class="space-y-2 text-center md:text-left">
 						<li>
 							<x-link
@@ -595,7 +804,7 @@
 
 				<!-- Contact info -->
 				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
-					<h3 class="text-lg font-bold text-zinc-900">Contact Us</h3>
+					<h3 class="text-lg font-bold text-zinc-900 dark:text-white">Contact Us</h3>
 					<ul class="space-y-2 text-center md:text-left">
 						<li><a
 									href="/contact"
@@ -608,7 +817,7 @@
 					</ul>
 				</div>
 				<div class="flex flex-col items-center md:items-start space-y-4 md:w-1/3">
-					<h3 class="text-lg font-bold text-zinc-900">About Us</h3>
+					<h3 class="text-lg font-bold text-zinc-900 dark:text-white">About Us</h3>
 					<ul class="space-y-2 text-center md:text-left">
 						<li><a
 									href="{{ route('about') }}"

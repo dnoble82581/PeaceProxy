@@ -2,6 +2,7 @@
 
 use App\Models\Conversation;
 use App\Models\User;
+use App\Support\Channels\Negotiation;
 use App\Support\Channels\Subject;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -32,9 +33,27 @@ Broadcast::channel(Subject::SUBJECT_MOOD_PATTERN, function (User $user, int $sub
 
 });
 
+Broadcast::channel(Negotiation::NEGOTIATION_OBJECTIVE_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
+Broadcast::channel(Negotiation::NEGOTIATION_DEMAND_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
 Broadcast::channel(Subject::SUBJECT_WARNING_PATTERN, function (User $user, int $subjectId) {
     return true;
 });
+
+Broadcast::channel(Subject::SUBJECT_WARRANT_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
+
+Broadcast::channel(Subject::SUBJECT_DOCUMENT_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
+
+
 
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
     // Retrieve the subject instance

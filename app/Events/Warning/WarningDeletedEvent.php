@@ -16,14 +16,14 @@ class WarningDeletedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $subjectId)
+    public function __construct(public int $subjectId, public array $detials)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Subject::subjectWarning($this->subjectId))
+            new PrivateChannel(Subject::subjectWarning($this->subjectId)),
         ];
     }
 
@@ -36,6 +36,7 @@ class WarningDeletedEvent implements ShouldBroadcastNow
     {
         return [
             'subjectId' => $this->subjectId,
+            'details' => $this->detials,
         ];
     }
 }

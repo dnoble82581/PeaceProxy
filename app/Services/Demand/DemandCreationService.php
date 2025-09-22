@@ -20,7 +20,7 @@ class DemandCreationService
         $this->addLogEntry($demand);
 
         // Dispatch event
-        event(new DemandCreatedEvent($demand));
+        event(new DemandCreatedEvent($demand->negotiation_id, $demand->id));
 
         return $demand;
     }
