@@ -44,4 +44,7 @@ class CreateWarrantForm extends Form
 
     #[Validate(['nullable', 'string'])]
     public $bond_type = null;
+
+    #[Validate(['nullable', 'integer'])]
+    public $created_by = null;
 }

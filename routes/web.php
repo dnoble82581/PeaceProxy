@@ -5,7 +5,7 @@ use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
 use Livewire\Volt\Volt;
 
 Broadcast::routes([
-    'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
+'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
 ]);
 
 Route::middleware([
@@ -62,16 +62,6 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
         // Subject routes
         Volt::route('/{negotiation?}/subject/{subject:name}/edit', 'forms.subject.edit-subject')
             ->name('subject.edit');
-
-        Volt::route(
-            '/{negotiationId}/warrant/create',
-            'pages.subject.create-warrant'
-        )->name('negotiation.subject.create-warrant');
-
-        Volt::route(
-            '/{negotiationId}/warrant/{warrantId}/update',
-            'pages.subject.update-warrant'
-        )->name('negotiation.subject.update-warrant');
 
         Volt::route('/{negotiation?}/subject/{subject:name}/show', 'pages.subject.show-subject')
             ->name('subject.show');

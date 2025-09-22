@@ -35,6 +35,11 @@ class DemandDestroyedEvent implements ShouldBroadcastNow
             'id' => $this->demand->id,
             'negotiation_id' => $this->demand->negotiation_id,
             'subject_id' => $this->demand->subject_id,
+            'details' => [
+                'title' => $this->demand->title ?? 'Demand',
+                'createdBy' => optional($this->demand->createdBy)->name ?? 'Someone',
+                'subjectName' => optional($this->demand->subject)->name ?? 'the subject',
+            ],
         ];
     }
 }

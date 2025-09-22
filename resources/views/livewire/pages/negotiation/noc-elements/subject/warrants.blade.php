@@ -11,11 +11,17 @@
 	use Illuminate\Support\Collection;
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		public Subject $subject;
 		public CreateWarrantForm $form;
 		public int $negotiationId;
+		public bool $showCreateWarrantModal = false;
+		public bool $showUpdateWarrantModal = false;
+
+		use Interactions;
+
 
 		public function mount($subjectId, $negotiationId)
 		{
@@ -48,26 +54,80 @@
 
 		public function createWarrant()
 		{
-			return $this->redirect(route('negotiation.subject.create-warrant',
-				['tenantSubdomain' => tenant()->subdomain, 'negotiationId' => $this->negotiationId]), navigate: true);
+			$this->showCreateWarrantModal = true;
+		}
+
+		#[\Livewire\Attributes\On('close-modal')]
+		public function closeModals()
+		{
+			$this->showCreateWarrantModal = false;
+			$this->showUpdateWarrantModal = false;
 		}
 
 		public function updateWarrant($warrantId):void
 		{
-			$this->redirect(route('negotiation.subject.update-warrant',
-				[
-					'warrantId' => $warrantId,
-					'negotiationId' => $this->negotiationId,
-					'tenantSubdomain' => tenant()->subdomain
-				]), navigate: true);
+			$this->warrantToEditId = $warrantId;
+
+			// Tell the child to load the warrant (no remount)
+			$this->dispatch('load-warrant', id: $warrantId)->to('pages.subject.update-warrant');
+
+			$this->showUpdateWarrantModal = true;
+		}
+
+		public function handleWarrantCreated(array $event):void
+		{
+			$this->subject->load('warrants');
+
+			$warrant = app(WarrantFetchingService::class)->getWarrantById($event['warrantId']);
+
+			if (!$warrant) {
+				return;
+			}
+
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($warrant, 'WarrantCreated');
+
+			$this->toast()->timeout()->info($message)->send();
 
 		}
 
-		public function resetForm():void
+		public function handleWarrantDeleted(array $event):void
 		{
-			$this->form->reset();
-			$this->form->tenant_id = auth()->user()->tenant_id;
-			$this->form->subject_id = $this->subject->id;
+			$details = $event['details'] ?? null;
+			if ($details) {
+				$message = "{$details['createdBy']} deleted a {$details['label']} warrant for {$details['subjectName']}.";
+			} else {
+				$message = "A warrant has been deleted.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+			$this->subject->load('warrants');
+		}
+
+		public function handleWarrantUpdated(array $event)
+		{
+			$this->subject->load('warrants');
+
+			$warrant = app(WarrantFetchingService::class)->getWarrantById($event['warrantId']);
+
+			if (!$warrant) {
+				return;
+			}
+
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($warrant, 'WarrantUpdated');
+
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function getListeners()
+		{
+			$subjectId = $this->subject->id;
+			return [
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_CREATED => 'handleWarrantCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_DELETED => 'handleWarrantDeleted',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_UPDATED => 'handleWarrantUpdated',
+			];
 		}
 	}
 
@@ -156,10 +216,22 @@
 					</tr>
 				@empty
 					<tr>
-						<td colspan="5" class="text-center p-4 text-gray-500">
+						<td
+								colspan="5"
+								class="text-center p-4 text-gray-500">
 							No warrants found for this subject.
 							<p class="mt-2">
-								Click the <span class="inline-flex items-center"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner to create a new warrant.
+								Click the <span class="inline-flex items-center"><svg
+											class="w-4 h-4 text-gray-500"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											xmlns="http://www.w3.org/2000/svg"><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the
+								top-right corner to create a new warrant.
 							</p>
 						</td>
 					</tr>
@@ -168,4 +240,46 @@
 			</table>
 		</div>
 	</div>
+	<x-slide
+			size="3xl"
+			{{--			title="Create Warrant"--}}
+			wire="showCreateWarrantModal"
+			class="">
+		<x-slot:title>
+			<div class="text-center">
+				<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Create Warrant</h1>
+				<p class="text-xs">Creating a warrant for:
+					<span class="text-primary-400">{{ $subject->name }}</span></p>
+			</div>
+		</x-slot:title>
+		<livewire:pages.subject.create-warrant
+				:subject="$subject"
+				:negotiationId="$negotiationId" />
+	</x-slide>
+
+	{{-- Remove the @if($this->warrantToEditId) guard so the slide exists from the start --}}
+	<x-slide
+			id="update-warrant-slide"
+			size="3xl"
+			wire="showUpdateWarrantModal"
+			x-on:open="$focusOn('edit-warrant-first-field', 400)" {{-- optional: see (C) --}}
+	>
+		<x-slot:title>
+			<div class="text-center">
+				<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Edit Warrant</h1>
+				<p class="text-xs">
+					Editing a warrant for:
+					<span class="text-primary-400">{{ $subject->name }}</span>
+				</p>
+			</div>
+		</x-slot:title>
+
+		{{-- Keep this child mounted; do NOT pass :warrant-id so it won’t remount on first open --}}
+		<div wire:ignore>
+			<livewire:pages.subject.update-warrant
+					:negotiation-id="$negotiationId"
+					wire:key="update-warrant-slide"
+			/>
+		</div>
+	</x-slide>
 </div>

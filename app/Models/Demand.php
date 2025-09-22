@@ -31,7 +31,7 @@ class Demand extends Model
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 
     public function deliveryPlans()

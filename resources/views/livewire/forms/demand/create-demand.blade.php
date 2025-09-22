@@ -19,7 +19,7 @@
 		{
 			// Set default values
 			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by = Auth::user()->name;
+			$this->form->created_by_id = Auth::id();
 			$this->form->subject_id = $subjectId;
 			$this->form->negotiation_id = $negotiationId;
 			$this->form->status = DemandStatuses::pending->value;
@@ -46,7 +46,7 @@
 
 			// Set default values again
 			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by = Auth::user()->name;
+			$this->form->created_by_id = Auth::id();
 		}
 	}
 

@@ -3,6 +3,7 @@
 namespace App\Services\Document;
 
 use App\Contracts\DocumentRepositoryInterface;
+use App\Events\Document\DocumentCreatedEvent;
 use App\Models\Document;
 use App\Services\Log\LogService;
 use Illuminate\Http\UploadedFile;
@@ -89,9 +90,9 @@ class DocumentStorageService
 
         $document = $this->documentRepository->createDocument($data, $file);
 
+        event(new DocumentCreatedEvent($document->documentable_id, $document->id));
         // Log the document creation
-        $log = $this->addLogEntry($document, 'document.created', 'created');
-        logger($log);
+        $this->addLogEntry($document, 'document.created', 'created');
 
         return $document;
     }

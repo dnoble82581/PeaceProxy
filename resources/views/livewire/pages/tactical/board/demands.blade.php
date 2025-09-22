@@ -2,8 +2,13 @@
 
 	use App\Livewire\Forms\CreateDemandForm;
 	use App\Models\Demand;
+	use App\Support\Channels\Negotiation;
+	use App\Support\EventNames\NegotiationEventNames;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends \Livewire\Volt\Component {
+		use Interactions;
+
 		public int $negotiationId;
 		public \App\Models\Negotiation $negotiation;
 		public CreateDemandForm $form;
@@ -31,12 +36,29 @@
 		public function getListeners()
 		{
 			$tenantId = tenant()->id;
+			$negotiationId = $this->negotiationId;
 			return [
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
+				'echo-private:'.Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_CREATED => 'handleDemandCreated',
 			];
 		}
 
-		public function handleDemandCreated(array $data)
+		public function handleDemandCreated(array $event):void
+		{
+			$this->negotiation->load('demands');
+
+			$demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($event['demandId']);
+
+			if (!$demand) {
+				return;
+			}
+
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($demand, 'DemandCreated');
+
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function handleDemandDeleted(array $event)
 		{
 			$this->negotiation->load('demands');
 		}

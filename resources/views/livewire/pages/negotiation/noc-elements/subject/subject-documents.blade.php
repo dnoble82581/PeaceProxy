@@ -9,6 +9,7 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\WithFileUploads;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		use WithFileUploads;
@@ -21,6 +22,12 @@
 		public $showViewModal = false;
 		public $currentDocument = null;
 		public $documentUrl = null;
+
+		use Interactions;
+
+
+		protected $listeners = ['refresh' => '$refresh'];
+
 
 		public function mount($subjectId, $negotiationId)
 		{
@@ -63,6 +70,7 @@
 			$data = $this->form->all();
 			$data['uploaded_by_id'] = auth()->id();
 			$data['negotiation_id'] = $this->negotiationId;
+			$data['uploaded_by_id'] = authUser()->id;
 
 			app(DocumentStorageService::class)->createSubjectDocument($data, $this->subject->id, $this->file);
 
@@ -101,6 +109,70 @@
 			$bytes /= (1 << (10 * $pow));
 
 			return round($bytes, 2).' '.$units[$pow];
+		}
+
+		public function handleDocumentCreated(array $event)
+		{
+			// Refresh the documents relation
+			$this->subject->load('documents');
+
+			// Attempt to fetch the created document
+			$document = app(\App\Services\Document\DocumentFetchingService::class)->getDocumentById($event['documentId'] ?? 0);
+
+			// Build a contextual message similar to the warnings pattern
+			if ($document) {
+				$subjectName = $this->subject->name ?? 'the subject';
+				$uploader = $document->uploadedBy;
+				if ($uploader && $uploader->id === auth()->id()) {
+					$message = "You uploaded '{$document->name}' for {$subjectName}.";
+				} elseif ($uploader) {
+					$message = "{$uploader->name} uploaded '{$document->name}' for {$subjectName}.";
+				} else {
+					$message = "A document '{$document->name}' was uploaded for {$subjectName}.";
+				}
+			} else {
+				$message = "A document has been uploaded.";
+			}
+
+			// Display the toast notification
+			$this->toast()->timeout()->info($message)->send();
+
+			// Trigger a refresh for the UI
+			$this->dispatch('refresh');
+		}
+
+		public function handleDocumentDeleted(array $event)
+		{
+			$details = $event['details'] ?? null;
+			if ($details) {
+				$createdBy = $details['createdBy'] ?? 'Someone';
+				$documentName = $details['documentName'] ?? 'a document';
+				$subjectName = $details['subjectName'] ?? ($this->subject->name ?? 'the subject');
+				$message = "{$createdBy} deleted '{$documentName}' for {$subjectName}.";
+			} else {
+				$message = "A document has been deleted.";
+			}
+
+			// Show notification
+			$this->toast()->timeout()->info($message)->send();
+
+			// Refresh the documents
+			$this->subject->load('documents');
+
+			// Force a UI refresh in Livewire
+			$this->dispatch('refresh');
+
+		}
+
+		public function getListeners()
+		{
+			$subjectId = $this->subject->id;
+			return [
+				'echo-private:'.\App\Support\Channels\Subject::subjectDocument($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::DOCUMENT_CREATED => 'handleDocumentCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectDocument($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::DOCUMENT_UPDATED => 'handleDocumentUpdated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectDocument($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::DOCUMENT_DELETED => 'handleDocumentDeleted',
+				'refresh' => '$refresh',
+			];
 		}
 	}
 
@@ -189,10 +261,22 @@
 					</tr>
 				@empty
 					<tr>
-						<td colspan="5" class="text-center p-4 text-gray-500">
+						<td
+								colspan="5"
+								class="text-center p-4 text-gray-500">
 							No documents found for this subject.
 							<p class="mt-2">
-								Click the <span class="inline-flex items-center"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner to upload a new document.
+								Click the <span class="inline-flex items-center"><svg
+											class="w-4 h-4 text-gray-500"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											xmlns="http://www.w3.org/2000/svg"><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the
+								top-right corner to upload a new document.
 							</p>
 						</td>
 					</tr>

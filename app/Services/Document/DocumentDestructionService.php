@@ -3,7 +3,9 @@
 namespace App\Services\Document;
 
 use App\Contracts\DocumentRepositoryInterface;
+use App\Events\Document\DocumentDestroyedEvent;
 use App\Models\Document;
+use App\Services\Log\LogService;
 
 class DocumentDestructionService
 {
@@ -62,9 +64,16 @@ class DocumentDestructionService
         $document = $this->documentRepository->getDocument($documentId);
 
         if ($document) {
-            $log = $this->addLogEntry($document);
-            logger($log);
+            $details = [
+                'fileType' => $document->file_type,
+                'storageDisk' => $document->storage_disk,
+                'uploadedById' => $document->uploaded_by,
+            ];
         }
+
+        event(new DocumentDestroyedEvent($document->documentable_id, $details));
+
+        $this->addLogEntry($document);
 
         return $this->documentRepository->deleteDocument($documentId);
     }

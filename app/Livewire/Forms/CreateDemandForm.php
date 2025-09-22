@@ -16,8 +16,8 @@ class CreateDemandForm extends Form
     #[Validate(['required', 'integer'])]
     public $negotiation_id = '';
 
-    #[Validate(['nullable', 'string'])]
-    public $created_by = '';
+    #[Validate(['nullable', 'integer'])]
+    public $created_by_id = null;
 
     #[Validate(['nullable', 'string'])]
     public $updated_by = '';

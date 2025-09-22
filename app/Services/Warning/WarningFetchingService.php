@@ -14,8 +14,12 @@ class WarningFetchingService
         $this->warningRepository = $warningRepository;
     }
 
-    public function fetchWarningById($id)
+    public function fetchWarningById(?int $id = null)
     {
+        if (! $id) {
+            return null;
+        }
+
         return $this->warningRepository->getWarning($id);
     }
 

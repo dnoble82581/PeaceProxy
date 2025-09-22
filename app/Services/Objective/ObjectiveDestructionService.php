@@ -3,7 +3,7 @@
 namespace App\Services\Objective;
 
 use App\Contracts\ObjectiveRepositoryInterface;
-use App\Events\Objective\ObjectiveDestroyedEvent;
+use App\Events\Objective\ObjectiveDeletedEvent;
 use App\Models\Objective;
 
 class ObjectiveDestructionService
@@ -24,9 +24,25 @@ class ObjectiveDestructionService
         $this->addLogEntry($objective);
 
         // Dispatch event
-        event(new ObjectiveDestroyedEvent($objective));
+        if ($objective) {
+            $data = [
+                'objectiveId' => $objective->id,
+                'negotiationId' => $objective->negotiation_id,
+                'actorId' => auth()->user()->id,
+                'actorName' => auth()->user()->name,
+                'priority' => $objective->priority,
+                'objectiveLabel' => $objective->objective,
+            ];
+        }
 
-        return $this->objectiveRepository->deleteObjective($objectiveId);
+
+        $is_deleted = $this->objectiveRepository->deleteObjective($objectiveId);
+
+        if ($is_deleted) {
+            event(new ObjectiveDeletedEvent($data));
+        }
+
+        return $is_deleted;
     }
 
     private function addLogEntry(Objective $objective): void

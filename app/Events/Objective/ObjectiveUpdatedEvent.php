@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events\Demand;
+namespace App\Events\Objective;
 
 use App\Support\Channels\Negotiation;
 use App\Support\EventNames\NegotiationEventNames;
@@ -10,31 +10,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DemandCreatedEvent implements ShouldBroadcastNow
+class ObjectiveUpdatedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $negotiationId, public int $demandId)
+    public function __construct(public int $negotiationId, public int $objectiveId)
     {
     }
 
-    public function broadcastOn(): PrivateChannel
+    public function broadcastOn(): array
     {
-        return new PrivateChannel(Negotiation::negotiationDemand($this->negotiationId));
+        return [
+            new PrivateChannel(Negotiation::negotiationObjective($this->negotiationId)),
+        ];
     }
 
-    public function broadcastAs(): string
+    public function broadcastAs()
     {
-        return NegotiationEventNames::DEMAND_CREATED;
+        return NegotiationEventNames::OBJECTIVE_UPDATED;
     }
 
     public function broadcastWith()
     {
         return [
-           'negotiationId' => $this->negotiationId,
-            'demandId' => $this->demandId,
+            'objectiveId' => $this->objectiveId,
+            'negotiationId' => $this->negotiationId,
         ];
     }
 }

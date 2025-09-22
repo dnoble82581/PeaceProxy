@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events\Warning;
+namespace App\Events\Warrant;
 
 use App\Support\Channels\Subject;
 use App\Support\EventNames\SubjectEventNames;
@@ -10,33 +10,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class WarningCreatedEvent implements ShouldBroadcastNow
+class WarrantUpdatedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $subjectId, public int $warningId)
+    public function __construct(public int $subjectId, public int $warrantId)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Subject::subjectWarning($this->subjectId)),
+            new PrivateChannel(Subject::subjectWarrant($this->subjectId)),
         ];
+    }
+
+    public function broadcastAs()
+    {
+        return SubjectEventNames::WARRANT_UPDATED;
     }
 
     public function broadcastWith()
     {
         return [
             'subjectId' => $this->subjectId,
-            'warningId' => $this->warningId,
+            'warrantId' => $this->warrantId,
         ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return SubjectEventNames::WARNING_CREATED;
     }
 }

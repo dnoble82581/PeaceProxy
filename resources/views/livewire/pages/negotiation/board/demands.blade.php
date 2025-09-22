@@ -8,9 +8,12 @@
 	use App\Services\Demand\DemandDestructionService;
 	use App\Services\Demand\DemandFetchingService;
 	use App\Services\Negotiation\NegotiationFetchingService;
+	use App\Support\EventNames\NegotiationEventNames;
+	use App\Factories\MessageFactory;
 	use Illuminate\Support\Facades\Auth;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	/**
 	 * Demands Component
@@ -21,6 +24,8 @@
 	 * through broadcast events.
 	 */
 	new class extends Component {
+		use Interactions;
+
 		/** @var bool Flag to control the visibility of the create demand modal */
 		public bool $showCreateDemandModal = false;
 
@@ -84,10 +89,11 @@
 		public function getListeners():array
 		{
 			$tenantId = auth()->user()->tenant_id;
+			$negotiationId = $this->negotiationId;
 			return [
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandCreated" => 'handleDemandCreated',
+				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_CREATED => 'handleDemandCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandDestroyed" => 'handleDemandUpdated',
+				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandDestroyed" => 'handleDemandDestroyed',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanCreated" => 'handleDeliveryPlanCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanUpdated" => 'handleDeliveryPlanUpdated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanDestroyed" => 'handleDeliveryPlanDestroyed',
@@ -102,16 +108,29 @@
 		 *
 		 * @return void
 		 */
-		public function handleDemandCreated(array $data):void
+		public function handleDemandCreated(array $event):void
 		{
-			// Reload the primary subject with fresh demands data including delivery plans
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-
-			// Force a refresh of the component
+			// Keep UI in sync immediately
 			$this->dispatch('refresh');
 
-			// Ensure the component is re-rendered
-			$this->render();
+			// Fetch the demand using the ID from the event
+			$demandId = $event['demandId'] ?? null;
+			$demand = $demandId? app(DemandFetchingService::class)->getDemandById($demandId, ['createdBy']) : null;
+
+			// Exit early if the demand cannot be found
+			if (!$demand) {
+				return;
+			}
+
+			// Generate a user-friendly message via the MessageFactory
+			$messageFactory = app(MessageFactory::class);
+			$message = $messageFactory->generateMessage($demand, 'DemandCreated');
+
+			// Notify the user
+			$this->toast()->timeout()->info($message)->send();
+
+			// Refresh the subject with related demands and delivery plans
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 		}
 
 		/**
@@ -123,11 +142,42 @@
 		 */
 		public function handleDemandUpdated(array $data):void
 		{
+			$demandId = $data['demandId'] ?? $data['id'] ?? $data['demand'] ?? null;
+			$demand = $demandId? app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId,
+				['subject', 'createdBy']) : null;
+
+			if ($demand) {
+				$subjectName = $demand->subject->name ?? ($this->primarySubject->name ?? 'the subject');
+				$actor = $demand->createdBy ?? null;
+				$title = $demand->title ?? 'a demand';
+				if ($actor && $actor->id === auth()->id()) {
+					$message = "You updated the '{$title}' demand for {$subjectName}.";
+				} elseif ($actor) {
+					$message = "{$actor->name} updated the '{$title}' demand for {$subjectName}.";
+				} else {
+					$message = "The '{$title}' demand was updated for {$subjectName}.";
+				}
+			} else {
+				$message = "A demand has been updated.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 			$this->dispatch('refresh');
 		}
 
 		public function handleDemandDestroyed(array $data)
 		{
+			$details = $data['details'] ?? null;
+			if ($details) {
+				$title = $details['title'] ?? 'a demand';
+				$createdBy = $details['createdBy'] ?? 'Someone';
+				$subjectName = $details['subjectName'] ?? ($this->primarySubject->name ?? 'the subject');
+				$message = "{$createdBy} deleted '{$title}' for {$subjectName}.";
+			} else {
+				$message = "A demand has been deleted.";
+			}
+			$this->toast()->timeout()->info($message)->send();
 			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 		}
 
@@ -397,7 +447,7 @@
 											position="left">
 										<span class="text-xs">{{ $demand->priority_level?->label() ?? 'No Priority' }}</span>
 									</x-badge>
-									<p class="text-gray-300 text-xs mt-1">{{ $demand->created_by ?? 'Unknown' }}</p>
+									<p class="text-gray-300 text-xs mt-1">{{ $demand->createdBy?->name ?? 'Unknown' }}</p>
 								</div>
 							</div>
 						</x-slot:header>

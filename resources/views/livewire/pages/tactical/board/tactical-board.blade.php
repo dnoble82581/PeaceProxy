@@ -19,9 +19,9 @@
 
 ?>
 
-{{--ToDO: Finish tactical noc, change target card to be more like subject general card, add google maps for now, look at live updates between negotation and tactical--}}
 <div
-		x-data="{ tab: 'requests' }"
+		wire:key="tactical-board-root"
+		x-data="{ tab: @entangle('tab') }"
 		class="dark:bg-dark-800 h-full rounded-lg px-2 pb-2 overflow-y-auto">
 	<div class="sticky top-0 z-10">
 		<div class="grid grid-cols-1 sm:hidden">
@@ -84,8 +84,7 @@
 			class="mt-4 space-y-2"
 			x-show="tab === 'maps'">
 		<div class="p-4 text-gray-600 dark:text-dark-200">
-			<p class="text-sm">Map tools and situational overlays will appear here.</p>
-			<!-- Placeholder content; plug in your tactical map component when ready -->
+			<livewire:pages.tactical.board.maps />
 		</div>
 	</div>
 

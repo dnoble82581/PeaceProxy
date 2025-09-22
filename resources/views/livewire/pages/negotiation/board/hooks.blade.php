@@ -8,6 +8,7 @@
 	use App\Services\Negotiation\NegotiationFetchingService;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
+	use TallStackUi\Traits\Interactions;
 
 	/**
 	 * Hooks Component
@@ -17,7 +18,8 @@
 	 * editing, and deleting hooks, as well as listening for real-time updates
 	 * through broadcast events.
 	 */
-	new class extends Component {
+ new class extends Component {
+ 		use Interactions;
 		/** @var bool Flag to control the visibility of the create hook modal */
 		public bool $showCreateHookModal = false;
 
@@ -67,7 +69,7 @@
 			return [
 				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookCreated" => 'handleHookCreated',
 				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookUpdated" => 'handleHookUpdated',
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookDestroyed" => 'handleHookUpdated',
+				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookDestroyed" => 'handleHookDestroyed',
 				'refresh' => '$refresh',
 			];
 		}
@@ -81,12 +83,31 @@
 		 */
 		public function handleHookCreated(array $data):void
 		{
-			// Eager load hooks with their relationships to prevent N+1 queries
-			$this->primarySubject->load(['hooks']);
+			// Attempt to fetch the created hook (event key could be 'hookId' or 'hook')
+			$hookId = $data['hookId'] ?? $data['hook'] ?? null;
+			$hook = $hookId ? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
+
+			if ($hook) {
+				$subjectName = $hook->subject->name ?? ($this->primarySubject->name ?? 'the subject');
+				$actor = $hook->createdBy ?? null;
+				$title = $hook->title ?? 'a hook';
+				if ($actor && $actor->id === auth()->id()) {
+					$message = "You created a new '{$title}' hook for {$subjectName}.";
+				} elseif ($actor) {
+					$message = "{$actor->name} created a new '{$title}' hook for {$subjectName}.";
+				} else {
+					$message = "A new '{$title}' hook was created for {$subjectName}.";
+				}
+			} else {
+				$message = "A hook has been created.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+			$this->dispatch('refresh');
 		}
 
 		/**
-		 * Handle the HookUpdated or HookDestroyed event by refreshing the hooks collection
+		 * Handle the HookUpdated event by sending a toast and refreshing
 		 *
 		 * @param  array  $data  Event data
 		 *
@@ -94,6 +115,43 @@
 		 */
 		public function handleHookUpdated(array $data):void
 		{
+			$hookId = $data['hookId'] ?? $data['hook'] ?? null;
+			$hook = $hookId ? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
+
+			if ($hook) {
+				$subjectName = $hook->subject->name ?? ($this->primarySubject->name ?? 'the subject');
+				$actor = $hook->createdBy ?? null;
+				$title = $hook->title ?? 'a hook';
+				if ($actor && $actor->id === auth()->id()) {
+					$message = "You updated the '{$title}' hook for {$subjectName}.";
+				} elseif ($actor) {
+					$message = "{$actor->name} updated the '{$title}' hook for {$subjectName}.";
+				} else {
+					$message = "The '{$title}' hook was updated for {$subjectName}.";
+				}
+			} else {
+				$message = "A hook has been updated.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+			$this->dispatch('refresh');
+		}
+
+		/**
+		 * Handle the HookDestroyed event by sending a toast with details if available
+		 */
+		public function handleHookDestroyed(array $data): void
+		{
+			$details = $data['details'] ?? null;
+			if ($details) {
+				$title = $details['title'] ?? 'a hook';
+				$createdBy = $details['createdBy'] ?? 'Someone';
+				$subjectName = $details['subjectName'] ?? ($this->primarySubject->name ?? 'the subject');
+				$message = "{$createdBy} deleted '{$title}' for {$subjectName}.";
+			} else {
+				$message = "A hook has been deleted.";
+			}
+			$this->toast()->timeout()->info($message)->send();
 			$this->dispatch('refresh');
 		}
 

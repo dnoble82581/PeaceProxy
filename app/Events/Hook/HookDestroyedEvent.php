@@ -21,7 +21,6 @@ class HookDestroyedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-
         return new PrivateChannel("private.negotiation.{$this->hook->tenant_id}.{$this->hook->negotiation_id}");
     }
 
@@ -30,5 +29,15 @@ class HookDestroyedEvent implements ShouldBroadcastNow
         return 'HookDestroyed';
     }
 
-
+    public function broadcastWith(): array
+    {
+        return [
+            'hookId' => $this->hook->id,
+            'details' => [
+                'title' => $this->hook->title ?? 'Hook',
+                'createdBy' => optional($this->hook->createdBy)->name ?? 'Someone',
+                'subjectName' => optional($this->hook->subject)->name ?? 'the subject',
+            ],
+        ];
+    }
 }

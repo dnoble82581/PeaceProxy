@@ -21,8 +21,7 @@ new #[Layout('layouts.negotiation'), \Livewire\Attributes\Title('Tactical NOC - 
 }
 
 ?>
-
-<div class="text-white px-8 mb-16">
+<div wire:key="tactical-noc-root" class="text-white px-8 mb-16">
     <livewire:pages.tactical.noc-elements.top-cards :negotiation="$this->negotiation" />
     <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mt-4">
         <div class="col-span-3 h-[calc(100vh-10rem)]">

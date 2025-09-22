@@ -12,12 +12,15 @@
 	use App\Services\Pin\PinCreationService;
 	use App\Services\Pin\PinDeletionService;
 	use App\Services\Pin\PinFetchingService;
+	use App\Support\Channels\Negotiation;
+	use App\Support\EventNames\NegotiationEventNames;
 	use Illuminate\Support\Collection;
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\Layout;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		public ?int $negotiation_id = null;
@@ -27,6 +30,9 @@
 		public bool $showForm = false;
 		public $pinnedObjectives = [];
 		public int $tenantId;
+
+		use Interactions;
+
 
 		public function mount(int $negotiationId = null):void
 		{
@@ -80,16 +86,64 @@
 
 		public function getListeners()
 		{
+			$negotiationId = $this->negotiation_id;
 			return [
 				"echo-private:tenants.$this->tenantId.notifications,.ObjectivePinned" => 'loadPinnedObjectives',
 				"echo-private:tenants.$this->tenantId.notifications,.ObjectiveUnpinned" => 'loadPinnedObjectives',
-				"echo-private.negotiation.$this->tenantId.$this->negotiation_id,.ObjectiveCreated" => 'handleObjectiveCreated'
+				'echo-private:'.Negotiation::negotiationObjective($negotiationId).',.'.NegotiationEventNames::OBJECTIVE_CREATED => 'handleObjectiveCreated',
+				'echo-private:'.Negotiation::negotiationObjective($negotiationId).',.'.NegotiationEventNames::OBJECTIVE_DELETED => 'handleObjectiveDeleted',
+				'echo-private:'.Negotiation::negotiationObjective($negotiationId).',.'.NegotiationEventNames::OBJECTIVE_UPDATED => 'handleObjectiveUpdated',
 			];
 		}
 
-		public function handleObjectiveCreated(array $data):void
+		public function handleObjectiveCreated(array $event):void
 		{
-			logger('heard objective');
+			$this->dispatch('$refresh');
+
+			$objective = app(\App\Services\Objective\ObjectiveFetchingService::class)->fetchObjectiveById($event['objectiveId']);
+
+			if (!$objective) {
+				return;
+			}
+
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($objective, 'ObjectiveCreated');
+
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function handleObjectiveDeleted(array $event)
+		{
+			$this->dispatch('$refresh');
+
+			$objectiveLabel = $event['objectiveLabel'];
+			$objectivePriority = $event['priority'];
+			$actorName = $event['actorName'];
+
+			if ($event['actorId'] == authUser()->id) {
+				$message = "You deleted a {$objectivePriority} priority objective";
+			} else {
+				$message = "{$actorName} deleted a {$objectivePriority} priority objective called {$objectiveLabel}.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+		}
+
+		public function handleObjectiveUpdated(array $event):void
+		{
+			$this->dispatch('$refresh');
+
+			$objective = app(\App\Services\Objective\ObjectiveFetchingService::class)->fetchObjectiveById($event['objectiveId']);
+
+			if (!$objective) {
+				return;
+			}
+
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($objective, 'ObjectiveUpdated');
+
+			$this->toast()->timeout()->info($message)->send();
+
 		}
 
 		#[Computed]
@@ -182,11 +236,6 @@
 		{
 			// Use the service to delete the objective
 			app(ObjectiveDestructionService::class)->deleteObjective($id);
-
-			$this->dispatch('notify', [
-				'message' => 'Objective deleted successfully!',
-				'type' => 'success',
-			]);
 		}
 
 		public function complete(int $id):void

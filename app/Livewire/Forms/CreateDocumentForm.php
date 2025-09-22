@@ -13,6 +13,9 @@ class CreateDocumentForm extends Form
     #[Validate(['nullable', 'integer'])]
     public $negotiation_id = null;
 
+    #[Validate(['nullable', 'integer'])]
+    public $uploaded_by_id = null;
+
     #[Validate(['required', 'string'])]
     public $documentable_type = '';
 

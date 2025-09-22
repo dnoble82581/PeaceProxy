@@ -11,6 +11,9 @@ class WarrantRepository implements WarrantRepositoryInterface
 {
     public function createWarrant($data)
     {
+        if (!isset($data['created_by']) || empty($data['created_by'])) {
+            $data['created_by'] = auth()->id();
+        }
         return Warrant::create($data);
     }
 

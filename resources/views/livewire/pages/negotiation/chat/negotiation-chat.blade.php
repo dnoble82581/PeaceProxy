@@ -349,7 +349,7 @@
 			// Dispatch event to trigger scroll
 			$this->dispatch('new-message');
 		}
-		
+
 		/**
 		 * Toggle a reaction on a message
 		 */
@@ -384,7 +384,7 @@
 //				->hasUserReacted($messageId, auth()->id(), $reactionType);
 //		}
 //
-/**
+		/**
 		 * Select a conversation by ID
 		 *
 		 * @param  int  $conversationId  The ID of the conversation to select
@@ -843,7 +843,7 @@
 										wire:click="selectConversation({{ $conversation->id }})"
 										class="p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600 {{ $selectedConversationId === $conversation->id ? 'bg-gray-100 dark:bg-dark-600 border-l-4 border-primary-400 dark:border-primary-500' : '' }}">
 									<div class="flex justify-between items-center">
-										<div class="font-medium text-sm">
+										<div class="font-medium text-sm text-dark-700 dark:text-white">
 											@php
 												$otherUser = $this->getOtherUserInPrivateConversation($conversation);
 											@endphp
@@ -852,7 +852,7 @@
 										@if($conversation->created_by === auth()->id())
 											<button
 													wire:click.stop="closeConversation({{ $conversation->id }})"
-													class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+													class="text-gray-400 hover:text-dark-600 dark:hover:text-gray-200">
 												<x-icon
 														name="x-mark"
 														class="size-4" />
@@ -1144,7 +1144,7 @@
 		<div class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-dark-900 dark:bg-opacity-75 flex items-center justify-center z-50">
 			<div class="bg-white dark:bg-dark-700 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-dark-600">
 				<div class="flex justify-between items-center mb-4">
-					<h3 class="text-lg font-medium">New Conversation</h3>
+					<h3 class="text-lg font-medium text-dark-700 dark:text-dark-200">New Conversation</h3>
 					<button
 							wire:click="closeNewConversationModal"
 							class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
@@ -1164,7 +1164,7 @@
 									wire:model.live="newConversationType"
 									value="private"
 									class="form-radio">
-							<span class="ml-2">Private</span>
+							<span class="ml-2 text-dark-700 dark:text-dark-200">Private</span>
 						</label>
 						<label class="inline-flex items-center">
 							<input
@@ -1172,7 +1172,7 @@
 									wire:model.live="newConversationType"
 									value="group"
 									class="form-radio">
-							<span class="ml-2">Group</span>
+							<span class="ml-2 text-dark-700 dark:text-dark-200">Group</span>
 						</label>
 					</div>
 				</div>
@@ -1214,7 +1214,7 @@
 											value="{{ $user->id }}"
 											class="form-checkbox">
 								@endif
-								<span class="ml-2">{{ $user->name }}</span>
+								<span class="ml-2 text-dark-700 dark:text-dark-200">{{ $user->name }}</span>
 							</label>
 						@endforeach
 					</div>

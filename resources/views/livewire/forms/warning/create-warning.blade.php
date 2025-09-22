@@ -5,11 +5,13 @@
 	use App\Services\Warning\WarningCreationService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		public CreateWarningForm $form;
 		public int $subjectId;
 		public ?int $negotiationId = null; // kept for parity with create-hook (not used by warnings)
+
 
 		public function mount($subjectId, $negotiationId = null):void
 		{
@@ -39,23 +41,27 @@
 			$this->form->reset();
 			$this->form->tenant_id = Auth::user()->tenant_id;
 			$this->form->created_by_id = Auth::user()->id;
-
-			event(new \App\Events\Warning\WarningCreatedEvent($this->subjectId));
+			event(new \App\Events\Warning\WarningCreatedEvent($this->subjectId, $warning->id));
 
 			$this->dispatch('close-create-warning-modal');
+		}
+
+		public function cancel()
+		{
+			$this->dispatch('close-modals');
 		}
 	};
 
 ?>
 
-<div>
+<div class="dark:bg-dark-700 p-2 rounded-lg">
 	<form
 			id="createWarningForm"
 			wire:submit.prevent="saveWarning"
 			class="space-y-6">
 		<!-- Basic Information -->
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold text-white">Warning Information</h2>
+			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Warning Information</h2>
 			<p class="mb-4 text-sm text-gray-400">Enter the details about this warning</p>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -81,7 +87,7 @@
 
 		<!-- Description -->
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold text-white">Details</h2>
+			<h2 class="text-lg font-semibold dark:text-white text-dark-800">Details</h2>
 			<p class="mb-4 text-sm text-gray-400">Provide additional information about the warning</p>
 
 			<div class="grid grid-cols-1 gap-4">
@@ -94,17 +100,18 @@
 		</div>
 
 		<!-- Submit Button -->
-		<div class="flex items-center justify-end gap-4">
+		<div class="space-y-2">
 			<x-button
+					class="w-full"
 					type="submit"
 					primary>
 				Create Warning
 			</x-button>
 			<x-button
-					type="button"
-					color="secondary"
-					x-on:click="$modalClose('CreateWarningModal')">
-				Cancel
+					class="w-full"
+					color="slate"
+					wire:click="cancel"
+			>Cancel
 			</x-button>
 		</div>
 	</form>

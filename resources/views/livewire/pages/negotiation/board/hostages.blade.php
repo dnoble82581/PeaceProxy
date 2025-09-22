@@ -2,12 +2,14 @@
 
 	use App\Services\Hostage\HostageDestructionService;
 	use App\Services\Negotiation\NegotiationFetchingService;
-	use Livewire\Volt\Component;
+ use Livewire\Volt\Component;
 	use App\Models\Hostage;
 	use Livewire\WithPagination;
+	use TallStackUi\Traits\Interactions;
 
-	new class extends Component {
+ new class extends Component {
 		use WithPagination;
+		use Interactions;
 
 		public bool $showCreateHostageModal = false;
 		public bool $showViewHostageModal = false;
@@ -151,6 +153,17 @@
 		 */
 		public function handleHostageCreated(array $data):void
 		{
+			$hostageId = $data['hostageId'] ?? $data['hostage'] ?? null;
+			$hostage = $hostageId ? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
+
+			if ($hostage) {
+				$name = $hostage->name ?? 'a hostage';
+				$message = "A new '{$name}' hostage was created.";
+			} else {
+				$message = "A hostage has been created.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
 			$this->loadHostages();
 		}
 
@@ -163,8 +176,18 @@
 		 */
 		public function handleHostageUpdated(array $data):void
 		{
+			$hostageId = $data['hostageId'] ?? $data['hostage'] ?? null;
+			$hostage = $hostageId ? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
+
+			if ($hostage) {
+				$name = $hostage->name ?? 'a hostage';
+				$message = "Hostage '{$name}' was updated.";
+			} else {
+				$message = "A hostage has been updated.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
 			$this->loadHostages();
-//			$this->dispatch('refresh');
 		}
 
 		/**
@@ -176,6 +199,14 @@
 		 */
 		public function handleHostageDestroyed(array $data):void
 		{
+			$details = $data['details'] ?? null;
+			if ($details) {
+				$hostageName = $details['hostageName'] ?? 'a hostage';
+				$message = "Hostage '{$hostageName}' was deleted.";
+			} else {
+				$message = "A hostage has been deleted.";
+			}
+			$this->toast()->timeout()->info($message)->send();
 			$this->loadHostages();
 		}
 	}
