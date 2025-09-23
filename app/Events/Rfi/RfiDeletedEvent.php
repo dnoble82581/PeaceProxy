@@ -2,6 +2,8 @@
 
 namespace App\Events\Rfi;
 
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,28 +17,26 @@ class RfiDeletedEvent implements ShouldBroadcastNow
     use SerializesModels;
 
     public function __construct(
+        public int $negotiationId,
         public int $rfiId,
-        public int $tenantId,
-        public int $negotiationId
     ) {
     }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel("tenants.{$this->tenantId}.rfi.{$this->rfiId}");
+        return new PrivateChannel(Negotiation::negotiationRfi($this->negotiationId));
     }
 
     public function broadcastAs(): string
     {
-        return 'RfiDeleted';
+        return NegotiationEventNames::RFI_DELETED;
     }
 
     public function broadcastWith()
     {
         return [
-            'id' => $this->rfiId,
-            'tenant_id' => $this->tenantId,
-            'negotiation_id' => $this->negotiationId,
+           'negotiationId' => $this->negotiationId,
+            'rfiId' => $this->rfiId,
         ];
     }
 }
