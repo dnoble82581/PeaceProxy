@@ -34,7 +34,7 @@ class CreateTriggerForm extends Form
     #[Validate(['nullable'])]
     public $source = '';
 
-    #[Validate(['nullable'])]
+    #[Validate(['required'])]
     public $confidence_score = '';
 
     #[Validate(['nullable', 'date'])]
