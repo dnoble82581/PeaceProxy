@@ -36,8 +36,11 @@
 
 			// Check if the status is changing to approved
 			if (
-				trim($this->demand->status->value) !== DemandStatuses::approved->value &&
-				trim($dto->status->value) === DemandStatuses::approved->value
+				$this->demand->status instanceof DemandStatuses &&
+				$dto->status instanceof DemandStatuses &&
+				$this->demand->status !== DemandStatuses::approved &&
+				$dto->status === DemandStatuses::approved
+
 			) {
 				// If handleApproved returns false, stop further execution
 				if (!$this->handleApproved()) {
