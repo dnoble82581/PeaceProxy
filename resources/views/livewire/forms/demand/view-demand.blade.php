@@ -34,20 +34,6 @@
 			$validated = $this->form->validate();
 			$dto = DemandDTO::fromArray($validated);
 
-			// Check if the status is changing to approved
-			if (
-				$this->demand->status instanceof DemandStatuses &&
-				$dto->status instanceof DemandStatuses &&
-				$this->demand->status !== DemandStatuses::approved &&
-				$dto->status === DemandStatuses::approved
-
-			) {
-				// If handleApproved returns false, stop further execution
-				if (!$this->handleApproved()) {
-					return;
-				}
-			}
-
 			// If handleApproved passes or no special condition applies, save the demand
 			app(DemandUpdateService::class)->updateDemand($this->demand->id, $dto);
 
@@ -164,6 +150,7 @@
 
 				<x-date
 						disabled
+						format="YYYY-MM-DD"
 						label="Deadline Date"
 						wire:model="form.deadline_date"
 						placeholder="Select deadline date" />
