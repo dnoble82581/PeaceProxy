@@ -174,7 +174,12 @@
 				<div
 						class="flex w-16 shrink-0 items-center justify-center rounded-l-md {{ $warning->risk_level->color() }}  text-sm font-medium text-white"
 				>
-					<span class="text-xs">{{ $warning->risk_level->label() }}</span>
+					@if($warning->risk_level)
+						<span class="text-xs">{{ $warning->risk_level->label() }}</span>
+					@else
+						<span class="text-xs">No Risk Level</span>
+					@endif
+
 				</div>
 				<div class="flex flex-1 items-center justify-between truncate overflow-visible rounded-r-md border-t border-r border-b border-gray-200 bg-white dark:border-white/10 dark:bg-dark-800/50">
 					<div class="flex-1 truncate px-4 py-2 text-sm">
@@ -257,7 +262,12 @@
 						</p>
 					</div>
 					<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium text-white {{ $this->warningToView->risk_level->color() }}">
-						{{ $this->warningToView->risk_level->label() }} Risk
+						@if($warning->risk_level)
+							<span class="text-xs">{{ $warning->risk_level->label() }}</span>
+						@else
+							<span class="text-xs">No Risk Level</span>
+						@endif
+
 					</span>
 				</div>
 
