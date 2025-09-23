@@ -23,11 +23,10 @@ class MoodLogDestructionService
             return null;
         }
 
-        $log = $this->addLogEntry($moodLog);
-        logger($log);
+        $this->addLogEntry($moodLog);
 
         $deletedMoodLog = $this->moodLogRepository->deleteMoodLog($id);
-        event(new MoodDeletedEvent($moodLog));
+        //        event(new MoodDeletedEvent($moodLog));
 
         return $deletedMoodLog;
     }

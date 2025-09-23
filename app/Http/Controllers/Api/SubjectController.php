@@ -12,7 +12,6 @@ class SubjectController
         $subjects = Subject::with('images')->get();
 
         // Debug the raw query and its results
-        logger($subjects->toArray());
 
         return response()->json($subjects->map(function ($subject) {
             return [

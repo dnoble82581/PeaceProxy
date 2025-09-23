@@ -23,10 +23,8 @@ class MoodLogUpdatingService
             return null;
         }
 
-        $log = $this->addLogEntry($moodLog);
-        logger($log);
+        $this->addLogEntry($moodLog);
 
-        event(new MoodUpdatedEvent($moodLog));
 
         return $moodLog;
     }

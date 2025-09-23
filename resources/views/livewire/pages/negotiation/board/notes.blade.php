@@ -151,7 +151,6 @@
 
 		public function handleNoteCreated(array $data)
 		{
-			logger($data);
 			$this->loadNotes();
 		}
 

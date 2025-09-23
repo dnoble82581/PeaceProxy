@@ -21,7 +21,6 @@ class WarrantUpdatingService
             return null;
         }
 
-        logger($warrant);
         event(new WarrantUpdatedEvent($warrant->subject_id, $warrant->id));
 
         $this->addLogEntry($warrant);
