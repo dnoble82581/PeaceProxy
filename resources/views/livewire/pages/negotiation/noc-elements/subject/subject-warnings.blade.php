@@ -74,7 +74,7 @@
 			if (!$this->warningToViewId) {
 				return null;
 			}
-			return Warning::with('createdBy')->find($this->warningToViewId);
+			return app(WarningFetchingService::class)->fetchWarningById($this->warningToViewId);
 		}
 
 		public function getUserName($userId):string
