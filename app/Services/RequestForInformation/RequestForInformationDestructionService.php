@@ -23,14 +23,16 @@ class RequestForInformationDestructionService
         $this->addLogEntry($rfi);
 
         // Store values needed for event before deletion
-        $tenantId = $rfi->tenant_id;
-        $negotiationId = $rfi->negotiation_id;
+        $data = [
+            'rfiId' => $rfi->id,
+            'negotiationId' => $rfi->negotiation_id,
+        ];
 
         // Delete the RFI
         $result = $this->rfiRepository->deleteRfi($rfiId);
 
         // Dispatch event after deletion
-        event(new RfiDeletedEvent($rfiId, $tenantId, $negotiationId));
+        event(new RfiDeletedEvent($data['negotiationId'], $data['rfiId']));
 
         return $result;
     }
