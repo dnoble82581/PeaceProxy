@@ -36,27 +36,27 @@ class MessageFactory
 
     protected function handleWarning(\App\Models\Warning $warning, string $eventName): string
     {
-        $warningLabel = $warning->warning_type->label();
-        $subjectName = $warning->subject->name;
+        $warningLabel = $warning->warning_type?->label() ?? 'Unknown';
+        $subjectName = $warning->subject->name ?? 'the subject';
+        $createdById = $warning->createdBy->id ?? null;
+        $createdByName = $warning->createdBy->name ?? 'Unknown User';
 
         switch ($eventName) {
             case 'WarningUpdated':
-                if ($warning->createdBy->id === auth()->id()) {
+                if ($createdById !== null && $createdById === auth()->id()) {
                     return "You updated a warning for {$subjectName}.";
                 } else {
-                    return "{$warning->createdBy->name} updated a warning for {$subjectName}.";
+                    return "{$createdByName} updated a warning for {$subjectName}.";
                 }
                 // no break
             case 'WarningCreated':
-                if ($warning->createdBy->id === auth()->id()) {
+                if ($createdById !== null && $createdById === auth()->id()) {
                     return "You created a new {$warningLabel} warning for {$subjectName}.";
                 } else {
-                    return "{$warning->createdBy->name} created a new {$warningLabel} warning for {$subjectName}.";
+                    return "{$createdByName} created a new {$warningLabel} warning for {$subjectName}.";
                 }
                 // no break
             default:
-                $createdByName = $warning->createdBy->name ?? 'Unknown User';
-
                 return "{$createdByName} created a {$warningLabel} warning for {$subjectName}.";
         }
 

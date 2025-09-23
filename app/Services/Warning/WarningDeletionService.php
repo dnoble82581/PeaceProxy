@@ -20,10 +20,10 @@ class WarningDeletionService
         $warning = $this->warningRepository->getWarning($id);
         if ($warning) {
             $details = [
-                'label' => $warning->warning_type->label(),
+                'label' => $warning->warning_type?->label() ?? 'Unknown',
                 'createdBy' => $warning->createdBy->name ?? 'Unknown User',
-                'risk_level' => $warning->risk_level->label(),
-                'subjectName' => $warning->subject->name,
+                'risk_level' => $warning->risk_level?->label() ?? 'Unknown',
+                'subjectName' => $warning->subject->name ?? 'the subject',
                 'warningId' => $warning->id,
             ];
 
