@@ -421,12 +421,12 @@
 											sm
 											flat
 											icon="pencil-square" />
-									<x-button
-											wire:click="deleteDemand({{ $demand->id }})"
-											color="red"
-											sm
-											flat
-											icon="trash" />
+									{{--									<x-button--}}
+									{{--											wire:click="deleteDemand({{ $demand->id }})"--}}
+									{{--											color="red"--}}
+									{{--											sm--}}
+									{{--											flat--}}
+									{{--											icon="trash" />--}}
 								</div>
 
 							</div>

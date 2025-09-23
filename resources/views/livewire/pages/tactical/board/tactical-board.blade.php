@@ -107,7 +107,10 @@
 				<livewire:pages.tactical.board.demands :negotiation-id="$negotiationId" />
 			</x-card>
 			<x-card>
-				<livewire:pages.tactical.board.rfis />
+				<x-slot:header>
+					<h3 class="p-2 font-semibold">RFIs</h3>
+				</x-slot:header>
+				<livewire:pages.tactical.board.rfis :negotiation-id="$negotiationId" />
 			</x-card>
 		</div>
 	</div>
