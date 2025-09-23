@@ -15,6 +15,7 @@
 		public function loadDeliveryPlan(int $deliveryPlanId)
 		{
 			$this->currentPlan = app(DeliveryPlanFetchingService::class)->getDeliveryPlan($deliveryPlanId);
+			$this->currentDemand = $this->currentPlan->demands->first();
 
 		}
 	}

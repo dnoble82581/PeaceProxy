@@ -53,6 +53,10 @@ Broadcast::channel(Subject::SUBJECT_DOCUMENT_PATTERN, function (User $user, int 
     return true;
 });
 
+Broadcast::channel(Negotiation::NEGOTIATION_DELIVERY_PLAN_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
 
 
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {

@@ -94,11 +94,17 @@
 				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_CREATED => 'handleDemandCreated',
 				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_UPDATED => 'handleDemandUpdated',
 				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_DELETED => 'handleDemandDestroyed',
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanCreated" => 'handleDeliveryPlanCreated',
+				'echo-private:'.App\Support\Channels\Negotiation::negotiationDeliveryPlan($negotiationId).',.'.NegotiationEventNames::DELIVERY_PLAN_CREATED => 'handleDeliveryPlanCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanUpdated" => 'handleDeliveryPlanUpdated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanDestroyed" => 'handleDeliveryPlanDestroyed',
 				'refresh' => '$refresh',
 			];
+		}
+
+		public function handleDeliveryPlanCreated(array $event)
+		{
+			logger('made it to handleDeliveryPlan');
+			$this->primarySubject->load('demands');
 		}
 
 		/**

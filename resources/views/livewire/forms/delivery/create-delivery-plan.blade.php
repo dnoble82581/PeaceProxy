@@ -62,7 +62,7 @@
 			$this->form->tenant_id = tenant()->id;
 			$this->form->created_by = authUser()->id;
 			$this->form->updated_by = authUser()->id;
-			$this->form->create_at = now();
+			$this->form->created_at = now();
 			$this->form->updated_at = now();
 
 
@@ -80,6 +80,8 @@
 					'notes' => $this->form->notes,      // Optional: use form data if available
 				]);
 			}
+
+			$this->form->reset();
 
 			$this->dispatch('close-modal');
 			$this->dispatch('delivery-plan-created', $deliveryPlan->id);
