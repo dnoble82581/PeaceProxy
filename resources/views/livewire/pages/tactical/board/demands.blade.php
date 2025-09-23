@@ -101,6 +101,7 @@
 ?>
 
 <div>
+	@php use Carbon\Carbon @endphp
 	<div class="px-4 sm:px-6 lg:px-8">
 		<div class="flow-root">
 			<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -139,12 +140,14 @@
 							</thead>
 							<tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-dark-800/50">
 							@foreach($negotiation->demands as $demand)
+
 								<tr>
 									<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-dark-900 sm:pl-6 dark:text-white">
 										{{ $demand->title }}
 									</td>
 									<td class="px-3 py-4 text-sm whitespace-nowrap text-dark-500 dark:text-dark-400">
-										{{ $demand->deadline_date->format('M d') }} {{ $demand->deadline_time }}
+										{{ $demand->deadline_date->format('M d,') }}
+										{{ Carbon::create($demand->deadline_time)->format('H:i')  }}
 									</td>
 									<td class="px-3 py-4 text-sm whitespace-nowrap text-dark-500 dark:text-dark-400">
 										<x-badge :text="$demand->status->label()" />
