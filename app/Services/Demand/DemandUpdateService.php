@@ -20,7 +20,7 @@ class DemandUpdateService
         $this->addLogEntry($demand);
 
         // Dispatch event
-        event(new DemandUpdatedEvent($demand));
+        event(new DemandUpdatedEvent($demand->negotiation_id, $demand->id));
 
         return $demand;
     }

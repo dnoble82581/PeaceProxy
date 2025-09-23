@@ -2,7 +2,8 @@
 
 namespace App\Events\Demand;
 
-use App\Models\Demand;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,35 +16,25 @@ class DemandUpdatedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Demand $demand)
+    public function __construct(public int $negotiationId, public int $demandId)
     {
     }
 
     public function broadcastOn()
     {
-        return new PrivateChannel("private.negotiation.{$this->demand->tenant_id}.{$this->demand->negotiation_id}");
+        return new PrivateChannel(Negotiation::negotiationDemand($this->negotiationId));
     }
 
     public function broadcastAs()
     {
-        return 'DemandUpdated';
+        return NegotiationEventNames::DEMAND_UPDATED;
     }
 
     public function broadcastWith()
     {
         return [
-            'id' => $this->demand->id,
-            'negotiation_id' => $this->demand->negotiation_id,
-            'subject_id' => $this->demand->subject_id,
-            'title' => $this->demand->title,
-            'content' => $this->demand->content,
-            'category' => $this->demand->category,
-            'status' => $this->demand->status,
-            'priority_level' => $this->demand->priority_level,
-            'channel' => $this->demand->channel,
-            'deadline_date' => $this->demand->deadline_date,
-            'deadline_time' => $this->demand->deadline_time,
-            'updated_at' => $this->demand->updated_at,
+           'demandId' => $this->demandId,
+            'negotiationId' => $this->negotiationId,
         ];
     }
 }

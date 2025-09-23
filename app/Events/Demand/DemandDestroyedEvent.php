@@ -2,7 +2,8 @@
 
 namespace App\Events\Demand;
 
-use App\Models\Demand;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,31 +16,29 @@ class DemandDestroyedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Demand $demand)
+    public function __construct(public array $data)
     {
     }
 
     public function broadcastOn()
     {
-        return new PrivateChannel("private.negotiation.{$this->demand->tenant_id}.{$this->demand->negotiation_id}");
+        return new PrivateChannel(Negotiation::negotiationDemand($this->data['negotiationId']));
     }
 
     public function broadcastAs()
     {
-        return 'DemandDestroyed';
+        return NegotiationEventNames::DEMAND_DELETED;
     }
 
     public function broadcastWith()
     {
         return [
-            'id' => $this->demand->id,
-            'negotiation_id' => $this->demand->negotiation_id,
-            'subject_id' => $this->demand->subject_id,
-            'details' => [
-                'title' => $this->demand->title ?? 'Demand',
-                'createdBy' => optional($this->demand->createdBy)->name ?? 'Someone',
-                'subjectName' => optional($this->demand->subject)->name ?? 'the subject',
-            ],
+            'negotiationId' => $this->data['negotiationId'],
+            'demandId' => $this->data['id'],
+            'actorId' => $this->data['actorId'],
+            'category' => $this->data['category'],
+            'status' => $this->data['status'],
+            'title' => $this->data['title'],
         ];
     }
 }

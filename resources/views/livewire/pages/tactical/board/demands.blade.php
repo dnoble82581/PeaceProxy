@@ -2,6 +2,7 @@
 
 	use App\Livewire\Forms\CreateDemandForm;
 	use App\Models\Demand;
+	use App\Models\User;
 	use App\Support\Channels\Negotiation;
 	use App\Support\EventNames\NegotiationEventNames;
 	use TallStackUi\Traits\Interactions;
@@ -14,6 +15,7 @@
 		public CreateDemandForm $form;
 		public ?Demand $demandToView = null;
 		public bool $showViewDemandModal = false;
+		public bool $showCreateDeliveryPlanModal = false;
 
 
 		public function mount(int $negotiationId)
@@ -30,7 +32,15 @@
 			$this->demandToView = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId,
 				['subject', 'createdBy']);
 
+			$this->dispatch('editDemand');
 			$this->showViewDemandModal = true;
+		}
+
+		public function createDeliveryPlan($demandId)
+		{
+			$this->dispatch('load-demand', demandId: $demandId)->to('forms.delivery.create-delivery-plan');
+			$this->demandToView = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId);
+			$this->showCreateDeliveryPlanModal = true;
 		}
 
 		public function getListeners()
@@ -39,6 +49,7 @@
 			$negotiationId = $this->negotiationId;
 			return [
 				'echo-private:'.Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_CREATED => 'handleDemandCreated',
+				'echo-private:'.Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_DELETED => 'handleDemandDeleted',
 			];
 		}
 
@@ -61,6 +72,23 @@
 		public function handleDemandDeleted(array $event)
 		{
 			$this->negotiation->load('demands');
+
+			$actor = User::findOrFail($event['actorId']);
+
+			if ($event) {
+				$message = "{$event['title']} demand has been deleted by {$actor->name}.";
+			} else {
+				$message = "A demand has been deleted by an unknown user.";
+			}
+
+			$this->toast()->timeout()->info($message)->send();
+
+		}
+
+		#[\Livewire\Attributes\On('close-modal')]
+		public function closeModal()
+		{
+			$this->showCreateDeliveryPlanModal = false;
 		}
 
 		#[\Livewire\Attributes\On('closeViewDemandModal')]
@@ -94,7 +122,12 @@
 								<th
 										scope="col"
 										class="px-3 py-2 text-left text-xs font-semibold text-dark-900 dark:text-gray-200">
-									Category
+									Status
+								</th>
+								<th
+										scope="col"
+										class="px-3 py-2 text-left text-xs font-semibold text-dark-900 dark:text-gray-200">
+									Delivery Plans
 								</th>
 
 								<th
@@ -114,7 +147,10 @@
 										{{ $demand->deadline_date->format('M d') }} {{ $demand->deadline_time }}
 									</td>
 									<td class="px-3 py-4 text-sm whitespace-nowrap text-dark-500 dark:text-dark-400">
-										<x-badge :text="$demand->category->label()" />
+										<x-badge :text="$demand->status->label()" />
+									</td>
+									<td class="px-3 py-4 text-sm whitespace-nowrap text-dark-500 dark:text-dark-400">
+										{{ $demand->deliveryPlans->count() }}
 									</td>
 
 									<td class="py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6 flex items-center gap-2 justify-end">
@@ -123,7 +159,9 @@
 												color="emerald"
 												icon="eye"
 												sm />
-										<button class="bg-teal-700 hover:bg-teal-600/90 hover:cursor-pointer rounded-full p-[3px] hover:transition-colors easing-in-out duration-150">
+										<button
+												wire:click="createDeliveryPlan({{ $demand->id }})"
+												class="bg-teal-700 hover:bg-teal-600/90 hover:cursor-pointer rounded-full p-[3px] hover:transition-colors easing-in-out duration-150">
 											<x-ui.delivery-van-svg />
 										</button>
 									</td>
@@ -148,4 +186,16 @@
 					:key="'demand-'.$demandToView->id" />
 		@endif
 	</x-modal>
+	<x-slide
+			size="3xl"
+			wire="showCreateDeliveryPlanModal">
+		<x-slot:title>
+			Create Delivery Plan
+		</x-slot:title>
+		<div>
+			<livewire:forms.delivery.create-delivery-plan
+					wire:key="'create-delivery-plan-form'" />
+		</div>
+	</x-slide>
+
 </div>
