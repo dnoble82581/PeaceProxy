@@ -21,6 +21,8 @@
 		public int $warningToEditId;
 		public ?int $warningToViewId = null;
 
+		use Interactions
+
 		public function mount($subjectId, $negotiationId)
 		{
 			$this->subject = $this->fetchSubject($subjectId);
