@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Replace the default guest middleware with our tenant-aware version
         $middleware->alias([
-            'guest' => RedirectIfAuthenticated::class,
+            'guest' => App\Http\Middleware\RedirectIfAuthenticatedMiddleware::class,
         ]);
 
     })
