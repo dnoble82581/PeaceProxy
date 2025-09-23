@@ -46,7 +46,6 @@ class SubjectCreationService
                 ]);
             } catch (\Exception $e) {
                 // Log the error but don't fail the subject creation
-                logger()->error("Failed to create phone contact point for subject {$subject->id}: " . $e->getMessage());
             }
         }
 

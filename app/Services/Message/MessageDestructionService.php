@@ -26,8 +26,7 @@ class MessageDestructionService
             return;
         }
 
-        $log = $this->addLogEntry($message);
-        logger($log);
+        $this->addLogEntry($message);
 
         // Dispatch event
         event(new MessageDeletedEvent($message));

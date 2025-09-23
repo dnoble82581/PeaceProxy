@@ -29,8 +29,7 @@ class DocumentStorageService
         }
 
         // Log the document update
-        $log = $this->addLogEntry($document, 'document.updated', 'updated');
-        logger($log);
+        $this->addLogEntry($document, 'document.updated', 'updated');
 
         return $document;
     }

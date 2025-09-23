@@ -91,8 +91,7 @@ class ContactPointCreationService
             return $contactPoint;
         });
 
-        $log = $this->addLogEntry($contactPoint);
-        logger($log);
+        $this->addLogEntry($contactPoint);
 
         return $contactPoint;
     }

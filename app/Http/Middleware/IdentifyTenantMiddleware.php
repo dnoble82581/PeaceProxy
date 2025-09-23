@@ -25,10 +25,10 @@ class IdentifyTenantMiddleware
 
         if ($tenant === null) {
             // Log or handle missing tenants (optional)
-            logger()->warning('No tenant identified for the request.', [
-                'url' => $request->fullUrl(),
-                'user' => auth()->user(),
-            ]);
+            //            logger()->warning('No tenant identified for the request.', [
+            //                'url' => $request->fullUrl(),
+            //                'user' => auth()->user(),
+            //            ]);
 
             // Proceed for central domain or routes that do not depend on a tenant
             return $next($request);

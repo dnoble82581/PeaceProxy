@@ -28,7 +28,6 @@ class RedirectToTenantDashboardMiddleware
 
                 // If no tenant is found, log out or redirect
                 if (! $user->tenant || ! $user->tenant->subdomain) {
-                    logger('No tenant found for user: '.$user->id); // Optional logging
                     Auth::guard($guard)->logout();
 
                     return redirect()->route('login')->withErrors(['message' => 'Tenant not found. Please log in again.']);

@@ -4,7 +4,6 @@ namespace App\Services\Message;
 
 use App\Contracts\MessageRepositoryInterface;
 use App\DTOs\Message\MessageDTO;
-use App\Events\Chat\MessageUpdatedEvent;
 use App\Models\Message;
 
 class MessageUpdateService
@@ -28,11 +27,9 @@ class MessageUpdateService
             return null;
         }
 
-        $log = $this->addLogEntry($message);
-        logger($log);
+        $this->addLogEntry($message);
 
         // Dispatch event
-        event(new MessageUpdatedEvent($message));
 
         return $message;
     }
