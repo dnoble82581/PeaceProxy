@@ -15,4 +15,6 @@ class NegotiationEventNames
     public const DELIVERY_PLAN_CREATED = 'DeliveryPlanCreated';
     public const DELIVERY_PLAN_UPDATED = 'DeliveryPlanUpdated';
     public const DELIVERY_PLAN_DELETED = 'DeliveryPlanDestroyed';
+
+    public const RFI_CREATED = 'RFICreated';
 }

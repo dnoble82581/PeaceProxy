@@ -20,7 +20,7 @@ class RequestForInformationCreationService
         $this->addLogEntry($rfi);
 
         // Dispatch event
-        event(new RfiCreatedEvent($rfi));
+        event(new RfiCreatedEvent($rfi->negotiation_id, $rfi->id));
 
         return $rfi;
     }

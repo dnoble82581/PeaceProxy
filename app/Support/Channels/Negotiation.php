@@ -12,6 +12,8 @@ final class Negotiation
 
     public const NEGOTIATION_DELIVERY_PLAN_PATTERN = 'negotiation.{negotiationId}.delivery-plan';
 
+    public const NEGOTIATION_RFI_PATTERN = 'negotiation.{negotiationId}.rfi';
+
     public static function negotiation(int $id)
     {
         return "negotiation.$id";
@@ -30,5 +32,10 @@ final class Negotiation
     public static function negotiationDeliveryPlan(int $id)
     {
         return "negotiation.$id.delivery-plan";
+    }
+
+    public static function negotiationRfi(int $id)
+    {
+        return "negotiation.$id.rfi";
     }
 }
