@@ -109,6 +109,18 @@ class DocumentStorageService
     }
 
     /**
+     * Create a document for a Request for Information (RFI)
+     */
+    public function createRfiDocument(array $data, int $rfiId, ?UploadedFile $file = null): Document
+    {
+        $data['documentable_type'] = 'App\\Models\\RequestForInformation';
+        $data['documentable_id'] = $rfiId;
+        // negotiation_id may be provided by caller when available
+
+        return $this->createDocument($data, $file);
+    }
+
+    /**
      * Create a document for a negotiation
      */
     public function createNegotiationDocument(array $data, int $negotiationId, ?UploadedFile $file = null): Document

@@ -73,6 +73,11 @@ class Negotiation extends Model
         return $this->hasMany(Hostage::class);
     }
 
+    public function rfis()
+    {
+        return $this->hasMany(RequestForInformation::class);
+    }
+
     /**
      * Get the conversations for this negotiation.
      */
