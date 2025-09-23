@@ -183,13 +183,15 @@
 		{
 			$tenantId = tenant()->id;
 			return [
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiCreated" => 'handleRfiCreated',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationRfi($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::RFI_CREATED => 'handleRfiCreated',
+
 				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiReplyPosted" => 'handleReplyPosted',
 			];
 		}
 
 		public function handleRfiCreated(array $event):void
 		{
+			$this->dispatch('$refresh');
 			$this->reloadNegotiation();
 		}
 
