@@ -15,7 +15,7 @@ class WarningRepository implements WarningRepositoryInterface
 
     public function getWarnings(): Collection
     {
-        return Warning::all();
+        return Warning::with(['createdBy', 'subject'])->get();
     }
 
     public function updateWarning($id, $data)
@@ -27,7 +27,7 @@ class WarningRepository implements WarningRepositoryInterface
 
     public function getWarning($id)
     {
-        return Warning::findOrFail($id);
+        return Warning::with(['createdBy', 'subject'])->findOrFail($id);
     }
 
     public function deleteWarning($id)
@@ -37,6 +37,8 @@ class WarningRepository implements WarningRepositoryInterface
 
     public function getWarningsBySubject($subjectId): Collection
     {
-        return Warning::where('subject_id', $subjectId)->get();
+        return Warning::with(['createdBy', 'subject'])
+            ->where('subject_id', $subjectId)
+            ->get();
     }
 }
