@@ -4,6 +4,7 @@ namespace App\Services\DeliveryPlan;
 
 use App\Contracts\DeliveryPlanRepositoryInterface;
 use App\DTOs\DeliveryPlan\DeliveryPlanDTO;
+use App\Events\DeliveryPlan\DeliveryPlanCreatedEvent;
 use App\Models\DeliveryPlan;
 
 class DeliveryPlanCreationService
@@ -18,8 +19,7 @@ class DeliveryPlanCreationService
 
         $this->addLogEntry($deliveryPlan);
 
-        // Event could be added here if needed
-        // event(new DeliveryPlanCreatedEvent($deliveryPlan));
+        event(new DeliveryPlanCreatedEvent($deliveryPlan->negotiation_id, $deliveryPlan->id));
 
         return $deliveryPlan;
     }

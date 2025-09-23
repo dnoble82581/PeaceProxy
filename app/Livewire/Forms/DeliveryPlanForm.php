@@ -66,6 +66,12 @@ class DeliveryPlanForm extends Form
     #[Validate(['nullable'])]
     public $risk_assessment = [];
 
+    #[Validate(['nullable', 'date'])]
+    public $created_at = null;
+
+    #[Validate(['nullable', 'date'])]
+    public $updated_at = null;
+
     #[Validate(['nullable'])]
     public $signals = [];
 

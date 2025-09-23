@@ -11,4 +11,8 @@ class NegotiationEventNames
     public const DEMAND_UPDATED = 'DemandUpdated';
     public const DEMAND_CREATED = 'DemandCreated';
     public const DEMAND_DELETED = 'DemandDeleted';
+
+    public const DELIVERY_PLAN_CREATED = 'DeliveryPlanCreated';
+    public const DELIVERY_PLAN_UPDATED = 'DeliveryPlanUpdated';
+    public const DELIVERY_PLAN_DELETED = 'DeliveryPlanDestroyed';
 }
