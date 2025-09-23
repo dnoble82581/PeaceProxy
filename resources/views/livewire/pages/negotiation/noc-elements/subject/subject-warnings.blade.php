@@ -172,7 +172,7 @@
 					class="col-span-1 flex rounded-md shadow-xs dark:shadow-none overflow-visible"
 					wire:key="warning-{{ $warning->id }}">
 				<div
-						class="flex w-16 shrink-0 items-center justify-center rounded-l-md {{ $warning->risk_level->color() }}  text-sm font-medium text-white"
+ 					class="flex w-16 shrink-0 items-center justify-center rounded-l-md {{ $warning->risk_level?->color() ?? 'bg-gray-400' }}  text-sm font-medium text-white"
 				>
 					@if($warning->risk_level)
 						<span class="text-xs">{{ $warning->risk_level->label() }}</span>
@@ -183,9 +183,9 @@
 				</div>
 				<div class="flex flex-1 items-center justify-between truncate overflow-visible rounded-r-md border-t border-r border-b border-gray-200 bg-white dark:border-white/10 dark:bg-dark-800/50">
 					<div class="flex-1 truncate px-4 py-2 text-sm">
-						<span
-								class="font-medium text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-200">{{ $warning->warning_type->label() }}</span>
-						<p class="text-gray-500 dark:text-gray-400 text-xs">{{ $warning->createdBy->name }}</p>
+ 					<span
+								class="font-medium text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-200">{{ $warning->warning_type?->label() ?? 'Unknown' }}</span>
+						<p class="text-gray-500 dark:text-gray-400 text-xs">{{ $warning->createdBy->name ?? 'Unknown' }}</p>
 					</div>
 					<div class="shrink-0 pr-2">
 						<x-dropdown
@@ -254,16 +254,16 @@
 				<div class="flex items-start justify-between">
 					<div>
 						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-							{{ $this->warningToView->warning_type->label() }} Warning
+							{{ $this->warningToView->warning_type?->label() ?? 'Unknown' }} Warning
 						</h3>
 						<p class="text-xs text-gray-500 dark:text-gray-400">
 							Created {{ $this->warningToView->created_at?->diffForHumans() }}
 							by {{ $this->warningToView->createdBy->name ?? 'Unknown' }}
 						</p>
 					</div>
-					<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium text-white {{ $this->warningToView->risk_level->color() }}">
-						@if($warning->risk_level)
-							<span class="text-xs">{{ $warning->risk_level->label() }}</span>
+					<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium text-white {{ $this->warningToView->risk_level?->color() ?? 'bg-gray-400' }}">
+						@if($this->warningToView->risk_level)
+							<span class="text-xs">{{ $this->warningToView->risk_level->label() }}</span>
 						@else
 							<span class="text-xs">No Risk Level</span>
 						@endif
@@ -281,7 +281,7 @@
 				<div class="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400">
 					<div>
 						<span class="font-semibold">Type:</span>
-						{{ $this->warningToView->warning_type->label() }}
+						{{ $this->warningToView->warning_type?->label() ?? 'Unknown' }}
 					</div>
 					<div class="text-right">
 						<span class="font-semibold">Created:</span>
