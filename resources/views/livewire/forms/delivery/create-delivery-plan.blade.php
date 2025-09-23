@@ -91,15 +91,16 @@
 ?>
 
 <div class="p-4">
-	{{ $errors }}
-	<div class="flex justify-end mb-3">
-		<x-button
-				wire:click="fillRandom"
-				color="orange"
-				icon="sparkles"
-				sm>Fill Random Data
-		</x-button>
-	</div>
+
+
+	{{--	<div class="flex justify-end mb-3">--}}
+	{{--		<x-button--}}
+	{{--				wire:click="fillRandom"--}}
+	{{--				color="orange"--}}
+	{{--				icon="sparkles"--}}
+	{{--				sm>Fill Random Data--}}
+	{{--		</x-button>--}}
+	{{--	</div>--}}
 	<form
 			wire:submit="save"
 			class="space-y-4">
@@ -139,7 +140,10 @@
 					label="Status"
 					hint="What stage is this delivery plan in?"
 					wire:model="form.status"
-					:options="$statusOptions" />
+					:options="collect(DeliveryPlanStatus::cases())->map(fn($case) => [
+						'label' => $case->label(),
+						'value' => $case->value,
+					])->toArray()" />
 		</div>
 
 		<!-- Window Starts At and Window Ends At -->
