@@ -15,33 +15,13 @@
 		public array $statusOptions = [];
 
 
-		public function mount($demandId)
+		public function mount() {}
+
+		#[\Livewire\Attributes\On('load-demand')]
+		public function loadDemand($demandId)
 		{
-			// Ensure demandId is properly assigned
 			$this->demandId = $demandId;
-			if ($this->demandId) {
-				$this->demand = Demand::findOrFail($this->demandId);
-
-				// Explicitly set negotiation_id from demand
-				$this->negotiationId = $this->demand->negotiation_id;
-				$this->form->negotiation_id = $this->negotiationId;
-			} else {
-				// If no demandId, try to get negotiation_id from request
-				$this->negotiationId = request()->negotiation_id;
-				$this->form->negotiation_id = $this->negotiationId;
-			}
-
-			// Set default values
-			$this->form->tenant_id = Auth::user()->tenant_id;
-			$this->form->created_by = Auth::id();
-			$this->form->updated_by = Auth::id();
-			$this->form->status = DeliveryPlanStatus::pending->value;
-
-			// Build status options from enum
-			$this->statusOptions = collect(DeliveryPlanStatus::cases())
-				->map(fn($c) => ['label' => $c->label(), 'value' => $c->value])
-				->values()
-				->all();
+			$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId);
 		}
 
 		public function fillRandom():void
@@ -78,30 +58,17 @@
 
 		public function save()
 		{
+			$this->form->negotiation_id = $this->demand->negotiation_id;
+			$this->form->tenant_id = tenant()->id;
+			$this->form->created_by = authUser()->id;
+			$this->form->updated_by = authUser()->id;
+			$this->form->create_at = now();
+			$this->form->updated_at = now();
+
+
 			$validated = $this->form->validate();
-//			dd($validated);
 			// Ensure tenant_id is set properly
 			$this->form->tenant_id = tenant()->id;
-
-			// Double-check that negotiation_id is set
-			if ($this->demand) {
-				// If we have a demand, use its negotiation_id
-				$this->negotiationId = $this->demand->negotiation_id;
-				$this->form->negotiation_id = $this->negotiationId;
-			} elseif (!empty($this->negotiationId)) {
-				// If we have a negotiationId but no demand, use the negotiationId
-				$this->form->negotiation_id = $this->negotiationId;
-			} elseif (request()->has('negotiation_id')) {
-				// Last resort: try to get from request
-				$this->form->negotiation_id = request()->negotiation_id;
-			}
-
-
-			// Ensure we have a negotiation_id before proceeding
-			if (empty($this->form->negotiation_id)) {
-				session()->flash('error', 'Cannot create delivery plan: negotiation_id is required.');
-				return;
-			}
 
 			$dto = \App\DTOs\DeliveryPlan\DeliveryPlanDTO::fromArray($this->form->toArray());
 
@@ -122,6 +89,7 @@
 ?>
 
 <div class="p-4">
+	{{ $errors }}
 	<div class="flex justify-end mb-3">
 		<x-button
 				wire:click="fillRandom"

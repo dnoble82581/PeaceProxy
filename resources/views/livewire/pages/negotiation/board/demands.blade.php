@@ -92,8 +92,8 @@
 			$negotiationId = $this->negotiationId;
 			return [
 				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_CREATED => 'handleDemandCreated',
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandUpdated" => 'handleDemandUpdated',
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DemandDestroyed" => 'handleDemandDestroyed',
+				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_UPDATED => 'handleDemandUpdated',
+				'echo-private:'.App\Support\Channels\Negotiation::negotiationDemand($negotiationId).',.'.NegotiationEventNames::DEMAND_DELETED => 'handleDemandDestroyed',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanCreated" => 'handleDeliveryPlanCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanUpdated" => 'handleDeliveryPlanUpdated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.DeliveryPlanDestroyed" => 'handleDeliveryPlanDestroyed',
@@ -113,21 +113,12 @@
 			// Keep UI in sync immediately
 			$this->dispatch('refresh');
 
-			// Fetch the demand using the ID from the event
-			$demandId = $event['demandId'] ?? null;
-			$demand = $demandId? app(DemandFetchingService::class)->getDemandById($demandId, ['createdBy']) : null;
-
-			// Exit early if the demand cannot be found
-			if (!$demand) {
+			if (!$event) {
 				return;
 			}
-
-			// Generate a user-friendly message via the MessageFactory
-			$messageFactory = app(MessageFactory::class);
-			$message = $messageFactory->generateMessage($demand, 'DemandCreated');
-
+			$message = "Demand created successfully";
 			// Notify the user
-			$this->toast()->timeout()->info($message)->send();
+			$this->toast()->timeout()->success($message)->send();
 
 			// Refresh the subject with related demands and delivery plans
 			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
@@ -140,44 +131,40 @@
 		 *
 		 * @return void
 		 */
-		public function handleDemandUpdated(array $data):void
+		public function handleDemandUpdated(array $event):void
 		{
-			$demandId = $data['demandId'] ?? $data['id'] ?? $data['demand'] ?? null;
-			$demand = $demandId? app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId,
-				['subject', 'createdBy']) : null;
+			// Keep UI in sync immediately
+			$this->dispatch('refresh');
 
-			if ($demand) {
-				$subjectName = $demand->subject->name ?? ($this->primarySubject->name ?? 'the subject');
-				$actor = $demand->createdBy ?? null;
-				$title = $demand->title ?? 'a demand';
-				if ($actor && $actor->id === auth()->id()) {
-					$message = "You updated the '{$title}' demand for {$subjectName}.";
-				} elseif ($actor) {
-					$message = "{$actor->name} updated the '{$title}' demand for {$subjectName}.";
-				} else {
-					$message = "The '{$title}' demand was updated for {$subjectName}.";
-				}
-			} else {
-				$message = "A demand has been updated.";
+			// Fetch the demand using the ID from the event
+			$demandId = $event['demandId'] ?? null;
+			$demand = $demandId? app(DemandFetchingService::class)->getDemandById($demandId,
+				['createdBy', 'subject']) : null;
+
+			// Exit early if the demand cannot be found
+			if (!$demand) {
+				return;
 			}
 
+			// Generate a user-friendly message via the MessageFactory
+			$messageFactory = app(MessageFactory::class);
+			$message = $messageFactory->generateMessage($demand, 'DemandUpdated');
+
+			// Notify the user
 			$this->toast()->timeout()->info($message)->send();
+
+			// Refresh the subject with related demands and delivery plans
 			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-			$this->dispatch('refresh');
 		}
 
 		public function handleDemandDestroyed(array $data)
 		{
-			$details = $data['details'] ?? null;
-			if ($details) {
-				$title = $details['title'] ?? 'a demand';
-				$createdBy = $details['createdBy'] ?? 'Someone';
-				$subjectName = $details['subjectName'] ?? ($this->primarySubject->name ?? 'the subject');
-				$message = "{$createdBy} deleted '{$title}' for {$subjectName}.";
+			if ($data) {
+				$message = "Demand deleted successfully";
 			} else {
 				$message = "A demand has been deleted.";
 			}
-			$this->toast()->timeout()->info($message)->send();
+			$this->toast()->timeout()->success($message)->send();
 			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
 		}
 
@@ -264,56 +251,6 @@
 			return $this->primarySubject->demands->sortBy($this->sortBy);
 		}
 
-		/**
-		 * Handle the DeliveryPlanCreated event by refreshing the component
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
-		 */
-		public function handleDeliveryPlanCreated(array $data):void
-		{
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-
-			// Force a refresh of the component
-			$this->dispatch('refresh');
-
-			// Ensure the component is re-rendered
-			$this->render();
-		}
-
-		/**
-		 * Handle the DeliveryPlanUpdated event by refreshing the component
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
-		 */
-		public function handleDeliveryPlanUpdated(array $data):void
-		{
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-
-			// Force a refresh of the component
-			$this->dispatch('refresh');
-		}
-
-		/**
-		 * Handle the DeliveryPlanDestroyed event by refreshing the component
-		 *
-		 * @param  array  $data  Event data
-		 *
-		 * @return void
-		 */
-		public function handleDeliveryPlanDestroyed(array $data):void
-		{
-			// Reload the primary subject with fresh demands data
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-
-			// Force a refresh of the component
-			$this->dispatch('refresh');
-		}
 
 		/**
 		 * Show the create delivery plan modal for a specific demand
@@ -322,72 +259,16 @@
 		 *
 		 * @return void
 		 */
-		public function showCreateDeliveryPlan($demandId)
+		public function showDeliveryPlan(int $deliveryPlanId)
 		{
-			$this->selectedDemandId = $demandId;
-//			dd($this->selectedDemandId);
-			$this->showCreateDeliveryModal = true;
-		}
+			$this->dispatch('load-delivery-plan',
+				deliveryPlanId: $deliveryPlanId)->to('forms.delivery.show-delivery-plan');
 
-		/**
-		 * Show the edit delivery plan modal
-		 *
-		 * @param  int  $deliveryPlanId  The ID of the delivery plan to edit
-		 *
-		 * @return void
-		 */
-		public function editDeliveryPlan($deliveryPlanId)
-		{
-			// Reset the delivery plan being edited before setting a new one
-			$this->deliveryPlanToEdit = null;
-
-			$deliveryPlan = DeliveryPlan::findOrFail($deliveryPlanId);
-
-			// Check if the user is authorized to update this delivery plan
-			if (Auth::user()->can('update', $deliveryPlan)) {
-				$this->deliveryPlanToEdit = $deliveryPlan;
-				$this->showEditDeliveryModal = true;
-			} else {
-				// Show an error message if the user is not authorized
-				session()->flash('error', 'You are not authorized to edit this delivery plan.');
-			}
-		}
-
-		/**
-		 * Delete a delivery plan
-		 *
-		 * @param  int  $deliveryPlanId  The ID of the delivery plan to delete
-		 *
-		 * @return void
-		 */
-		public function deleteDeliveryPlan($deliveryPlanId)
-		{
-			$deliveryPlan = DeliveryPlan::findOrFail($deliveryPlanId);
-
-			// Check if the user is authorized to delete this delivery plan
-			if (Auth::user()->can('delete', $deliveryPlan)) {
-				// Delete the delivery plan
-				$deliveryPlan->delete();
-
-				// Reload the primary subject with fresh demands data
-				$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
-
-				// Force a refresh of the component
-				$this->dispatch('refresh');
-			} else {
-				// Show an error message if the user is not authorized
-				session()->flash('error', 'You are not authorized to delete this delivery plan.');
-			}
-		}
-
-		public function showDeliveryPlans(int $demandId)
-		{
-			$this->selectedDemandId = $demandId;
 			$this->showViewDeliveryPlansModal = true;
 		}
 
-
 	}
+
 
 ?>
 
@@ -435,9 +316,19 @@
 						<x-slot:header>
 							<div class="p-3 flex items-center justify-between bg-indigo-500 dark:bg-indigo-700">
 								<div>
-									<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
-									<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
+									<div class="flex gap-2">
+										<div>
+											<p class="capitalize font-semibold text-lg">{{ $demand->title }}</p>
+											<p class="text-gray-300 text-xs">{{ $demand->channel?->label() ?? 'No Channel' }}</p>
+										</div>
+										@if($demand->status->value === 'approved')
+											<x-icon
+													name="check-circle"
+													class="text-green-500 h-8 w-8 inline" />
+										@endif
+									</div>
 								</div>
+
 								<div class="text-right">
 									<x-badge
 											color="{{ $demand->priority_level?->color() ?? 'gray' }}"
@@ -458,16 +349,30 @@
 								</p>
 							</div>
 							<div>
-								<button
-										wire:click="showDeliveryPlans({{ $demand->id }})"
-										class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">
-									<div class="flex items-center">
-										<x-ui.delivery-van-svg />
-										<span class="ml-1 text-sm">
-											{{ $demand->deliveryPlans->count() }}
-								        </span>
-									</div>
-								</button>
+								<x-dropdown
+										position="top">
+									<x-slot:text>
+										<div class="flex items-center gap-1">
+											<x-ui.delivery-van-svg class="size-5" />
+											<p>{{ $demand->deliveryPlans->count() }}</p>
+										</div>
+									</x-slot:text>
+									@foreach($demand->deliveryPlans as $plan)
+										<x-dropdown.items wire:click="showDeliveryPlan({{ $plan->id }})">
+											<div>
+												<div>
+													<span class="capitalize">
+														{{ $plan->title }}
+													</span>
+												</div>
+												<div class="text-xs text-gray-400 block">
+													{{ $plan->creator->name }}
+													<span>({{ $plan->created_at->diffForHumans() }})</span>
+												</div>
+											</div>
+										</x-dropdown.items>
+									@endforeach
+								</x-dropdown>
 							</div>
 						</div>
 						<x-slot:footer>
@@ -504,11 +409,6 @@
 									@endif
 								</div>
 								<div class="flex items-center gap-2">
-									{{--									<button--}}
-									{{--											wire:click="showCreateDeliveryPlan({{ $demand->id }})"--}}
-									{{--											class="hover:cursor-pointer hover:bg-blue-300/20 rounded px-1 py-0.5">--}}
-									{{--										<x-ui.delivery-van-svg class="w-4 h-4" />--}}
-									{{--									</button>--}}
 									<x-button
 											wire:click="editDemand({{ $demand->id }})"
 											color="cyan"
@@ -559,36 +459,9 @@
 		@endif
 	</x-modal>
 
-	{{--	SHOW DELIVERY PLANS MODAL--}}
-	<x-slide
-			size="5xl"
-			center
-			title="View Plans"
-			wire="showViewDeliveryPlansModal">
-		<livewire:forms.delivery.showDeliveryPlans
-				:demand-id="$selectedDemandId"
-				:key="'show-plans-'.$selectedDemandId" />
-	</x-slide>
-	<x-slide
-			size="5xl"
-			id="create-delivery-modal"
-			wire="showCreateDeliveryModal"
-			title="Create Delivery Plan">
-		<livewire:forms.delivery.create-delivery-plan
-				:demand-id="$selectedDemandId"
-				:key="'create-delivery-plan-'.$selectedDemandId" />
-	</x-slide>
+	{{--	SHOW DELIVERY PLAN MODAL--}}
+	<x-modal wire="showViewDeliveryPlansModal">
+		<livewire:forms.delivery.show-delivery-plan />
+	</x-modal>
 
-	<x-slide
-			z-index="z-10"
-			size="5xl"
-			id="edit-delivery-modal"
-			wire="showEditDeliveryModal"
-			title="Edit Delivery Plan">
-		@if($deliveryPlanToEdit)
-			<livewire:forms.delivery.edit-delivery-plan
-					:deliveryPlanId="$deliveryPlanToEdit->id"
-					:key="'edit-delivery-plan-'.$deliveryPlanToEdit->id" />
-		@endif
-	</x-slide>
 </div>

@@ -10,30 +10,85 @@
 	use App\Services\Demand\DemandUpdateService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		public CreateDemandForm $form;
 		public Demand $demand;
 
+		use Interactions;
+
+		use \TallStackUi\Traits\Interactions;
+
 		public function mount(Demand $demand):void
 		{
-			$this->demand = $demand;
+			$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demand->id); // Reload demand from DB
 
 			// Reset the form before filling it with the new demand data
 			$this->form->reset();
 			$this->form->fill($this->demand);
 		}
 
-		public function updateDemand()
+		public function updateDemand():void
 		{
-			$this->demand->update([
-				'updated_at' => now(),
-				'updated_by' => authUser()->name,
-				'responded_at' => now(),
-				'resolved_at' => now(),
-				'status' => DemandStatuses::approved,
-			]);
+			$validated = $this->form->validate();
+			$dto = DemandDTO::fromArray($validated);
+
+			// Check if the status is changing to approved
+			if (
+				trim($this->demand->status->value) !== DemandStatuses::approved->value &&
+				trim($dto->status->value) === DemandStatuses::approved->value
+			) {
+				// If handleApproved returns false, stop further execution
+				if (!$this->handleApproved()) {
+					return;
+				}
+			}
+
+			// If handleApproved passes or no special condition applies, save the demand
+			app(DemandUpdateService::class)->updateDemand($this->demand->id, $dto);
+
+			// Close the view modal after successful update
+			$this->dispatch('closeViewDemandModal');
+
+			$this->toast()->timeout()->success('Demand Successfully Updated.')->send();
 		}
+
+		public function refreshDemand():void
+		{
+			$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($this->demand->id); // Reload demand from DB
+
+			// Reset and refill the form
+			$this->form->reset();
+			$this->form->fill($this->demand);
+		}
+
+
+		private function handleApproved():bool
+		{
+			// Ensure the deliveryPlans relationship is eager loaded to avoid N+1 issues
+			$this->demand->loadMissing('deliveryPlans');
+
+			// Check if the demand has delivery plans
+			if ($this->demand->deliveryPlans->count() > 0) {
+				return true; // Allow the process to continue
+			}
+
+			// If no delivery plans exist, stop the process
+			$this->dispatch('closeViewDemandModal');
+			$this->dialog()->error('Error',
+				'This demand cannot be approved because it has no associated delivery plans. Please create a delivery plan to approve this demand')->send();
+
+			return false; // Prevent further execution
+		}
+
+		public function getListeners():array
+		{
+			return [
+				'editDemand' => 'refreshDemand', // Handle the custom event
+			];
+		}
+
 
 		public function cancel()
 		{
@@ -44,7 +99,6 @@
 ?>
 
 <div>
-	{{ $errors }}
 	<form
 			id="editDemandForm"
 			wire:submit.prevent="updateDemand"

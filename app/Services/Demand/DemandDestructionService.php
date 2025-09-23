@@ -22,8 +22,18 @@ class DemandDestructionService
 
         $this->addLogEntry($demand);
 
+        $data = [
+            'negotiationId' => $demand->negotiation_id,
+            'id' => $demand->id,
+            'category' => $demand->category,
+            'status' => $demand->status,
+            'created_by_id' => $demand->created_by_id,
+            'title' => $demand->title,
+            'actorId' => auth()->user()->id,
+        ];
+
         // Dispatch event
-        event(new DemandDestroyedEvent($demand));
+        event(new DemandDestroyedEvent($data));
 
         return $this->demandRepository->deleteDemand($demandId);
     }

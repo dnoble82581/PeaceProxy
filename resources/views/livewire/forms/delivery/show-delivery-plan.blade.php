@@ -2,25 +2,20 @@
 
 	use App\Models\DeliveryPlan;
 	use App\Models\Demand;
+	use App\Services\DeliveryPlan\DeliveryPlanFetchingService;
 	use Livewire\Attributes\Computed;
 
 	new class extends \Livewire\Volt\Component {
 		public ?DeliveryPlan $currentPlan = null;
 		public ?Demand $currentDemand = null;
 
-		public function mount(?int $deliveryPlanId = null):void
-		{
-			if ($deliveryPlanId) {
-				$this->currentPlan = app(\App\Services\DeliveryPlan\DeliveryPlanFetchingService::class)
-					->getDeliveryPlan($deliveryPlanId);
+		public function mount():void {}
 
-				// Eager load useful relations
-				if ($this->currentPlan) {
-					$this->currentPlan->loadMissing(['creator', 'demands', 'subjects', 'hostages']);
-					// Determine the associated demand (use the first if multiple)
-					$this->currentDemand = $this->currentPlan->demands->first();
-				}
-			}
+		#[\Livewire\Attributes\On('load-delivery-plan')]
+		public function loadDeliveryPlan(int $deliveryPlanId)
+		{
+			$this->currentPlan = app(DeliveryPlanFetchingService::class)->getDeliveryPlan($deliveryPlanId);
+
 		}
 	}
 ?>

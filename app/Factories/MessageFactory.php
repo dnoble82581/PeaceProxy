@@ -120,6 +120,17 @@ class MessageFactory
                     return "{$demand->createdBy->name} created a new {$demandLabel} demand.";
                 }
                 // no break
+            case 'DemandUpdated':
+                $title = $demand->title ?? 'a demand';
+                $subjectName = $demand->subject->name ?? 'the subject';
+                if ($demand->createdBy && $demand->createdBy->id === auth()->id()) {
+                    return "A demand that you created for {$subjectName} titled '{$title}' has been updated successfully.";
+                } elseif ($demand->createdBy) {
+                    return "{$demand->createdBy->name} updated the '{$title}' demand for {$subjectName}.";
+                } else {
+                    return "The '{$title}' demand was updated for {$subjectName}.";
+                }
+                // no break
             default:
                 return 'An unknown demand event occurred';
         }
