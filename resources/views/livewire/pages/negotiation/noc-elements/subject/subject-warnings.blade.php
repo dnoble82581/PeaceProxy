@@ -21,7 +21,7 @@
 		public int $warningToEditId;
 		public ?int $warningToViewId = null;
 
-		use Interactions
+		use Interactions;
 
 		public function mount($subjectId, $negotiationId)
 		{
