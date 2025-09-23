@@ -25,8 +25,8 @@
 			$this->form->subject_id = $warning->subject_id;
 			$this->form->tenant_id = Auth::user()->tenant_id; // keep tenant scoped to current
 			$this->form->created_by_id = $warning->created_by_id ?? Auth::user()->id;
-			$this->form->risk_level = $warning->risk_level->value ?? 'low';
-			$this->form->warning_type = $warning->warning_type->value ?? 'other';
+			$this->form->risk_level = $warning->risk_level?->value ?? 'low';
+			$this->form->warning_type = $warning->warning_type?->value ?? 'other';
 			$this->form->warning = $warning->warning;
 		}
 

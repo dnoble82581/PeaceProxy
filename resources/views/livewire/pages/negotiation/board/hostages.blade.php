@@ -337,12 +337,17 @@
 								</p>
 							</div>
 							<div class="flex flex-col items-center gap-2">
-								@if($hostage->risk_level)
-									<x-badge
-											xs
-											text="Risk: {{ $hostage->risk_level->label() }}"
-											round />
-								@endif
+   					@if($hostage->risk_level)
+   						<x-badge
+   								xs
+   								text="Risk: {{ $hostage->risk_level?->label() ?? 'Unknown' }}"
+   								round />
+   					@else
+   						<x-badge
+   								xs
+   								text="Risk: Unknown"
+   								round />
+   					@endif
 								@if($hostage->injury_status)
 									<x-badge
 											xs
