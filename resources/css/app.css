@@ -4,6 +4,7 @@
 @source '../views';
 @source '../../vendor/tallstackui/tallstackui/src/**/*.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source "../../app/Providers/**/*.php";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -20,5 +20,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Cashier::useCustomerModel(Tenant::class);   // <-- critical
+
+        //        TallStackUi::personalize()
+        //            ->form('carousel')
+        //            ->block('wrapper')
+        //            ->replace('rounded-md', 'rounded-full');
     }
 }

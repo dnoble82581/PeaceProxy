@@ -16,7 +16,7 @@ class SubjectCreationService
 
     public function createSubject(SubjectDTO $subjectDTO)
     {
-        // Extract phone number from DTO
+        // Extract a phone number from DTO
         $phoneNumber = $subjectDTO->phone;
 
         // Remove phone from the data to be saved to the subjects table

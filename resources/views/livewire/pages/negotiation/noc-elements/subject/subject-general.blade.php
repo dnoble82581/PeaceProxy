@@ -51,33 +51,113 @@
 			}
 		}
 
-		public function loadImageUrls()
+		/**
+		 * Build rich slide objects instead of plain URLs.
+		 * Each item: [
+		 *   'id' => int|null,
+		 *   'url' => string,
+		 *   'thumb' => string|null,
+		 *   'caption' => string|null,
+		 *   'updated_at' => int|null,      // unix ts
+		 *   'uploader' => ['id' => int|null, 'name' => string|null],
+		 *   'is_primary' => bool,
+		 *   'is_placeholder' => bool,
+		 *   'ver' => int,                  // cache buster
+		 *   'key' => string,               // stable reactive key
+		 * ]
+		 */
+		public function loadImageUrls():void
 		{
-			// Clear the array first to avoid duplicates if the method is called multiple times
-			$this->imageUrls = [];
+			$this->imageUrls = [];               // now an array of objects
+			$seen = [];                          // prevent duplicates by URL
+			$limit = 5;
 
-			// If the subject has a primary image, add it first
-			$primaryImageUrl = $this->primarySubject->primaryImage();
-			if ($primaryImageUrl && $primaryImageUrl !== $this->primarySubject->temporaryImageUrl()) {
-				$this->imageUrls[] = $primaryImageUrl;
+			$primaryImageUrl = $this->primarySubject->primaryImage(); // current method returns URL
+			$temporaryUrl = $this->primarySubject->temporaryImageUrl();
+
+			// Helper to push an item safely
+			$push = function (array $item) use (&$seen) {
+				// de-dupe by canonical url (without query)
+				$key = parse_url($item['src'], PHP_URL_SCHEME)
+					? $item['src']
+					: ('//'.ltrim($item['src'], '/'));
+				if (isset($seen[$key])) return;
+				$seen[$key] = true;
+				$this->imageUrls[] = $item;
+			};
+
+			// 1) Add primary first (if real, not temp)
+			if ($primaryImageUrl && $primaryImageUrl !== $temporaryUrl) {
+				// Try to find the primary record in the collection for metadata
+				$primaryModel = $this->primarySubject->images
+					->first(fn($img) => ($img->src ?? (method_exists($img,
+							'src')? $img->url() : null)) === $primaryImageUrl);
+
+				$ts = $primaryModel?->updated_at?->getTimestamp() ?? now()->getTimestamp();
+
+				$push([
+					'id' => $primaryModel?->id,
+					'src' => $primaryImageUrl,
+					'thumb' => $primaryModel->thumb_url ?? null,
+					'caption' => $primaryModel->caption ?? null,
+					'updated_at' => $ts,
+					'uploader' => [
+						'id' => $primaryModel?->user_id,
+						'name' => optional($primaryModel?->user)->name,
+					],
+					'is_primary' => true,
+					'is_placeholder' => false,
+					'ver' => $ts,
+					'key' => sprintf('img-%s-%s', $primaryModel?->id ?? 'primary', $ts),
+				]);
 			}
 
-			// Add all other images, skipping the primary one if it's already added
+			// 2) Add other images until limit
 			foreach ($this->primarySubject->images as $image) {
-				// Break if we've already added 5 images
-				if (count($this->imageUrls) >= 5) {
-					break;
-				}
+				if (count($this->imageUrls) >= $limit) break;
 
 				$imageUrl = $image->url ?? (method_exists($image, 'url')? $image->url() : null);
-				if ($imageUrl && $imageUrl !== $primaryImageUrl) {
-					$this->imageUrls[] = $imageUrl;
-				}
+				if (!$imageUrl || $imageUrl === $primaryImageUrl) continue;
+
+				$ts = $image->updated_at?->getTimestamp() ?? now()->getTimestamp();
+
+				$push([
+					'id' => $image->id,
+					'src' => $imageUrl,
+					'thumb' => $image->thumb_url ?? null,
+					'caption' => $image->caption ?? null,
+					'updated_at' => $ts,
+					'uploader' => [
+						'id' => $image->user_id ?? null,
+						'name' => optional($image->user ?? null)->name,
+					],
+					'is_primary' => false,
+					'is_placeholder' => false,
+					'ver' => $ts,
+					'key' => sprintf('img-%s-%s', $image->id ?? 'x', $ts),
+				]);
 			}
 
-			// If no images were added, use the temporary image URL (but this shouldn't exceed the limit of 5)
-			if (empty($this->imageUrls) && count($this->imageUrls) < 5) {
-				$this->imageUrls[] = $this->primarySubject->temporaryImageUrl();
+			// 3) Fallback to temporary placeholder if none added
+			if (empty($this->imageUrls) && $temporaryUrl) {
+				$ts = now()->getTimestamp();
+				$push([
+					'id' => null,
+					'src' => $temporaryUrl,
+					'thumb' => null,
+					'caption' => null,
+					'updated_at' => null,
+					'uploader' => ['id' => null, 'name' => null],
+					'is_primary' => false,
+					'is_placeholder' => true,
+					'ver' => $ts,
+					'key' => sprintf('img-temp-%s', $ts),
+				]);
+			}
+
+			// Hard cap to $limit just in case
+			if (count($this->imageUrls) > $limit) {
+				$this->imageUrls = array_slice($this->imageUrls, 0, $limit);
 			}
 		}
 
@@ -185,11 +265,23 @@
 			return
 				[
 					'echo-private:'.\App\Support\Channels\Subject::subjectMood($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
-					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'refresh',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
 				];
 		}
 
-		public function handleSubjectUpdated(array $event) {}
+		public function handleSubjectUpdated(array $event)
+		{
+			// Ignore events for other subjects
+//			if (($event['subject_id'] ?? null) !== $this->primarySubject->id) {
+//				return;
+//			}
+
+			// Rebuild slides (this method already resets the array)
+			$this->loadImageUrls();
+
+
+			// No $refresh needed — updating the property triggers a re-render
+		}
 
 		public function handleMoodCreated($event)
 		{
@@ -292,28 +384,28 @@
 <div class="py-4 px-2 grid grid-cols-1 md:grid-cols-[150px_1fr_1fr_1fr_1fr_20px] gap-4 dark:bg-dark-800 bg-white rounded-lg shadow-sm">
 	<div
 			x-data="{
-			activeSlide: 0,
-			isHovering: false,
-			slides: {{ json_encode(count($imageUrls) > 0 ? $imageUrls : [$primarySubject->temporaryImageUrl()]) }},
-			nextSlide() {
-				this.activeSlide = (this.activeSlide + 1) % this.slides.length;
-			},
-			prevSlide() {
-				this.activeSlide = (this.activeSlide - 1 + this.slides.length) % this.slides.length;
-			}
-		}"
+    activeSlide: 0,
+    isHovering: false,
+    slides: @entangle('imageUrls'),
+    nextSlide() {
+      if (!this.slides.length) return;
+      this.activeSlide = (this.activeSlide + 1) % this.slides.length;
+    },
+    prevSlide() {
+      if (!this.slides.length) return;
+      this.activeSlide = (this.activeSlide - 1 + this.slides.length) % this.slides.length;
+    }
+  }"
 			class="relative w-32 h-32"
 			@mouseenter="isHovering = true"
 			@mouseleave="isHovering = false"
 	>
-		<!-- Slider container -->
 		<div class="overflow-hidden rounded-lg w-32 h-32 relative shadow-md">
-			<!-- Slides -->
 			<template
-					x-for="(slide, index) in slides"
-					:key="index">
+					x-for="(s, i) in slides"
+					:key="s.key ?? i">
 				<div
-						x-show="activeSlide === index"
+						x-show="activeSlide === i"
 						x-transition:enter="transition ease-out duration-300"
 						x-transition:enter-start="opacity-0 transform scale-90"
 						x-transition:enter-end="opacity-100 transform scale-100"
@@ -322,6 +414,12 @@
 						x-transition:leave-end="opacity-0 transform scale-90"
 						class="absolute inset-0"
 				>
+					<img
+							class="w-full h-full object-cover"
+							:src="(s.src ?? s) /* works if you passed objects OR plain URLs */"
+							:alt="s.caption ?? (`Image ${s.id ?? ''}`)"
+					>
+
 					<div
 							class="absolute flex justify-between w-full bottom-1 left-0 px-2"
 							x-show="isHovering">
@@ -338,87 +436,48 @@
 								icon="envelope"
 								color="secondary" />
 					</div>
-					<img
-							:src="slide"
-							class="w-32 h-32 object-cover"
-							alt="Subject image"
-					>
 				</div>
 			</template>
 
-			<!-- Navigation buttons -->
+			<!-- Nav -->
 			<button
 					@click="prevSlide"
-					class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 bg-opacity-50 text-white p-1 rounded-r focus:outline-none transition-opacity duration-200"
+					class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-r transition-opacity duration-200"
 					x-show="slides.length > 1 && isHovering"
-					x-transition:enter="transition ease-out duration-200"
-					x-transition:enter-start="opacity-0"
-					x-transition:enter-end="opacity-100"
-					x-transition:leave="transition ease-in duration-200"
-					x-transition:leave-start="opacity-100"
-					x-transition:leave-end="opacity-0"
-			>
-				<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor">
-					<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M15 19l-7-7 7-7" />
-				</svg>
+					x-transition.opacity>
+				<x-icon
+						name="chevron-left"
+						class="w-4 h-4" />
+				<!-- left chevron SVG -->
 			</button>
 			<button
 					@click="nextSlide"
-					class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 bg-opacity-50 text-white p-1 rounded-l focus:outline-none transition-opacity duration-200"
+					class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-l transition-opacity duration-200"
 					x-show="slides.length > 1 && isHovering"
-					x-transition:enter="transition ease-out duration-200"
-					x-transition:enter-start="opacity-0"
-					x-transition:enter-end="opacity-100"
-					x-transition:leave="transition ease-in duration-200"
-					x-transition:leave-start="opacity-100"
-					x-transition:leave-end="opacity-0"
-			>
-				<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor">
-					<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M9 5l7 7-7 7" />
-				</svg>
+					x-transition.opacity>
+				<x-icon
+						name="chevron-right"
+						class="w-4 h-4" />
+				<!-- right chevron SVG -->
 			</button>
 
-			<!-- Indicators -->
+			<!-- Dots -->
 			<div
 					class="absolute bottom-1 left-0 right-0 flex justify-center space-x-1 transition-opacity duration-200"
 					x-show="slides.length > 1 && isHovering"
-					x-transition:enter="transition ease-out duration-200"
-					x-transition:enter-start="opacity-0"
-					x-transition:enter-end="opacity-100"
-					x-transition:leave="transition ease-in duration-200"
-					x-transition:leave-start="opacity-100"
-					x-transition:leave-end="opacity-0"
-			>
+					x-transition.opacity>
 				<template
-						x-for="(slide, index) in slides"
-						:key="index">
+						x-for="(_, idx) in slides"
+						:key="idx">
 					<button
-							@click="activeSlide = index"
-							:class="{'bg-white': activeSlide === index, 'bg-gray-300': activeSlide !== index}"
-							class="h-1.5 w-1.5 rounded-full focus:outline-none"
-					></button>
+							@click="activeSlide = idx"
+							:class="{'bg-white': activeSlide === idx, 'bg-gray-300': activeSlide !== idx}"
+							class="h-1.5 w-1.5 rounded-full"></button>
 				</template>
 			</div>
 		</div>
 	</div>
+
 	<div class="space-y-3">
 		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Basic</h3>
 		<div class="space-y-2">
