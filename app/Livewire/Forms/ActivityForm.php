@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\Activity\ActivityType;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -20,7 +21,7 @@ class ActivityForm extends Form
     public $subject_id = '';
 
     #[Validate(['nullable'])]
-    public $type = '';
+    public $type = ActivityType::subject_action;
 
     #[Validate(['required'])]
     public $activity = '';
