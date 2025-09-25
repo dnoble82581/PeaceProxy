@@ -13,7 +13,10 @@ return new class () extends Migration {
             $table->foreignId('negotiation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subject_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('type')->nullable(); // subject_action, negotiator_action, etc.
+            $table->enum('type', array_map(
+                fn ($type) => $type->value,
+                \App\Enums\Activity\ActivityType::cases()
+            ));
             $table->text('activity');
             $table->boolean('is_flagged')->default(false);
             $table->timestamp('entered_at')->nullable();

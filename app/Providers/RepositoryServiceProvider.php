@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\ActivityRepositoryInterface;
 use App\Contracts\CallRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
 use App\Contracts\ConversationRepositoryInterface;
@@ -29,6 +30,7 @@ use App\Contracts\RiskAssessmentRepositoryInterface;
 use App\Contracts\TriggerRepositoryInterface;
 use App\Contracts\WarningRepositoryInterface;
 use App\Contracts\WarrantRepositoryInterface;
+use App\Repositories\Activity\ActivityRepository;
 use App\Repositories\Call\CallRepository;
 use App\Repositories\Contact\ContactRepository;
 use App\Repositories\Conversation\ConversationRepository;
@@ -158,6 +160,12 @@ class RepositoryServiceProvider extends ServiceProvider
             NoteRepository::class
         );
 
+        // Bind Activity repository
+        $this->app->bind(
+            ActivityRepositoryInterface::class,
+            ActivityRepository::class
+        );
+
         // Bind Objective repository
         $this->app->bind(
             ObjectiveRepositoryInterface::class,
@@ -229,6 +237,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             DeliveryPlannablesRepositoryInterface::class,
             DeliveryPlannablesRepository::class
+        );
+
+        $this->app->bind(
+            ActivityRepositoryInterface::class,
+            ActivityRepository::class
         );
     }
 

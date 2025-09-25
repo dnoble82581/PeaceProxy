@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Activity\ActivityType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,7 +37,8 @@ class Activity extends Model
     {
         return [
             'is_flagged' => 'boolean',
-            'entered_at' => 'timestamp',
+            'entered_at' => 'datetime',
+            'type' => ActivityType::class,
         ];
     }
 }

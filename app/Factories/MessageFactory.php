@@ -23,12 +23,11 @@ class MessageFactory
 
             case \App\Models\Warrant::class:
                 $message = $this->handleWarrant($model, $eventName);
+                break;
 
-                // no break
             case \App\Models\Demand::class:
                 $message = $this->handleDemand($model, $eventName);
-
-                // Additional model cases can go here
+                break;
         }
 
         return $message;

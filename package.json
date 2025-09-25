@@ -10,11 +10,9 @@
         "@tailwindcss/vite": "^4.0.7",
         "alpinejs": "^3.15.0",
         "apexcharts": "^5.3.2",
-        "autoprefixer": "^10.4.20",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.0",
-        "tailwindcss": "^4.0.7",
         "vite": "^6.2"
     },
     "optionalDependencies": {
@@ -23,7 +21,11 @@
         "lightningcss-linux-x64-gnu": "^1.29.1"
     },
     "devDependencies": {
+        "autoprefixer": "^10.4.21",
         "laravel-echo": "^2.1.7",
-        "pusher-js": "^8.4.0"
+        "postcss": "^8.5.6",
+        "postcss-scss": "^4.0.9",
+        "pusher-js": "^8.4.0",
+        "tailwindcss": "^4.1.13"
     }
 }
