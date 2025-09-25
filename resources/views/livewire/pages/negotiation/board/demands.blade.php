@@ -103,7 +103,6 @@
 
 		public function handleDeliveryPlanCreated(array $event)
 		{
-			logger('made it to handleDeliveryPlan');
 			$this->primarySubject->load('demands');
 		}
 

@@ -242,8 +242,15 @@
 			@endforeach
 		</div>
 	@else
-		<div class="text-center py-4">
-			<p class="text-gray-500">No notes found. Click "Add Note" to create one.</p>
+		<div class="text-center">
+			<tr>
+				<td
+						colspan="5"
+						class="px-4 py-4 text-center text-xs text-gray-500 dark:text-dark-400">No
+				                                                                               objectives
+				                                                                               yet.
+				</td>
+			</tr>
 		</div>
 	@endif
 
