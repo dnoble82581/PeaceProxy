@@ -6,11 +6,14 @@
 
 	new class extends Component {
 		public int $negotiationId;
+		public int $subjectId;
 		public string $tab = 'board';
 
 		public function mount($negotiationId)
 		{
 			$this->negotiationId = $negotiationId;
+			$this->subjectId = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId)->primarySubject()->id;
+
 		}
 
 		/**
@@ -108,6 +111,16 @@
 								class="size-5" />
 						<span>RFI</span>
 					</button>
+					<button
+							@click="tab = 'timeline'"
+							class="group inline-flex gap-1 items-center border-b-2 px-1 py-2 text-sm font-medium hover:cursor-pointer text-gray-700 hover:text-gray-900 hover:border-gray-300 dark:text-dark-300 dark:hover:border-dark-400 dark:hover:text-dark-400"
+							:class="{'border-b-primary-500 text-primary-600 dark:text-primary-400': tab === 'timeline', 'border-transparent': tab !== 'timeline'}"
+					>
+						<x-icon
+								name="identification"
+								class="size-5" />
+						<span>Timeline</span>
+					</button>
 				</nav>
 			</div>
 		</div>
@@ -152,6 +165,15 @@
 			x-show="tab === 'rfi'">
 		<div class="p-4 text-gray-500 dark:text-dark-300">
 			<livewire:pages.negotiation.board.rfi :negotiationId="$this->negotiationId" />
+		</div>
+	</div>
+	<div
+			class="mt-4"
+			x-show="tab === 'timeline'">
+		<div class="p-4 text-gray-500 dark:text-dark-300">
+			<livewire:pages.negotiation.board.timeline
+					:negotiationId="$this->negotiationId"
+					:subjectId="$this->subjectId" />
 		</div>
 	</div>
 
