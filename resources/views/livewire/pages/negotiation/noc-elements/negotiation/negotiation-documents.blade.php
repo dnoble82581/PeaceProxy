@@ -42,16 +42,16 @@
 				->findOrFail($negotiationId);
 		}
 
- 	public function deleteDocument($documentId):void
- 	{
- 		app(DocumentDestructionService::class)->deleteDocument($documentId);
- 		$this->negotiation = $this->fetchNegotiation($this->negotiation->id);
-		
- 		// Reset document-related properties to prevent errors when accessing deleted documents
- 		$this->currentDocument = null;
- 		$this->documentUrl = null;
- 		$this->showViewModal = false;
- 	}
+		public function deleteDocument($documentId):void
+		{
+			app(DocumentDestructionService::class)->deleteDocument($documentId);
+			$this->negotiation = $this->fetchNegotiation($this->negotiation->id);
+
+			// Reset document-related properties to prevent errors when accessing deleted documents
+			$this->currentDocument = null;
+			$this->documentUrl = null;
+			$this->showViewModal = false;
+		}
 
 		public function uploadDocument():void
 		{
@@ -104,6 +104,18 @@
 			$bytes /= (1 << (10 * $pow));
 
 			return round($bytes, 2).' '.$units[$pow];
+		}
+
+		public function handleDocumentUploaded()
+		{
+			$this->negotiation->load('documents');
+		}
+
+		public function getListeners()
+		{
+			return [
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationDocument($this->negotiation->id).',.'.\App\Support\EventNames\NegotiationEventNames::DOCUMENT_UPLOADED => 'handleDocumentUploaded',
+			];
 		}
 	}
 
@@ -192,10 +204,22 @@
 					</tr>
 				@empty
 					<tr>
-						<td colspan="5" class="text-center p-4 text-gray-500">
+						<td
+								colspan="5"
+								class="text-center p-4 text-gray-500">
 							No documents found for this negotiation.
 							<p class="mt-2">
-								Click the <span class="inline-flex items-center"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner to upload a new document.
+								Click the <span class="inline-flex items-center"><svg
+											class="w-4 h-4 text-gray-500"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											xmlns="http://www.w3.org/2000/svg"><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the
+								top-right corner to upload a new document.
 							</p>
 						</td>
 					</tr>

@@ -4,6 +4,7 @@ namespace App\Services\Document;
 
 use App\Contracts\DocumentRepositoryInterface;
 use App\Events\Document\DocumentCreatedEvent;
+use App\Events\Document\NegotiationDocumentCreatedEvent;
 use App\Models\Document;
 use App\Services\Log\LogService;
 use Illuminate\Http\UploadedFile;
@@ -128,6 +129,10 @@ class DocumentStorageService
         $data['documentable_id'] = $negotiationId;
         $data['negotiation_id'] = $negotiationId;
 
-        return $this->createDocument($data, $file);
+        $newDocument = $this->createDocument($data, $file);
+
+        event(new NegotiationDocumentCreatedEvent($negotiationId, $newDocument->id));
+
+        return $newDocument;
     }
 }

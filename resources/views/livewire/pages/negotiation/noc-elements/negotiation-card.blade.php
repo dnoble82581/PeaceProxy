@@ -17,7 +17,7 @@
 
 <div
 		class="h-[13rem] border border-gray-300 rounded-lg text-dark-800 dark:text-primary-50 dark:bg-dark-800 px-2 pb-2 overflow-y-auto"
-		x-data="{tab: 'hostages'}">
+		x-data="{tab: 'general'}">
 	<div class="sticky top-0 z-10 bg-white dark:bg-dark-800">
 		<div class="grid grid-cols-1 sm:hidden">
 			<!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
@@ -47,6 +47,18 @@
 						aria-label="Tabs"
 						class="-mb-px flex space-x-8">
 					<!-- Current: "border-indigo-500 text-indigo-600", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" -->
+					<button
+							@click="tab = 'general'"
+							:class="{'border-b-primary-500 text-dark-800 dark:text-primary-400': tab === 'general'}"
+							class="border-b-1 px-1 py-2 text-sm font-medium whitespace-nowrap text-gray-700 hover:border-gray-200 hover:text-gray-500 dark:text-dark-300 dark:hover:border-dark-400 dark:hover:text-dark-400 hover:cursor-pointer">
+						<x-icon
+								name="user"
+								class="h-4 w-4">
+							<x-slot:right>
+								General
+							</x-slot:right>
+						</x-icon>
+					</button>
 					<button
 							@click="tab = 'hostages'"
 							:class="{'border-b-primary-500 text-dark-800 dark:text-primary-400': tab === 'hostages'}"
@@ -104,11 +116,18 @@
 	</div>
 
 	<div
+			x-show="tab === 'general'"
+			class="pt-2">
+		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-general
+				:subjectId="$negotiation->primarySubject()->id"
+				:negotiationId="$negotiation->id" />
+	</div>
+	<div
 			x-show="tab === 'hostages'"
 			class="overflow-visible">
 		<livewire:pages.negotiation.noc-elements.negotiation.negotiation-card-hostages :negotiationId="$this->negotiation->id" />
 	</div>
- <div
+	<div
 			class="p-4 pt-6"
 			x-show="tab === 'initial_complaint'">
 		@if($this->negotiation->initial_complaint)
@@ -117,12 +136,13 @@
 			<div class="text-center p-4 text-gray-500">
 				No initial complaint found for this negotiation.
 				<p class="mt-2">
-					To add an initial complaint, please edit the negotiation details from the negotiation management page.
+					To add an initial complaint, please edit the negotiation details from the negotiation management
+					page.
 				</p>
 			</div>
 		@endif
 	</div>
- <div
+	<div
 			class="p-4 pt-6"
 			x-show="tab === 'summary'">
 		@if($this->negotiation->summary)

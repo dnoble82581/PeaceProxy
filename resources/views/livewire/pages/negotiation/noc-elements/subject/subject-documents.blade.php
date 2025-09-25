@@ -68,7 +68,6 @@
 			]);
 
 			$data = $this->form->all();
-			$data['uploaded_by_id'] = auth()->id();
 			$data['negotiation_id'] = $this->negotiationId;
 			$data['uploaded_by_id'] = authUser()->id;
 
