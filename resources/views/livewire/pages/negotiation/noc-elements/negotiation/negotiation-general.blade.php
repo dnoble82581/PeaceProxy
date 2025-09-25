@@ -125,7 +125,7 @@
 			$this->toast()->timeout()->info($message)->send();
 		}
 
-		public function handleWarningDeleted(array $event)
+		public function handleWarningDeleted(array $event):void
 		{
 			$details = $event['details'] ?? null;
 			if ($details) {
@@ -142,7 +142,7 @@
 			$this->dispatch('refresh');
 		}
 
-		public function getListeners()
+		public function getListeners():array
 		{
 			$subjectId = $this->subject->id;
 			return [
@@ -155,39 +155,22 @@
 
 ?>
 <div>
-	<div class="text-right px-4 pt-1">
-		<x-button.circle
-				wire:click="$toggle('showCreateWarningModal')"
-				color=""
-				flat
-				sm
-				icon="plus"
-		/>
-	</div>
-	<ul
-			role="list"
-			class="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-2 lg:grid-cols-4">
-		@forelse($this->warnings as $warning)
-			<li
-					class="col-span-1 flex rounded-md shadow-xs dark:shadow-none overflow-visible"
-					wire:key="warning-{{ $warning->id }}">
-				<div
- 					class="flex w-16 shrink-0 items-center justify-center rounded-l-md {{ $warning->risk_level?->color() ?? 'bg-gray-400' }}  text-sm font-medium text-white"
-				>
-					@if($warning->risk_level)
-						<span class="text-xs">{{ $warning->risk_level->label() }}</span>
-					@else
-						<span class="text-xs">No Risk Level</span>
-					@endif
-
-				</div>
-				<div class="flex flex-1 items-center justify-between truncate overflow-visible rounded-r-md border-t border-r border-b border-gray-200 bg-white dark:border-white/10 dark:bg-dark-800/50">
-					<div class="flex-1 truncate px-4 py-2 text-sm">
- 					<span
-								class="font-medium text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-200">{{ $warning->warning_type?->label() ?? 'Unknown' }}</span>
-						<p class="text-gray-500 dark:text-gray-400 text-xs">{{ $warning->createdBy->name ?? 'Unknown' }}</p>
+	<div class="space-y-3 grid grid-cols-5 gap-3">
+		<div class="col-span-2">
+			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Warnings</h3>
+			@forelse($this->warnings as $warning)
+				<div class="flex items-center justify-between bg-gray-100 dark:bg-dark-700 rounded-md mt-2">
+					<div class="ml-2">
+						<x-alerts.pulse
+								wire:key="pulse-{{ $warning->id }}"
+								:primary-color="$warning->risk_level?->color()"
+								:secondary-color="$warning->risk_level?->color()">
+							<div class="text-xs w-full text-gray-600 dark:text-gray-400 px-3 py-1 rounded-md">
+								{{ $warning->warning_type->label() }}
+							</div>
+						</x-alerts.pulse>
 					</div>
-					<div class="shrink-0 pr-2">
+					<div class="mt-1">
 						<x-dropdown
 								icon="ellipsis-vertical"
 								position="left"
@@ -208,27 +191,89 @@
 						</x-dropdown>
 					</div>
 				</div>
-			</li>
-		@empty
-			<div class="col-span-full text-center p-4 text-gray-500">
-				No warnings found for this subject.
-				<p class="mt-2">
-					Click the <span class="inline-flex items-center"><svg
-								class="w-4 h-4 text-gray-500"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"><path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner
-					to create a new warning.
-				</p>
-			</div>
-		@endforelse
-	</ul>
+			@empty
+				<div class="col-span-full text-center p-4 text-gray-500">
+					No warnings found for this subject.
+					<p class="mt-2">
+						Click the <span class="inline-flex items-center"><svg
+									class="w-4 h-4 text-gray-500"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									xmlns="http://www.w3.org/2000/svg"><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right
+						corner
+						to create a new warning.
+					</p>
+				</div>
+			@endforelse
+		</div>
 
+		<div>
+			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Warnings</h3>
+		</div>
+		<div>
+			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Warnings</h3>
+		</div>
+		<div>
+			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Warnings</h3>
+		</div>
+		{{--		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Warnings</h3>--}}
+		{{--		<div>--}}
+		{{--			@forelse($this->warnings as $warning)--}}
+		{{--				<div class="flex">--}}
+		{{--					<x-alerts.pulse--}}
+		{{--							wire:key="pulse-{{ $warning->id }}"--}}
+		{{--							:primary-color="$warning->risk_level?->color()"--}}
+		{{--							:secondary-color="$warning->risk_level?->color()">--}}
+		{{--						<p class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 px-3 py-1 rounded-md">--}}
+		{{--							{{ $warning->warning_type->label() }}--}}
+		{{--						</p>--}}
+		{{--					</x-alerts.pulse>--}}
+
+		{{--					<x-dropdown--}}
+		{{--							icon="ellipsis-vertical"--}}
+		{{--							position="left"--}}
+		{{--							static>--}}
+		{{--						<x-dropdown.items--}}
+		{{--								icon="pencil-square"--}}
+		{{--								wire:click="editWarning({{ $warning->id }})"--}}
+		{{--								text="Edit" />--}}
+		{{--						<x-dropdown.items--}}
+		{{--								icon="trash"--}}
+		{{--								wire:click="deleteWarning({{ $warning->id }})"--}}
+		{{--								text="Delete" />--}}
+		{{--						<x-dropdown.items--}}
+		{{--								wire:click="viewWarning({{ $warning->id }})"--}}
+		{{--								separator--}}
+		{{--								icon="eye"--}}
+		{{--								text="View" />--}}
+		{{--					</x-dropdown>--}}
+		{{--				</div>--}}
+		{{--			@empty--}}
+		{{--				<div class="col-span-full text-center p-4 text-gray-500">--}}
+		{{--					No warnings found for this subject.--}}
+		{{--					<p class="mt-2">--}}
+		{{--						Click the <span class="inline-flex items-center"><svg--}}
+		{{--									class="w-4 h-4 text-gray-500"--}}
+		{{--									fill="none"--}}
+		{{--									stroke="currentColor"--}}
+		{{--									viewBox="0 0 24 24"--}}
+		{{--									xmlns="http://www.w3.org/2000/svg"><path--}}
+		{{--										stroke-linecap="round"--}}
+		{{--										stroke-linejoin="round"--}}
+		{{--										stroke-width="2"--}}
+		{{--										d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right--}}
+		{{--						corner--}}
+		{{--						to create a new warning.--}}
+		{{--					</p>--}}
+		{{--				</div>--}}
+		{{--			@endforelse--}}
+		{{--		</div>--}}
+	</div>
 	<x-modal
 			id="CreateWarningModal"
 			wire="showCreateWarningModal"

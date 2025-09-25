@@ -18,4 +18,6 @@ class NegotiationEventNames
 
     public const RFI_CREATED = 'RFICreated';
     public const RFI_DELETED = 'RFICreated';
+
+    public const DOCUMENT_UPLOADED = 'DocumentUploaded';
 }

@@ -14,6 +14,8 @@ final class Negotiation
 
     public const NEGOTIATION_RFI_PATTERN = 'negotiation.{negotiationId}.rfi';
 
+    public const NEGOTIATION_DOCUMENT_PATTERN = 'negotiation.{negotiationId}.document';
+
     public static function negotiation(int $id)
     {
         return "negotiation.$id";
@@ -22,6 +24,11 @@ final class Negotiation
     public static function negotiationObjective(int $id)
     {
         return "negotiation.$id.objective";
+    }
+
+    public static function negotiationDocument(int $id)
+    {
+        return "negotiation.$id.document";
     }
 
     public static function negotiationDemand(int $id)

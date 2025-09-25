@@ -61,6 +61,10 @@ Broadcast::channel(Negotiation::NEGOTIATION_RFI_PATTERN, function (User $user, i
     return true;
 });
 
+Broadcast::channel(Negotiation::NEGOTIATION_DOCUMENT_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
 
 
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
