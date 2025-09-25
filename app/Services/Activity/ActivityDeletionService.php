@@ -14,17 +14,21 @@ class ActivityDeletionService
         $this->activityRepository = $activityRepository;
     }
 
-    public function deleteActivity($id): ?Activity
+    public function deleteActivity(int $activityId): ?Activity
     {
-        $activity = $this->activityRepository->getActivity($id);
+        $activity = $this->activityRepository->getActivity($activityId);
 
-        if (!$activity) {
+        if (! $activity) {
             return null;
         }
 
-        $this->addLogEntry($activity);
+        $deleted = $this->activityRepository->deleteActivity($activityId);
 
-        return $this->activityRepository->deleteActivity($id);
+        if ($deleted) {
+            $this->addLogEntry($activity);
+        }
+
+        return $deleted;
     }
 
     private function addLogEntry(Activity $activity): void

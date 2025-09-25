@@ -24,17 +24,20 @@ class ActivityDTO
     public static function fromArray(array $data): ActivityDTO
     {
         return new self(
-            $data['id'] ?? null,
-            $data['tenant_id'],
-            $data['negotiation_id'],
-            $data['user_id'],
-            $data['subject_id'] ?? null,
-            $data['type'] ?? null,
-            $data['activity'],
-            $data['is_flagged'] ?? false,
-            isset($data['entered_at']) ? Carbon::parse($data['entered_at']) : null,
-            isset($data['created_at']) ? Carbon::parse($data['created_at']) : null,
-            isset($data['updated_at']) ? Carbon::parse($data['updated_at']) : null,
+            tenant_id: $data['tenant_id'],
+            negotiation_id: $data['negotiation_id'],
+            user_id: $data['user_id'],
+            subject_id: $data['subject_id'] ?? null,
+            type: isset($data['type'])
+                ? (is_int($data['type']) || is_string($data['type'])
+                    ? ActivityType::tryFrom($data['type'])
+                    : ($data['type'] instanceof ActivityType ? $data['type'] : null))
+                : null,
+            activity: $data['activity'],
+            is_flagged: (bool)($data['is_flagged'] ?? false),
+            entered_at: isset($data['entered_at']) ? Carbon::parse($data['entered_at']) : null,
+            created_at: isset($data['created_at']) ? Carbon::parse($data['created_at']) : null,
+            updated_at: isset($data['updated_at']) ? Carbon::parse($data['updated_at']) : null,
         );
     }
 
