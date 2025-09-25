@@ -48,11 +48,11 @@
 					negotiation_id: $validated['negotiation_id'],
 					user_id: $validated['user_id'],
 					subject_id: $validated['subject_id'],
-						type: isset($validated['type'])
-							? (is_int($validated['type']) || is_string($validated['type'])
-								? ActivityType::tryFrom($validated['type'])
-								: ($validated['type'] instanceof ActivityType ? $validated['type'] : ($existingDto?->type ?? null)))
-							: ($existingDto?->type ?? null),
+					type: isset($validated['type'])
+						? (is_int($validated['type']) || is_string($validated['type'])
+							? ActivityType::tryFrom($validated['type'])
+							: ($validated['type'] instanceof ActivityType? $validated['type'] : ($existingDto?->type ?? null)))
+						: ($existingDto?->type ?? null),
 					activity: $validated['activity'],
 					is_flagged: (bool) ($existingDto?->is_flagged ?? false),
 					entered_at: $existingDto?->entered_at ?? now(),
@@ -75,7 +75,7 @@
 				type: isset($validated['type'])
 					? (is_int($validated['type']) || is_string($validated['type'])
 						? ActivityType::tryFrom($validated['type'])
-						: ($validated['type'] instanceof ActivityType ? $validated['type'] : null))
+						: ($validated['type'] instanceof ActivityType? $validated['type'] : null))
 					: null,
 				activity: $validated['activity'],
 				is_flagged: false,
@@ -203,10 +203,12 @@
 												wire:click="deleteActivity({{ $activity->id }})" />
 									</td>
 								</tr>
-							@empty
-								<p>Empty</p>
-							@endforelse
 
+							@empty
+								<div class="p-6 text-center text-gray-500 dark:text-gray-400">
+									<p>No negotiation activities found. Create your first activity above.</p>
+								</div>
+							@endforelse
 							</tbody>
 						</table>
 					</div>
