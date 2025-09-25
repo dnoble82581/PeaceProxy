@@ -91,6 +91,11 @@ class Negotiation extends Model
         return $this->hasMany(Hook::class);
     }
 
+    public function activities(): hasMany
+    {
+        return $this->hasMany(Activity::class);
+    }
+
     /**
      * Get the documents for the negotiation.
      */
