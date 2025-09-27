@@ -1,11 +1,15 @@
 <?php
 
+	use App\Events\Assessment\AssessmentCompletedEvent;
+	use App\Events\Assessment\AssessmentDeletedEvent;
 	use App\Models\Assessment;
 	use App\Models\AssessmentTemplate;
 	use App\Models\AssessmentTemplateQuestion;
 	use App\Models\AssessmentQuestionsAnswer;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
+	use App\Support\EventNames\SubjectEventNames;
+	use Carbon\Carbon;
 	use Livewire\Volt\Component;
 	use Livewire\WithFileUploads;
 	use Livewire\Attributes\Rule;
@@ -13,9 +17,10 @@
 
 	new class extends Component {
 		use WithFileUploads;
+		use \TallStackUi\Traits\Interactions;
 
-		public Subject $subject;
-		public Negotiation $negotiation;
+		public ?Subject $subject = null;
+		public ?Negotiation $negotiation = null;
 
 		// Properties for assessment management
 		public $templates = [];
@@ -26,7 +31,7 @@
 
 		public $questions = [];
 		public $answers = [];
-		public $assessment = null;
+		public ?int $assessmentId = null;
 
 		// Properties for UI state
 		public $showTemplateSelection = false;
@@ -89,7 +94,7 @@
 			}
 
 			// Create a new assessment
-			$this->assessment = Assessment::create([
+			$assessment = Assessment::create([
 				'tenant_id' => tenant()->id,
 				'assessment_template_id' => $this->selectedTemplateId,
 				'negotiation_id' => $this->negotiation->id,
@@ -98,8 +103,11 @@
 				'title' => $template->name.' - '.$this->subject->name,
 			]);
 
+			$this->assessmentId = $assessment->id;
+
 			// Show the slide with questions instead of changing the view
 			$this->showQuestionsSlide = true;
+			$this->showCreateForm = false;
 		}
 
 		public function closeQuestionsSlide()
@@ -107,13 +115,18 @@
 			$this->showQuestionsSlide = false;
 
 			// If the assessment was not completed, delete it
-			if ($this->assessment && !$this->assessment->completed_at) {
-				$this->assessment->delete();
-				$this->assessment = null;
+			if ($this->assessmentId) {
+				$assessment = Assessment::find($this->assessmentId);
+				if ($assessment && !$assessment->completed_at) {
+					$assessment->delete();
+				}
+				$this->assessmentId = null;
 			}
 
 			// Reset answers
 			$this->answers = [];
+
+			$this->showTemplateSelection = false;
 		}
 
 		public function submitAssessment()
@@ -169,39 +182,74 @@
 				}
 
 				AssessmentQuestionsAnswer::create([
-					'assessment_id' => $this->assessment->id,
+					'assessment_id' => $this->assessmentId,
 					'assessment_template_question_id' => $question->id,
 					'answer' => json_encode($answer),
 				]);
 			}
 
 			// Mark assessment as completed and update the score
-			$this->assessment->update([
-				'completed_at' => now(),
-				'score' => $yesCount,
-			]);
+			if ($this->assessmentId) {
+				$assessment = Assessment::find($this->assessmentId);
+				if ($assessment) {
+					$assessment->update([
+						'completed_at' => now(),
+						'score' => $yesCount,
+					]);
+				}
+			}
 
 			// Close the slides
 			$this->showQuestionsSlide = false;
 			$this->showCreateForm = false;
 
-			// Show success notification
-			$this->dispatch('notify', [
-				'message' => 'Assessment completed successfully!',
-				'type' => 'success'
-			]);
+			event(new AssessmentCompletedEvent($this->subject->id, $this->assessmentId));
 
 			// Reload assessments to show the new one
 			$this->loadAssessments();
 		}
 
-		public function startNewAssessment()
+		public function getListeners()
 		{
+			return [
+				'echo-private:'.\App\Support\Channels\Subject::subjectAssessment($this->subject->id).',.'.SubjectEventNames::ASSESSMENT_COMPLETED => 'handleAssessmentCompleted',
+				'echo-private:'.\App\Support\Channels\Subject::subjectAssessment($this->subject->id).',.'.SubjectEventNames::ASSESSMENT_DELETED => 'handleAssessmentDeleted',
+			];
+		}
+
+		public function handleAssessmentCompleted(array $event):void
+		{
+			$this->loadAssessments();
+			$assessment = Assessment::findOrFail($event['assessmentId']);
+			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$message = $messageFactory->generateMessage($assessment, 'AssessmentCreated');
+
+			$this->toast()->timeout()->info($message)->send();
+
+		}
+
+		public function handleAssessmentDeleted(array $event)
+		{
+			$this->loadAssessments();
+
+			// If the currently open assessment was deleted elsewhere, reset local state to avoid Livewire model hydration issues
+			if (isset($event['assessmentId']) && $this->assessmentId === $event['assessmentId']) {
+				$this->assessmentId = null;
+				$this->answers = [];
+				$this->questions = [];
+				$this->showQuestionsSlide = false;
+				$this->showCreateForm = false;
+			}
+		}
+
+		public function startNewAssessment():void
+		{
+
 			$this->reset([
 				'selectedTemplateId',
 				'questions',
 				'answers',
-				'assessment'
+				'assessmentId'
 			]);
 
 			$this->showCreateForm = true;
@@ -209,7 +257,6 @@
 
 		public function showCreateForm()
 		{
-			dd('here');
 			$this->showCreateForm = true;
 		}
 
@@ -222,6 +269,12 @@
 		{
 			$assessment = Assessment::find($assessmentId);
 			if ($assessment) {
+
+				$data = [
+					'assessmentId' => $assessment->id,
+					'subjectId' => $assessment->subject_id,
+				];
+
 				// Delete related answers first
 				$assessment->answers()->delete();
 				// Then delete the assessment
@@ -229,6 +282,7 @@
 
 				// Reload assessments
 				$this->loadAssessments();
+				event(new AssessmentDeletedEvent($data));
 			}
 		}
 	}
@@ -238,26 +292,7 @@
 <div>
 	<!-- Removed debug section -->
 
-	<div
-			x-data="{ showNotification: false, message: '', type: '' }"
-			@notify.window="showNotification = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => showNotification = false, 3000)">
-		<!-- Notification -->
-		<div
-				x-show="showNotification"
-				x-transition:enter="transition ease-out duration-300"
-				x-transition:enter-start="opacity-0 transform scale-90"
-				x-transition:enter-end="opacity-100 transform scale-100"
-				x-transition:leave="transition ease-in duration-300"
-				x-transition:leave-start="opacity-100 transform scale-100"
-				x-transition:leave-end="opacity-0 transform scale-90"
-				x-bind:class="{ 'bg-green-100 border-green-400 text-green-700': type === 'success', 'bg-red-100 border-red-400 text-red-700': type === 'error' }"
-				class="border px-4 py-3 rounded relative mb-2"
-				role="alert">
-			<span
-					class="block sm:inline"
-					x-text="message"></span>
-		</div>
-
+	<div>
 		<!-- Assessments Table View -->
 		<div class="mt-2 flow-root overflow-hidden rounded-t-lg">
 			<div class="">
@@ -326,13 +361,13 @@
 							<td class="px-3 py-2 text-xs dark:text-dark-400 text-gray-500">
 								@if($assessment->completed_at)
 									@if(is_int($assessment->completed_at))
-										{{ \Carbon\Carbon::createFromTimestamp($assessment->completed_at)->format('M d, Y') }}
+										{{ Carbon\Carbon::createFromTimestamp($assessment->completed_at)->format('M d, Y') }}
 									@else
 										{{ $assessment->completed_at->format('M d, Y') }}
 									@endif
 								@else
 									@if(is_int($assessment->started_at))
-										{{ \Carbon\Carbon::createFromTimestamp($assessment->started_at)->format('M d, Y') }}
+										{{ Carbon\Carbon::createFromTimestamp($assessment->started_at)->format('M d, Y') }}
 									@else
 										{{ $assessment->started_at->format('M d, Y') }}
 									@endif
@@ -375,7 +410,8 @@
 		</div>
 
 		<!-- Template Selection Slide -->
-		<x-slide
+		<x-modal
+				center
 				wire="showCreateForm"
 				size="md">
 			<x-slot:title>
@@ -421,7 +457,7 @@
 					</div>
 				@endif
 			</div>
-		</x-slide>
+		</x-modal>
 
 		<!-- Questions Slide -->
 		<x-slide
@@ -620,7 +656,6 @@
 				</form>
 			</div>
 		</x-slide>
-
 		<!-- Success message is now handled through the notification system -->
 	</div>
 </div>

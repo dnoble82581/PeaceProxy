@@ -66,9 +66,6 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
         Volt::route('/{negotiation?}/subject/{subject:name}/show', 'pages.subject.show-subject')
             ->name('subject.show');
 
-        // Contact Point routes
-        Volt::route('/{negotiationId}/subject/{subjectId}/contact-point/create', 'forms.contact.create-contact-point')
-            ->name('contact-point.create');
 
         Volt::route('/{negotiationId}/subject/{subjectId}/contact-point/{contactPointId}/edit', 'forms.contact.edit-contact-point')
             ->name('contact-point.edit');

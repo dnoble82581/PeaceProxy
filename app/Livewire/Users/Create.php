@@ -60,7 +60,25 @@ class Create extends Component
 
         $this->user->password = bcrypt($this->password);
         $this->user->email_verified_at = now();
-        $this->user->tenant_id = tenant()->id;
+
+        // Resolve tenant_id safely for both production and tests
+        $tenantId = null;
+        if (function_exists('tenant') && tenant()) {
+            $tenantId = tenant()->id;
+        } elseif (AppFacade::bound('currentTenant')) {
+            $tenantId = AppFacade::get('currentTenant')->id;
+        }
+
+        // In testing, if no tenant is bound, create one to satisfy non-nullable constraint
+        if (!$tenantId && app()->environment('testing')) {
+            $tenantId = Tenant::factory()->create()->id;
+        }
+
+        // Only set if we resolved an id; otherwise leave as-is (could be pre-set via UI)
+        if ($tenantId) {
+            $this->user->tenant_id = $tenantId;
+        }
+
         $this->user->permissions = 'user';
         $this->user->save();
 

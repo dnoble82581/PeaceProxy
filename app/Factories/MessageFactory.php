@@ -2,6 +2,11 @@
 
 namespace App\Factories;
 
+use App\Models\Assessment;
+use App\Models\Demand;
+use App\Models\Objective;
+use App\Models\Warning;
+use App\Models\Warrant;
 use Illuminate\Database\Eloquent\Model;
 
 class MessageFactory
@@ -13,27 +18,32 @@ class MessageFactory
 
         // Handle message generation based on model type and event
         switch (get_class($model)) {
-            case \App\Models\Warning::class:
+            case Warning::class:
                 $message = $this->handleWarning($model, $eventName);
                 break;
 
-            case \App\Models\Objective::class:
+            case Objective::class:
                 $message = $this->handleObjective($model, $eventName);
                 break;
 
-            case \App\Models\Warrant::class:
+            case Warrant::class:
                 $message = $this->handleWarrant($model, $eventName);
                 break;
 
-            case \App\Models\Demand::class:
+            case Demand::class:
                 $message = $this->handleDemand($model, $eventName);
                 break;
+
+            case Assessment::class:
+                $message = $this->handleAssessment($model, $eventName);
+                break;
+
         }
 
         return $message;
     }
 
-    protected function handleWarning(\App\Models\Warning $warning, string $eventName): string
+    protected function handleWarning(Warning $warning, string $eventName): string
     {
         $warningLabel = $warning->warning_type?->label() ?? 'Unknown';
         $subjectName = $warning->subject->name ?? 'the subject';
@@ -61,7 +71,7 @@ class MessageFactory
 
     }
 
-    protected function handleObjective(\App\Models\Objective $objective, string $eventName): string
+    protected function handleObjective(Objective $objective, string $eventName): string
     {
         $objectiveLabel = $objective->priority->label();
 
@@ -80,7 +90,7 @@ class MessageFactory
         }
     }
 
-    protected function handleWarrant(\App\Models\Warrant $warrant, string $eventName): string
+    protected function handleWarrant(Warrant $warrant, string $eventName): string
     {
         $warrantLabel = $warrant->type->label();
         $subjectName = $warrant->subject->name;
@@ -107,7 +117,7 @@ class MessageFactory
         }
     }
 
-    protected function handleDemand(\App\Models\Demand $demand, string $eventName): string
+    protected function handleDemand(Demand $demand, string $eventName): string
     {
         $demandLabel = $demand->title;
 
@@ -132,6 +142,16 @@ class MessageFactory
                 // no break
             default:
                 return 'An unknown demand event occurred';
+        }
+    }
+
+    protected function handleAssessment(Assessment $assessment, string $eventName)
+    {
+        switch ($eventName) {
+            case 'AssessmentCreated':
+                return "An assessment has been created for {$assessment->subject->name}.";
+            default:
+                return 'An unknown assessment event occurred';
         }
     }
 }

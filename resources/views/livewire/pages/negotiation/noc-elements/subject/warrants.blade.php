@@ -3,11 +3,13 @@
 	use App\Enums\Warrant\BondType;
 	use App\Enums\Warrant\WarrantStatus;
 	use App\Enums\Warrant\WarrantType;
+	use App\Factories\MessageFactory;
 	use App\Livewire\Forms\CreateWarrantForm;
 	use App\Models\Subject;
 	use App\Models\Warrant;
 	use App\Services\Warrant\WarrantDestructionService;
 	use App\Services\Warrant\WarrantFetchingService;
+	use App\Support\EventNames\SubjectEventNames;
 	use Illuminate\Support\Collection;
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
@@ -84,7 +86,7 @@
 				return;
 			}
 
-			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$messageFactory = app(MessageFactory::class);
 			$message = $messageFactory->generateMessage($warrant, 'WarrantCreated');
 
 			$this->toast()->timeout()->info($message)->send();
@@ -114,7 +116,7 @@
 				return;
 			}
 
-			$messageFactory = app(\App\Factories\MessageFactory::class);
+			$messageFactory = app(MessageFactory::class);
 			$message = $messageFactory->generateMessage($warrant, 'WarrantUpdated');
 
 			$this->toast()->timeout()->info($message)->send();
@@ -124,9 +126,9 @@
 		{
 			$subjectId = $this->subject->id;
 			return [
-				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_CREATED => 'handleWarrantCreated',
-				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_DELETED => 'handleWarrantDeleted',
-				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::WARRANT_UPDATED => 'handleWarrantUpdated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.SubjectEventNames::WARRANT_CREATED => 'handleWarrantCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.SubjectEventNames::WARRANT_DELETED => 'handleWarrantDeleted',
+				'echo-private:'.\App\Support\Channels\Subject::subjectWarrant($subjectId).',.'.SubjectEventNames::WARRANT_UPDATED => 'handleWarrantUpdated',
 			];
 		}
 	}

@@ -50,7 +50,7 @@ class TenantFactory extends Factory
             'pm_type' => $this->faker->optional(0.7)->randomElement(['card', 'bank']),
             'pm_last_four' => $this->faker->optional(0.7)->numerify('####'),
             'trial_ends_at' => $this->faker->optional(0.7)->dateTimeBetween('+1 week', '+1 month'),
-            'billing_owner_id' => $this->faker->optional(0.5)->numberBetween(1, 10),
+            'billing_owner_id' => null,
 
             // Branding
             'logo_path' => $this->faker->imageUrl(200, 50, 'business'),
