@@ -9,10 +9,6 @@ use App\Services\Log\LogService;
 
 class DocumentDestructionService
 {
-    /**
-     * @param DocumentRepositoryInterface $documentRepository
-     * @param LogService|null $logService
-     */
     public function __construct(
         protected DocumentRepositoryInterface $documentRepository,
         protected ?LogService $logService = null
@@ -23,7 +19,6 @@ class DocumentDestructionService
     /**
      * Delete all documents for a subject
      *
-     * @param int $subjectId
      * @return int Number of documents deleted
      */
     public function deleteSubjectDocuments(int $subjectId): int
@@ -34,8 +29,6 @@ class DocumentDestructionService
     /**
      * Delete all documents for a documentable entity
      *
-     * @param string $type
-     * @param int $id
      * @return int Number of documents deleted
      */
     public function deleteDocumentsByDocumentable(string $type, int $id): int
@@ -54,25 +47,26 @@ class DocumentDestructionService
 
     /**
      * Delete a document
-     *
-     * @param int $documentId
-     * @return Document|null
      */
     public function deleteDocument(int $documentId): ?Document
     {
         // Get the document before deleting it
         $document = $this->documentRepository->getDocument($documentId);
 
-        if ($document) {
-            $details = [
-                'fileType' => $document->file_type,
-                'storageDisk' => $document->storage_disk,
-                'uploadedById' => $document->uploaded_by,
-            ];
+        // If the document does not exist, nothing to delete
+        if (! $document) {
+            return null;
         }
 
-        event(new DocumentDestroyedEvent($document->documentable_id, $details));
+        // Prepare details for event/logging before deletion
+        $details = [
+            'fileType' => $document->file_type,
+            'storageDisk' => $document->storage_disk,
+            'uploadedById' => $document->uploaded_by,
+        ];
 
+        // Fire event and add log entry with the loaded document context
+        event(new DocumentDestroyedEvent($document->documentable_id, $details));
         $this->addLogEntry($document);
 
         return $this->documentRepository->deleteDocument($documentId);
@@ -81,7 +75,6 @@ class DocumentDestructionService
     /**
      * Add a log entry for document deletion
      *
-     * @param Document $document
      * @return mixed
      */
     private function addLogEntry(Document $document)
@@ -108,7 +101,6 @@ class DocumentDestructionService
     /**
      * Delete all documents for a user
      *
-     * @param int $userId
      * @return int Number of documents deleted
      */
     public function deleteUserDocuments(int $userId): int
@@ -119,7 +111,6 @@ class DocumentDestructionService
     /**
      * Delete all documents for a negotiation
      *
-     * @param int $negotiationId
      * @return int Number of documents deleted
      */
     public function deleteNegotiationDocuments(int $negotiationId): int
