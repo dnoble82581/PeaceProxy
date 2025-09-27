@@ -73,7 +73,6 @@ Broadcast::channel(subject::SUBJECT_CONTACT_PATTERN, function (User $user, int $
     return true;
 });
 
-
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
     // Retrieve the subject instance
     $subject = App\Models\Subject::find($subjectId);
