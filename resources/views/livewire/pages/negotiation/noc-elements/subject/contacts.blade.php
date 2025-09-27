@@ -12,7 +12,8 @@
 		public Subject $subject;
 		public int $negotiationId;
 
-		public bool $showCreateModal;
+		public bool $showCreateModal = false;
+		public bool $showContactEditModal = false;
 
 		public function mount($subjectId, $negotiationId)
 		{
@@ -64,6 +65,12 @@
 			$this->refreshSubject();
 		}
 
+		public function editContactPoint(int $id)
+		{
+			$this->dispatch('load-contact', contactPointId: $id)->to('forms.contact.edit-contact-point');
+			$this->showContactEditModal = true;
+		}
+
 		/**
 		 * Refresh the subject data after a change
 		 */
@@ -72,9 +79,18 @@
 			$this->subject = $this->fetchSubject($this->subject->id);
 		}
 
-		public function handleContactCreated()
+		public function handleContactCreated(array $event)
 		{
-			logger('made it to handleContactCreation');
+			$this->refreshSubject();
+		}
+
+		public function handleContactDeleted(array $event)
+		{
+			$this->refreshSubject();
+		}
+
+		public function handleContactUpdated(array $event)
+		{
 			$this->refreshSubject();
 		}
 
@@ -82,6 +98,8 @@
 		{
 			return [
 				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_CREATED => 'handleContactCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
+				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_UPDATED => 'handleContactUpdated',
 			];
 		}
 
@@ -89,6 +107,7 @@
 		public function closeModal()
 		{
 			$this->showCreateModal = false;
+			$this->showContactEditModal = false;
 		}
 
 		public function createContact()
@@ -188,7 +207,7 @@
 							@endif
 							<x-button.circle
 									wire:navigate.hover
-									href="{{ route('contact-point.edit', ['tenantSubdomain' => tenant()->subdomain, 'negotiationId' => $negotiationId, 'subjectId' => $subject->id, 'contactPointId' => $contactPoint->id]) }}"
+									wire:click="editContactPoint({{ $contactPoint->id }})"
 									flat
 									color="sky"
 									icon="pencil-square"
@@ -240,5 +259,19 @@
 		<livewire:forms.contact.create-contact-point
 				:subject-id="$subject->id"
 				:negotiation-id="$negotiationId" />
+	</x-slide>
+	<x-slide
+			wire="showContactEditModal"
+			class="">
+		<x-slot:title>
+			<div class="px-4 sm:px-8 text-center space-y-3">
+				<h1 class="text-2xl text-gray-400 font-semibold uppercase">Edit Contact Point</h1>
+				<p class="text-xs">Editing a contact point for:
+					<span class="text-primary-400">{{ $subject->name }}</span></p>
+			</div>
+		</x-slot:title>
+		<livewire:forms.contact.edit-contact-point
+				:negotiation-id="$negotiationId"
+				:subject-id="$subject->id" />
 	</x-slide>
 </div>

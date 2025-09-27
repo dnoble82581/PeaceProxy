@@ -2,6 +2,7 @@
 
 namespace App\Services\ContactPoint;
 
+use App\Events\Subject\ContactDeletedEvent;
 use App\Models\ContactPoint;
 
 class ContactPointDeletionService
@@ -19,7 +20,18 @@ class ContactPointDeletionService
             $contactPoint->address()->delete();
         }
 
+        $data = [
+            'contactPointId' => $contactPoint->id,
+            'subjectId' => $contactPoint->contactable_id,
+        ];
+
         // Delete the contact point itself
-        return $contactPoint->delete();
+        $contactDeleted = $contactPoint->delete();
+
+        if ($contactDeleted) {
+            event(new ContactDeletedEvent($data));
+        }
+
+        return $contactDeleted;
     }
 }
