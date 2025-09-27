@@ -9,7 +9,7 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+	new class extends Component {
 		public Negotiation $negotiation;
 		public Subject $subject;
 		public CreateContactPointForm $form;
@@ -32,18 +32,14 @@
 
 			app(ContactPointCreationService::class)->createContactPoint($validated);
 
-			return $this->redirect(route('negotiation-noc',
-				['tenantSubdomain' => tenant()->subdomain, 'negotiation' => $this->negotiation]));
+			$this->dispatch('closeModal');
+
 		}
 	}
 
 ?>
 <div class="max-w-7xl mx-auto bg-dark-700 p-8 mt-4 rounded-lg">
-	<div class="px-4 sm:px-8 text-center space-y-3">
-		<h1 class="text-2xl text-gray-400 font-semibold uppercase">Create Contact Point</h1>
-		<p class="text-xs">Creating a contact point for:
-			<span class="text-primary-400">{{ $subject->name }}</span></p>
-	</div>
+
 	<form
 			wire:submit="createContactPoint"
 			class="space-y-6 mt-6">
@@ -199,8 +195,7 @@
 			<div class="flex items-center gap-4">
 				<x-button
 						sm
-						wire:navigate.hover
-						href="{{ route('negotiation-noc', ['tenantSubdomain' => tenant()->subdomain, 'negotiation' => $negotiation]) }}"
+						wire:click="$dispatch('closeModal')"
 						color="secondary">
 					Cancel
 				</x-button>

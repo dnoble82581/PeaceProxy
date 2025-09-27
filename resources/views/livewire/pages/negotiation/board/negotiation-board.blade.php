@@ -117,7 +117,7 @@
 							:class="{'border-b-primary-500 text-primary-600 dark:text-primary-400': tab === 'timeline', 'border-transparent': tab !== 'timeline'}"
 					>
 						<x-icon
-								name="identification"
+								name="clock"
 								class="size-5" />
 						<span>Timeline</span>
 					</button>

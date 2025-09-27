@@ -65,6 +65,13 @@ Broadcast::channel(Negotiation::NEGOTIATION_DOCUMENT_PATTERN, function (User $us
     return true;
 });
 
+Broadcast::channel(Subject::SUBJECT_ASSESSMENT_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
+
+Broadcast::channel(subject::SUBJECT_CONTACT_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
 
 
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {

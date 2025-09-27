@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Activity\ActivityType;
 use App\Models\Activity;
 use App\Models\Negotiation;
 use App\Models\Subject;
@@ -16,9 +17,11 @@ class ActivityFactory extends Factory
 
     public function definition(): array
     {
+        $type = $this->faker->randomElement(ActivityType::cases());
+
         return [
-            'type' => $this->faker->word(),
-            'activity' => $this->faker->word(),
+            'type' => $type->value,
+            'activity' => $this->faker->sentence(),
             'is_flagged' => $this->faker->boolean(),
             'entered_at' => Carbon::now(),
             'created_at' => Carbon::now(),

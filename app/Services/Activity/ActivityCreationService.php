@@ -4,6 +4,7 @@ namespace App\Services\Activity;
 
 use App\Contracts\ActivityRepositoryInterface;
 use App\DTOs\Activity\ActivityDTO;
+use App\Enums\Activity\ActivityType;
 use App\Models\Activity;
 
 class ActivityCreationService
@@ -17,7 +18,16 @@ class ActivityCreationService
 
     public function createActivity(ActivityDTO $activityDTO): Activity
     {
-        $newActivity = $this->activityRepository->createActivity($activityDTO->toArray());
+        // Ensure non-nullable fields have sensible defaults
+        $data = $activityDTO->toArray();
+        if (empty($data['type'])) {
+            $data['type'] = ActivityType::subject_action; // default type
+        }
+        if (empty($data['entered_at'])) {
+            $data['entered_at'] = now();
+        }
+
+        $newActivity = $this->activityRepository->createActivity($data);
 
         $this->addLogEntry($newActivity);
 

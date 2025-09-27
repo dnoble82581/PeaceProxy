@@ -4,11 +4,15 @@
 	use App\Models\ContactPoint;
 	use App\Services\Subject\SubjectFetchingService;
 	use App\Services\ContactPoint\ContactPointDeletionService;
+	use App\Support\EventNames\SubjectEventNames;
+	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 
 	new class extends Component {
 		public Subject $subject;
 		public int $negotiationId;
+
+		public bool $showCreateModal;
 
 		public function mount($subjectId, $negotiationId)
 		{
@@ -67,11 +71,35 @@
 		{
 			$this->subject = $this->fetchSubject($this->subject->id);
 		}
+
+		public function handleContactCreated()
+		{
+			logger('made it to handleContactCreation');
+			$this->refreshSubject();
+		}
+
+		public function getListeners()
+		{
+			return [
+				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_CREATED => 'handleContactCreated',
+			];
+		}
+
+		#[On('closeModal')]
+		public function closeModal()
+		{
+			$this->showCreateModal = false;
+		}
+
+		public function createContact()
+		{
+			$this->showCreateModal = true;
+		}
 	}
 
 ?>
 
-<div x-data="{}">
+<div>
 	<div class="mt-2 flow-root overflow-hidden rounded-t-lg">
 		<div class="">
 			<table class="w-full text-left">
@@ -111,7 +139,7 @@
 							<x-button.circle
 									wire:navigate.hover
 									color=""
-									href="{{ route('contact-point.create', ['tenantSubdomain' => tenant()->subdomain, 'negotiationId' => $negotiationId, 'subjectId' => $subject->id]) }}"
+									wire:click="createContact"
 									sm
 									flat
 									icon="plus"
@@ -175,10 +203,22 @@
 					</tr>
 				@empty
 					<tr>
-						<td colspan="5" class="text-center p-4 text-gray-500">
+						<td
+								colspan="5"
+								class="text-center p-4 text-gray-500">
 							No contacts found for this subject.
 							<p class="mt-2">
-								Click the <span class="inline-flex items-center"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the top-right corner to create a new contact.
+								Click the <span class="inline-flex items-center"><svg
+											class="w-4 h-4 text-gray-500"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											xmlns="http://www.w3.org/2000/svg"><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></span> button in the
+								top-right corner to create a new contact.
 							</p>
 						</td>
 					</tr>
@@ -187,4 +227,18 @@
 			</table>
 		</div>
 	</div>
+	<x-slide
+			wire="showCreateModal"
+			class="">
+		<x-slot:title>
+			<div class="px-4 sm:px-8 text-center space-y-3">
+				<h1 class="text-2xl text-gray-400 font-semibold uppercase">Create Contact Point</h1>
+				<p class="text-xs">Creating a contact point for:
+					<span class="text-primary-400">{{ $subject->name }}</span></p>
+			</div>
+		</x-slot:title>
+		<livewire:forms.contact.create-contact-point
+				:subject-id="$subject->id"
+				:negotiation-id="$negotiationId" />
+	</x-slide>
 </div>

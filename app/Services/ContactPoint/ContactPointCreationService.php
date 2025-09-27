@@ -2,6 +2,7 @@
 
 namespace App\Services\ContactPoint;
 
+use App\Events\Subject\ContactCreatedEvent;
 use App\Models\ContactAddress;
 use App\Models\ContactEmail;
 use App\Models\ContactPhone;
@@ -92,6 +93,8 @@ class ContactPointCreationService
         });
 
         $this->addLogEntry($contactPoint);
+
+        event(new ContactCreatedEvent($contactPoint->contactable_id, $contactPoint->id));
 
         return $contactPoint;
     }

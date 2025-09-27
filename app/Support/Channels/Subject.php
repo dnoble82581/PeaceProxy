@@ -15,6 +15,10 @@ final class Subject
 
     public const SUBJECT_DOCUMENT_PATTERN = 'subject.{subjectId}.document';
 
+    public const SUBJECT_ASSESSMENT_PATTERN = 'subject.{subjectId}.assessment';
+
+    public const SUBJECT_CONTACT_PATTERN = 'subject.{subjectId}.contact';
+
     // Concrete builders (used in events / listeners at runtime)
     public static function subject(int $id): string
     {
@@ -39,5 +43,15 @@ final class Subject
     public static function subjectDocument(int $id): string
     {
         return "subject.$id.document";
+    }
+
+    public static function subjectAssessment(int $id): string
+    {
+        return "subject.$id.assessment";
+    }
+
+    public static function subjectContact(int $id): string
+    {
+        return "subject.$id.contact";
     }
 }
