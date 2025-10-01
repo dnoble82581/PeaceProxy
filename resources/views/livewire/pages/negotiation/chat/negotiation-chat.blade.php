@@ -689,7 +689,7 @@
       authId: @js((int) auth()->id()),
       negotiationId: @js($negotiationId),
       initialConversationId: @js($selectedConversationId),
-      usePhpNotifications: true
+      usePhpNotifications: false
   })"
 		x-init="init()"
 		class="h-full bg-white dark:bg-dark-800 rounded-lg p-2 shadow-sm">

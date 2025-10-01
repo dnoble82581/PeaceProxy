@@ -24,7 +24,7 @@ class HookUpdatingService
         $this->addLogEntry($hook);
 
         // Dispatch event if needed
-        event(new HookUpdatedEvent($hook));
+        event(new HookUpdatedEvent($hook->negotiation_id, $hook->id));
 
         return $hook;
     }

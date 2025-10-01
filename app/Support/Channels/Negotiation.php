@@ -16,6 +16,10 @@ final class Negotiation
 
     public const NEGOTIATION_DOCUMENT_PATTERN = 'negotiation.{negotiationId}.document';
 
+    public const NEGOTIATION_HOOK_PATTERN = 'negotiation.{negotiationId}.hook';
+
+    public const NEGOTIATION_TRIGGERS_PATTERN = 'negotiation.{negotiationId}.triggers';
+
     public static function negotiation(int $id)
     {
         return "negotiation.$id";
@@ -34,6 +38,16 @@ final class Negotiation
     public static function negotiationDemand(int $id)
     {
         return "negotiation.$id.demand";
+    }
+
+    public static function negotiationHook(int $id)
+    {
+        return "negotiation.$id.hook";
+    }
+
+    public static function negotiationTriggers(int $id)
+    {
+        return "negotiation.$id.triggers";
     }
 
     public static function negotiationDeliveryPlan(int $id)

@@ -19,7 +19,8 @@ class TriggerUpdatingService
 
         $this->addLogEntry($trigger);
 
-        event(new TriggerUpdatedEvent($trigger));
+        event(new TriggerUpdatedEvent($trigger->negotiation_id, $trigger->id));
+
         return $trigger;
     }
 

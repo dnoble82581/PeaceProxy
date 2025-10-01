@@ -18,8 +18,9 @@
 	 * editing, and deleting hooks, as well as listening for real-time updates
 	 * through broadcast events.
 	 */
- new class extends Component {
- 		use Interactions;
+	new class extends Component {
+		use Interactions;
+
 		/** @var bool Flag to control the visibility of the create hook modal */
 		public bool $showCreateHookModal = false;
 
@@ -67,9 +68,9 @@
 		{
 			$tenantId = tenant()->id;
 			return [
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookCreated" => 'handleHookCreated',
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookUpdated" => 'handleHookUpdated',
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.HookDestroyed" => 'handleHookDestroyed',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationHook($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::HOOK_CREATED => 'handleHookCreated',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationHook($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::HOOK_DELETED => 'handleHookDeleted',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationHook($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::HOOK_UPDATED => 'handleHookUpdated',
 				'refresh' => '$refresh',
 			];
 		}
@@ -85,7 +86,7 @@
 		{
 			// Attempt to fetch the created hook (event key could be 'hookId' or 'hook')
 			$hookId = $data['hookId'] ?? $data['hook'] ?? null;
-			$hook = $hookId ? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
+			$hook = $hookId? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
 
 			if ($hook) {
 				$subjectName = $hook->subject->name ?? ($this->primarySubject->name ?? 'the subject');
@@ -116,7 +117,7 @@
 		public function handleHookUpdated(array $data):void
 		{
 			$hookId = $data['hookId'] ?? $data['hook'] ?? null;
-			$hook = $hookId ? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
+			$hook = $hookId? app(\App\Services\Hook\HookFetchingService::class)->getHookById($hookId) : null;
 
 			if ($hook) {
 				$subjectName = $hook->subject->name ?? ($this->primarySubject->name ?? 'the subject');
@@ -140,7 +141,7 @@
 		/**
 		 * Handle the HookDestroyed event by sending a toast with details if available
 		 */
-		public function handleHookDestroyed(array $data): void
+		public function handleHookDeleted(array $data):void
 		{
 			$details = $data['details'] ?? null;
 			if ($details) {

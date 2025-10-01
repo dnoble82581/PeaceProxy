@@ -2,12 +2,12 @@
 
 	use App\Services\Hostage\HostageDestructionService;
 	use App\Services\Negotiation\NegotiationFetchingService;
- use Livewire\Volt\Component;
+	use Livewire\Volt\Component;
 	use App\Models\Hostage;
 	use Livewire\WithPagination;
 	use TallStackUi\Traits\Interactions;
 
- new class extends Component {
+	new class extends Component {
 		use WithPagination;
 		use Interactions;
 
@@ -110,6 +110,8 @@
 
 		public function deleteHostage():void
 		{
+			$this->showDeleteHostageModal = false;
+
 			if ($this->currentHostageId) {
 				$hostage = Hostage::find($this->currentHostageId);
 
@@ -154,7 +156,7 @@
 		public function handleHostageCreated(array $data):void
 		{
 			$hostageId = $data['hostageId'] ?? $data['hostage'] ?? null;
-			$hostage = $hostageId ? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
+			$hostage = $hostageId? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
 
 			if ($hostage) {
 				$name = $hostage->name ?? 'a hostage';
@@ -177,7 +179,7 @@
 		public function handleHostageUpdated(array $data):void
 		{
 			$hostageId = $data['hostageId'] ?? $data['hostage'] ?? null;
-			$hostage = $hostageId ? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
+			$hostage = $hostageId? app(\App\Services\Hostage\HostageFetchingService::class)->getHostage($hostageId) : null;
 
 			if ($hostage) {
 				$name = $hostage->name ?? 'a hostage';
@@ -199,6 +201,10 @@
 		 */
 		public function handleHostageDestroyed(array $data):void
 		{
+			// Ensure any open delete modal is closed and internal state reset when a deletion event is received
+			$this->showDeleteHostageModal = false;
+			$this->currentHostageId = null;
+
 			$details = $data['details'] ?? null;
 			if ($details) {
 				$hostageName = $details['hostageName'] ?? 'a hostage';
@@ -337,17 +343,17 @@
 								</p>
 							</div>
 							<div class="flex flex-col items-center gap-2">
-   					@if($hostage->risk_level)
-   						<x-badge
-   								xs
-   								text="Risk: {{ $hostage->risk_level?->label() ?? 'Unknown' }}"
-   								round />
-   					@else
-   						<x-badge
-   								xs
-   								text="Risk: Unknown"
-   								round />
-   					@endif
+								@if($hostage->risk_level)
+									<x-badge
+											xs
+											text="Risk: {{ $hostage->risk_level?->label() ?? 'Unknown' }}"
+											round />
+								@else
+									<x-badge
+											xs
+											text="Risk: Unknown"
+											round />
+								@endif
 								@if($hostage->injury_status)
 									<x-badge
 											xs

@@ -11,6 +11,11 @@ class ContactPointDeletionService
     {
         $contactPoint = ContactPoint::findOrFail($id);
 
+        $data = [
+            'contactPointId' => $contactPoint->id,
+            'subjectId' => $contactPoint->contactable_id,
+        ];
+
         // Delete the specific contact point type (email, phone, address)
         if ($contactPoint->kind === 'email') {
             $contactPoint->email()->delete();
@@ -20,18 +25,11 @@ class ContactPointDeletionService
             $contactPoint->address()->delete();
         }
 
-        $data = [
-            'contactPointId' => $contactPoint->id,
-            'subjectId' => $contactPoint->contactable_id,
-        ];
+        $contactPoint->delete();
 
-        // Delete the contact point itself
-        $contactDeleted = $contactPoint->delete();
+        event(new ContactDeletedEvent($data));
 
-        if ($contactDeleted) {
-            event(new ContactDeletedEvent($data));
-        }
 
-        return $contactDeleted;
+        return true;
     }
 }

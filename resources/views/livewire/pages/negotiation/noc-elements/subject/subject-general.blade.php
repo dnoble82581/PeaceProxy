@@ -1,6 +1,7 @@
 <?php
 
 	use App\Enums\Subject\MoodLevels;
+	use App\Factories\MessageFactory;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
 	use App\Services\ContactPoint\ContactPointFetchingService;
@@ -266,21 +267,26 @@
 				[
 					'echo-private:'.\App\Support\Channels\Subject::subjectMood($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
 					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
 				];
 		}
 
 		public function handleSubjectUpdated(array $event)
 		{
-			// Ignore events for other subjects
-//			if (($event['subject_id'] ?? null) !== $this->primarySubject->id) {
-//				return;
-//			}
-
 			// Rebuild slides (this method already resets the array)
 			$this->loadImageUrls();
+			$this->loadPrimaryPhoneNumber();
 
 
-			// No $refresh needed — updating the property triggers a re-render
+			$messageFactory = app(MessageFactory::class);
+			$message = $messageFactory->generateMessage($this->primarySubject, 'SubjectEdited');
+			$this->toast()->timeout()->info($message)->send();
+
+		}
+
+		public function handleContactDeleted(array $event)
+		{
+			logger($event);
 		}
 
 		public function handleMoodCreated($event)
@@ -487,8 +493,19 @@
 			<p class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 px-3 py-1 rounded-md">
 				{{ $primarySubject->subjectAge() }} Year old {{ $primarySubject->gender ?? 'UNK Gender' }}
 			</p>
+			@php
+				$pn = $primaryPhoneNumber ?? '';
+				$digits = preg_replace('/\D+/', '', (string) $pn);
+				$formattedPhone = $pn;
+				if (strlen($digits) === 10) {
+					$formattedPhone = '(' . substr($digits, 0, 3) . ')-' . substr($digits, 3, 3) . '-' . substr($digits, 6, 4);
+				} elseif (strlen($digits) === 11 && $digits[0] === '1') {
+					// Strip leading country code 1 and format as US number
+					$formattedPhone = '(' . substr($digits, 1, 3) . ')-' . substr($digits, 4, 3) . '-' . substr($digits, 7, 4);
+				}
+			@endphp
 			<p class="text-xs text-primary-600 dark:text-gray-200 bg-gray-100 dark:bg-blue-700 px-3 py-1 rounded-md">
-				{{ $primaryPhoneNumber }}
+				{{ $formattedPhone }}
 			</p>
 		</div>
 	</div>

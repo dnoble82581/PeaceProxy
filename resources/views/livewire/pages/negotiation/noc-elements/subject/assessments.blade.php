@@ -240,6 +240,9 @@
 				$this->showQuestionsSlide = false;
 				$this->showCreateForm = false;
 			}
+
+			$message = "An assessment for {$this->subject->name} has been deleted.";
+			$this->toast()->timeout()->info($message)->send();
 		}
 
 		public function startNewAssessment():void

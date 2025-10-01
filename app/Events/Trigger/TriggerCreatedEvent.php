@@ -2,7 +2,8 @@
 
 namespace App\Events\Trigger;
 
-use App\Models\Trigger;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,26 +16,27 @@ class TriggerCreatedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Trigger $trigger)
+    public function __construct(public int $negotiationId, public int $triggerId)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("private.negotiation.{$this->trigger->tenant_id}.{$this->trigger->negotiation_id}")
+            new PrivateChannel(Negotiation::negotiationTriggers($this->negotiationId)),
         ];
     }
 
     public function broadcastAs()
     {
-        return 'TriggerCreated';
+        return NegotiationEventNames::TRIGGER_CREATED;
     }
 
     public function broadcastWith()
     {
         return [
-            'trigger' => $this->trigger->id,
+            'triggerId' => $this->triggerId,
+            'negotiationId' => $this->negotiationId,
         ];
     }
 }

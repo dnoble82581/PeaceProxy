@@ -1,6 +1,7 @@
 <?php
 
 	use App\Events\Subject\SubjectUpdatedEvent;
+	use App\Factories\MessageFactory;
 	use App\Livewire\Forms\CreateSubjectForm;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
@@ -16,6 +17,7 @@
 
 	new #[Layout('layouts.negotiation')] class extends Component {
 		use WithFileUploads;
+		use \TallStackUi\Traits\Interactions;
 
 		public Subject $subject;
 		public ?Negotiation $negotiation = null;
@@ -25,13 +27,13 @@
 		public $tempImages = [];
 
 		// Contact information properties
-		public $contactPhone = '';
-		public $contactEmail = '';
-		public $contactAddress = '';
-		public $contactCity = '';
-		public $contactState = '';
-		public $contactZip = '';
-		public $contactCountry = '';
+		public string $contactPhone = '';
+		public string $contactEmail = '';
+		public string $contactAddress = '';
+		public string $contactCity = '';
+		public string $contactState = '';
+		public string $contactZip = '';
+		public string $contactCountry = '';
 
 		public function mount(Subject $subject, ?Negotiation $negotiation = null)
 		{
@@ -59,7 +61,7 @@
 
 			// If a contact point exists, load its information
 			if ($primaryContactPoint) {
-				// Get phone number if it exists
+				// Get a phone number if it exists
 				if ($primaryContactPoint->phone) {
 					$this->contactPhone = $primaryContactPoint->phone->e164;
 				}
@@ -403,12 +405,12 @@
 						label="Date of Birth"
 						wire:model="createSubjectForm.date_of_birth"
 						placeholder="Enter date of birth" />
-
-				<x-input
-						icon="user"
+				
+				<x-select.styled
 						label="Gender"
 						wire:model="createSubjectForm.gender"
-						placeholder="Enter gender" />
+						placeholder="Select gender"
+						:options="collect(App\Enums\General\Genders::cases())->map(fn($gender) => ['label' => $gender->label(), 'value' => $gender->value])->toArray()" />
 
 				<x-input
 						icon="arrow-trending-up"

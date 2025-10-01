@@ -22,9 +22,16 @@ class TriggerDestructionService
 
         $this->addLogEntry($deletedTrigger);
 
+        $data = [
+            'triggerId' => $deletedTrigger->id,
+            'negotiationId' => $deletedTrigger->negotiation_id,
+        ];
+
         $deleted = $this->triggerRepository->deleteTrigger($id);
 
-        event(new TriggerDestroyedEvent($deletedTrigger));
+        if ($deleted) {
+            event(new TriggerDestroyedEvent($data['negotiationId'], $data['triggerId']));
+        }
 
         return $deleted;
     }

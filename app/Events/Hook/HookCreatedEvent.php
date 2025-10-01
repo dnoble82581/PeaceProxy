@@ -2,7 +2,8 @@
 
 namespace App\Events\Hook;
 
-use App\Models\Hook;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,24 +16,25 @@ class HookCreatedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Hook $hook)
+    public function __construct(public int $negotiationId, public int $hookId)
     {
     }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel("private.negotiation.{$this->hook->tenant_id}.{$this->hook->negotiation_id}");
+        return new PrivateChannel(Negotiation::negotiationHook($this->negotiationId));
     }
 
     public function broadcastAs(): string
     {
-        return 'HookCreated';
+        return NegotiationEventNames::HOOK_CREATED;
     }
 
     public function broadcastWith(): array
     {
         return [
-            'hookId' => $this->hook->id,
+            'negotiationId' => $this->negotiationId,
+            'hookId' => $this->hookId,
         ];
     }
 }

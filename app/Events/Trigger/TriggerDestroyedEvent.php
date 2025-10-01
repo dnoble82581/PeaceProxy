@@ -2,7 +2,8 @@
 
 namespace App\Events\Trigger;
 
-use App\Models\Trigger;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,31 +16,27 @@ class TriggerDestroyedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Trigger $trigger)
+    public function __construct(public int $negotiationId, public int $triggerId)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("private.negotiation.{$this->trigger->tenant_id}.{$this->trigger->negotiation_id}"),
+            new PrivateChannel(Negotiation::negotiationTriggers($this->negotiationId)),
         ];
     }
 
     public function broadcastAs()
     {
-        return 'TriggerDestroyed';
+        return NegotiationEventNames::TRIGGER_DELETED;
     }
 
     public function broadcastWith(): array
     {
         return [
-            'triggerId' => $this->trigger->id,
-            'details' => [
-                'title' => $this->trigger->title ?? 'Trigger',
-                'createdBy' => optional($this->trigger->user)->name ?? 'Someone',
-                'subjectName' => optional($this->trigger->subject)->name ?? 'the subject',
-            ],
+           'negotiationId' => $this->negotiationId,
+            'triggerId' => $this->triggerId,
         ];
     }
 }

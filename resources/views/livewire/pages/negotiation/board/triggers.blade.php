@@ -18,8 +18,9 @@
 	 * editing, and deleting triggers, as well as listening for real-time updates
 	 * through broadcast events.
 	 */
- new class extends Component {
- 		use Interactions;
+	new class extends Component {
+		use Interactions;
+
 		/** @var bool Flag to control the visibility of the create trigger modal */
 		public bool $showCreateTriggerModal = false;
 
@@ -67,7 +68,11 @@
 		{
 			$tenantId = auth()->user()->tenant_id;
 			return [
-				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationTriggers($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::TRIGGER_CREATED => 'handleTriggerCreated',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationTriggers($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::TRIGGER_DELETED => 'handleTriggerDeleted',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationTriggers($this->negotiationId).',.'.\App\Support\EventNames\NegotiationEventNames::TRIGGER_UPDATED => 'handleTriggerUpdated',
+
+//				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerCreated" => 'handleTriggerCreated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerUpdated" => 'handleTriggerUpdated',
 				"echo-private:private.negotiation.$tenantId.$this->negotiationId,.TriggerDestroyed" => 'handleTriggerDestroyed',
 			];
@@ -79,7 +84,7 @@
 		public function handleTriggerCreated(array $data):void
 		{
 			$triggerId = $data['triggerId'] ?? $data['trigger'] ?? null;
-			$trigger = $triggerId ? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
+			$trigger = $triggerId? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
 
 			if ($trigger) {
 				$subjectName = $trigger->subject->name ?? ($this->primarySubject->name ?? 'the subject');
@@ -106,7 +111,7 @@
 		public function handleTriggerUpdated(array $data)
 		{
 			$triggerId = $data['triggerId'] ?? $data['trigger'] ?? null;
-			$trigger = $triggerId ? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
+			$trigger = $triggerId? app(\App\Services\Trigger\TriggerFetchingService::class)->getTrigger($triggerId) : null;
 
 			if ($trigger) {
 				$subjectName = $trigger->subject->name ?? ($this->primarySubject->name ?? 'the subject');
@@ -130,7 +135,7 @@
 		/**
 		 * Handle the TriggerDestroyed event by sending a toast
 		 */
-		public function handleTriggerDestroyed(array $data): void
+		public function handleTriggerDeleted(array $data):void
 		{
 			$details = $data['details'] ?? null;
 			if ($details) {

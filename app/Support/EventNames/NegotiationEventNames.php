@@ -20,4 +20,13 @@ class NegotiationEventNames
     public const RFI_DELETED = 'RFICreated';
 
     public const DOCUMENT_UPLOADED = 'DocumentUploaded';
+    public const DOCUMENT_DELETED = 'DocumentDeleted';
+
+    public const HOOK_CREATED = 'HookCreated';
+    public const HOOK_DELETED = 'HookDeleted';
+    public const HOOK_UPDATED = 'HookUpdated';
+
+    public const TRIGGER_CREATED = 'TriggerCreated';
+    public const TRIGGER_UPDATED = 'TriggerUpdated';
+    public const TRIGGER_DELETED = 'TriggerDeleted';
 }
