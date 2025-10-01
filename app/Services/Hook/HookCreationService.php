@@ -18,7 +18,7 @@ class HookCreationService
         $hook = $this->hookRepository->createHook($hookDTO->toArray());
         $this->addLogEntry($hook);
         // Dispatch event on private.negotiation channel
-        event(new HookCreatedEvent($hook));
+        event(new HookCreatedEvent($hook->negotiation_id, $hook->id));
 
         return $hook;
     }

@@ -5,6 +5,7 @@ namespace App\Factories;
 use App\Models\Assessment;
 use App\Models\Demand;
 use App\Models\Objective;
+use App\Models\Subject;
 use App\Models\Warning;
 use App\Models\Warrant;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,10 @@ class MessageFactory
 
             case Assessment::class:
                 $message = $this->handleAssessment($model, $eventName);
+                break;
+
+            case Subject::class:
+                $message = $this->handleSubject($model, $eventName);
                 break;
 
         }
@@ -152,6 +157,16 @@ class MessageFactory
                 return "An assessment has been created for {$assessment->subject->name}.";
             default:
                 return 'An unknown assessment event occurred';
+        }
+    }
+
+    protected function handleSubject(Subject $subject, string $eventName): string
+    {
+        switch ($eventName) {
+            case 'SubjectEdited':
+                return "Subject {$subject->name} has been updated.";
+            default:
+                return 'An unknown subject event occurred';
         }
     }
 }

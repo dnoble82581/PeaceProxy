@@ -73,6 +73,14 @@ Broadcast::channel(subject::SUBJECT_CONTACT_PATTERN, function (User $user, int $
     return true;
 });
 
+Broadcast::channel(Negotiation::NEGOTIATION_HOOK_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
+Broadcast::channel(Negotiation::NEGOTIATION_TRIGGERS_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
     // Retrieve the subject instance
     $subject = App\Models\Subject::find($subjectId);

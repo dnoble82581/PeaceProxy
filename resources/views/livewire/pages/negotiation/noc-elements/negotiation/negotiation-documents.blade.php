@@ -111,10 +111,18 @@
 			$this->negotiation->load('documents');
 		}
 
-		public function getListeners()
+		public function handleDocumentDeleted(array $event)
+		{
+			$this->negotiation->load('documents');
+			$this->dispatch('refresh');
+		}
+
+		public function getListeners():array
 		{
 			return [
 				'echo-private:'.\App\Support\Channels\Negotiation::negotiationDocument($this->negotiation->id).',.'.\App\Support\EventNames\NegotiationEventNames::DOCUMENT_UPLOADED => 'handleDocumentUploaded',
+				'echo-private:'.\App\Support\Channels\Negotiation::negotiationDocument($this->negotiation->id).',.'.\App\Support\EventNames\NegotiationEventNames::DOCUMENT_DELETED => 'handleDocumentDeleted',
+				'refresh' => '$refresh',
 			];
 		}
 	}

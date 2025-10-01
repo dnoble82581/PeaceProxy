@@ -8,12 +8,13 @@
 	use Illuminate\Routing\Redirector;
 	use Livewire\Attributes\Layout;
 	use Livewire\Attributes\On;
+	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
 	use TallStackUi\Traits\Interactions;
 
 
-	new #[Layout('layouts.negotiation'), \Livewire\Attributes\Title('NOC - Peace Proxy')] class extends Component {
+	new #[Layout('layouts.negotiation'), Title('NOC - Peace Proxy')] class extends Component {
 
 		public ?Negotiation $negotiation;
 		public bool $showPhoneModal = false;

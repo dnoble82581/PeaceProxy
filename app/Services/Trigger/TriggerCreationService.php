@@ -19,7 +19,7 @@ class TriggerCreationService
 
         $this->addLogEntry($trigger);
 
-        event(new TriggerCreatedEvent($trigger));
+        event(new TriggerCreatedEvent($trigger->negotiation_id, $trigger->id));
 
         return $trigger;
     }

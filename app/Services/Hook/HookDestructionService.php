@@ -16,16 +16,26 @@ class HookDestructionService
     {
         $hook = $this->hookRepository->getHook($hookId);
 
-        if (!$hook) {
+        if (! $hook) {
             return null;
         }
 
+        $data = [
+            'hookId' => $hook->id,
+            'negotiationId' => $hook->negotiation_id,
+        ];
+
         $this->addLogEntry($hook);
 
-        // Dispatch event if needed
-        event(new HookDestroyedEvent($hook));
+        $hookDeleted = $this->hookRepository->deleteHook($hookId);
 
-        return $this->hookRepository->deleteHook($hookId);
+        if ($hookDeleted) {
+            event(new HookDestroyedEvent($data['negotiationId'], $data['hookId']));
+        }
+        // Dispatch event if needed
+
+        return $hookDeleted;
+
     }
 
     private function addLogEntry(Hook $hook): void

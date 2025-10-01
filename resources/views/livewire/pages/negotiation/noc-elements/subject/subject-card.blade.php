@@ -1,5 +1,6 @@
 <?php
 
+	use App\Factories\MessageFactory;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
 	use Livewire\Attributes\On;
@@ -41,6 +42,8 @@
 					'tenantSubdomain' => tenant()->subdomain
 				]));
 		}
+
+		public function handleSubjectUpdated() {}
 	}
 
 ?>

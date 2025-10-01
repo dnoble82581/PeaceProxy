@@ -181,7 +181,7 @@
 						</td>
 						<td class="hidden px-3 py-2 text-xs dark:text-dark-400 text-gray-500 md:table-cell">
 							@if($contactPoint->kind === 'email')
-								{{ $contactPoint->email->email }}
+								{{ $contactPoint->email->email ?? '' }}
 							@elseif($contactPoint->kind === 'phone')
 								{{ $contactPoint->phone->e164 }} {{ $contactPoint->phone->ext ? 'ext. ' . $contactPoint->phone->ext : '' }}
 							@elseif($contactPoint->kind === 'address')

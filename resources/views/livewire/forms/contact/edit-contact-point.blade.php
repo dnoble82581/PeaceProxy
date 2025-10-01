@@ -10,6 +10,7 @@
 	use App\Services\ContactPoint\ContactPointFetchingService;
 	use App\Services\ContactPoint\ContactPointUpdateService;
 	use Livewire\Attributes\Layout;
+	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 
 	new #[Layout('layouts.negotiation')] class extends Component {
@@ -28,7 +29,7 @@
 
 		}
 
-		#[\Livewire\Attributes\On('load-contact')]
+		#[On('load-contact')]
 		public function loadForm(int $contactPointId)
 		{
 
@@ -64,6 +65,11 @@
 				$this->form->latitude = $this->contactPoint->address->latitude;
 				$this->form->longitude = $this->contactPoint->address->longitude;
 			}
+		}
+
+		public function cancel()
+		{
+			$this->dispatch('closeModal');
 		}
 
 		public function updateContactPoint()
@@ -414,7 +420,7 @@
 				<x-button
 						sm
 						wire:navigate.hover
-						href="{{ route('negotiation-noc', ['negotiation' => $this->negotiation->title, 'tenantSubdomain' => tenant()->subdomain]) }}"
+						wire:click="cancel"
 						color="secondary">
 					Cancel
 				</x-button>

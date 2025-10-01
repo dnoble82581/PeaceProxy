@@ -2,6 +2,7 @@
 
 namespace App\Events\Document;
 
+use App\Support\Channels\Negotiation;
 use App\Support\Channels\Subject;
 use App\Support\EventNames\SubjectEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -16,20 +17,24 @@ class DocumentDestroyedEvent implements ShouldBroadcastNow
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public int $subjectId, public array $details)
+    public function __construct(public int $subjectId, public int $negotiationId, public array $details)
     {
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Subject::subjectDocument($this->subjectId))
+            new PrivateChannel(Subject::subjectDocument($this->subjectId)),
+            new PrivateChannel(Negotiation::negotiationDocument($this->negotiationId)),
         ];
     }
 
     public function broadcastAs(): string
     {
+        // Both SubjectEventNames::DOCUMENT_DELETED and NegotiationEventNames::DOCUMENT_DELETED resolve to the same string
+        // so broadcasting once with this alias will satisfy listeners on both channels returned above.
         return SubjectEventNames::DOCUMENT_DELETED;
+
     }
 
     public function broadcastWith(): array
@@ -41,6 +46,7 @@ class DocumentDestroyedEvent implements ShouldBroadcastNow
 
         return [
             'subjectId' => $this->subjectId,
+            'negotiationId' => $this->negotiationId,
             'documents' => $documents, // Now documents are properly serialized
             'details' => $this->details,
         ];

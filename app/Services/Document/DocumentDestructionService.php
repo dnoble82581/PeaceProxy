@@ -66,7 +66,7 @@ class DocumentDestructionService
         ];
 
         // Fire event and add log entry with the loaded document context
-        event(new DocumentDestroyedEvent($document->documentable_id, $details));
+        event(new DocumentDestroyedEvent($document->documentable_id, $document->negotiation_id, $details));
         $this->addLogEntry($document);
 
         return $this->documentRepository->deleteDocument($documentId);
