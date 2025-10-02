@@ -246,32 +246,36 @@
 			</table>
 		</div>
 	</div>
-	<x-slide
-			wire="showCreateModal"
-			class="">
-		<x-slot:title>
-			<div class="px-4 sm:px-8 text-center space-y-3">
-				<h1 class="text-2xl text-gray-400 font-semibold uppercase">Create Contact Point</h1>
-				<p class="text-xs">Creating a contact point for:
-					<span class="text-primary-400">{{ $subject->name }}</span></p>
-			</div>
-		</x-slot:title>
-		<livewire:forms.contact.create-contact-point
-				:subject-id="$subject->id"
-				:negotiation-id="$negotiationId" />
-	</x-slide>
-	<x-slide
-			wire="showContactEditModal"
-			class="">
-		<x-slot:title>
-			<div class="px-4 sm:px-8 text-center space-y-3">
-				<h1 class="text-2xl text-gray-400 font-semibold uppercase">Edit Contact Point</h1>
-				<p class="text-xs">Editing a contact point for:
-					<span class="text-primary-400">{{ $subject->name }}</span></p>
-			</div>
-		</x-slot:title>
-		<livewire:forms.contact.edit-contact-point
-				:negotiation-id="$negotiationId"
-				:subject-id="$subject->id" />
-	</x-slide>
+	<template x-teleport="body">
+		<x-slide
+				wire="showCreateModal"
+				class="">
+			<x-slot:title>
+				<div class="px-4 sm:px-8 text-center space-y-3">
+					<h1 class="text-2xl text-gray-400 font-semibold uppercase">Create Contact Point</h1>
+					<p class="text-xs">Creating a contact point for:
+						<span class="text-primary-400">{{ $subject->name }}</span></p>
+				</div>
+			</x-slot:title>
+			<livewire:forms.contact.create-contact-point
+					:subject-id="$subject->id"
+					:negotiation-id="$negotiationId" />
+		</x-slide>
+	</template>
+	<template x-teleport="body">
+		<x-slide
+				wire="showContactEditModal"
+				class="">
+			<x-slot:title>
+				<div class="px-4 sm:px-8 text-center space-y-3">
+					<h1 class="text-2xl text-gray-400 font-semibold uppercase">Edit Contact Point</h1>
+					<p class="text-xs">Editing a contact point for:
+						<span class="text-primary-400">{{ $subject->name }}</span></p>
+				</div>
+			</x-slot:title>
+			<livewire:forms.contact.edit-contact-point
+					:negotiation-id="$negotiationId"
+					:subject-id="$subject->id" />
+		</x-slide>
+	</template>
 </div>

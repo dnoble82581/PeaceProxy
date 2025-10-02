@@ -316,25 +316,29 @@
 			</div>
 		@endif
 	</div>
-	<x-modal
-			id="create-trigger-modal"
-			center
-			title="Create Trigger"
-			wire="showCreateTriggerModal">
-		<livewire:forms.trigger.create-trigger
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
-	</x-modal>
-	<x-modal
-			id="edit-trigger-modal"
-			center
-			title="Edit Trigger"
-			wire="showEditTriggerModal"
-			x-on:hidden.window="$wire.closeModal()">
-		@if($triggerToEdit)
-			<livewire:forms.trigger.edit-trigger
-					:trigger="$triggerToEdit"
-					:key="'edit-trigger-'.$triggerToEdit->id" />
-		@endif
-	</x-modal>
+	<template x-teleport="body">
+		<x-modal
+				id="create-trigger-modal"
+				center
+				title="Create Trigger"
+				wire="showCreateTriggerModal">
+			<livewire:forms.trigger.create-trigger
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		</x-modal>
+	</template>
+	<template x-teleport="body">
+		<x-modal
+				id="edit-trigger-modal"
+				center
+				title="Edit Trigger"
+				wire="showEditTriggerModal"
+				x-on:hidden.window="$wire.closeModal()">
+			@if($triggerToEdit)
+				<livewire:forms.trigger.edit-trigger
+						:trigger="$triggerToEdit"
+						:key="'edit-trigger-'.$triggerToEdit->id" />
+			@endif
+		</x-modal>
+	</template>
 </div>

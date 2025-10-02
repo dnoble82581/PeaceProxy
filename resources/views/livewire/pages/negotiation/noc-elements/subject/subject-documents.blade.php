@@ -286,131 +286,135 @@
 	</div>
 
 	<!-- Upload Document Modal -->
-	<x-modal wire="showUploadModal">
-		<x-card title="Upload Document">
-			<div class="space-y-4">
-				<div>
-					<x-upload
-							label="File"
-							wire:model="file"
-							id="file"
-							class="mt-1 block w-full" />
-				</div>
-
-				<div>
-					<x-input
-							label="Name"
-							wire:model="form.name"
-							id="name"
-							class="mt-1 block w-full" />
-				</div>
-
-				<div>
-					<x-input
-							label="Category"
-							wire:model="form.category"
-							id="category"
-							class="mt-1 block w-full" />
-				</div>
-
-				<div>
-					<x-textarea
-							label="Description"
-							wire:model="form.description"
-							id="description"
-							class="mt-1 block w-full" />
-				</div>
-
-				<div class="flex items-center">
-					<x-checkbox
-							label="Private"
-							wire:model="form.is_private"
-							id="is_private" />
-				</div>
-			</div>
-
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-4">
-					<x-button
-							flat
-							text="Cancel"
-							wire:click="$toggle('showUploadModal')" />
-					<x-button
-							primary
-							label="Upload"
-							text="Upload"
-							wire:click="uploadDocument"
-							wire:loading.attr="disabled" />
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
-
-	<!-- View Document Modal -->
-	<x-modal
-			wire="showViewModal"
-			max-width="4xl">
-		<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
-			@if($currentDocument && $documentUrl)
+	<template x-teleport="body">
+		<x-modal wire="showUploadModal">
+			<x-card title="Upload Document">
 				<div class="space-y-4">
-					<div class="flex justify-between">
-						<div>
-							<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
-							<p class="text-sm text-gray-500">
-								Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
-							<p class="text-sm text-gray-500">
-								Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
-						</div>
-						<div>
-							<x-button
-									href="{{ $documentUrl }}"
-									target="_blank"
-									primary
-									label="Expand"
-									icon="arrows-pointing-out" />
-						</div>
+					<div>
+						<x-upload
+								label="File"
+								wire:model="file"
+								id="file"
+								class="mt-1 block w-full" />
 					</div>
 
-					<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
-						@if(Str::startsWith($currentDocument->file_type, 'image/'))
-							<img
-									src="{{ $documentUrl }}"
-									alt="{{ $currentDocument->name }}"
-									class="max-w-full h-auto mx-auto" />
-						@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
-							<iframe
-									src="{{ $documentUrl }}"
-									class="w-full h-96"
-									frameborder="0"></iframe>
-						@else
-							<div class="text-center py-8">
-								<p>Preview not available for this file type.</p>
-								<p class="mt-2">Please download the file to view it.</p>
+					<div>
+						<x-input
+								label="Name"
+								wire:model="form.name"
+								id="name"
+								class="mt-1 block w-full" />
+					</div>
+
+					<div>
+						<x-input
+								label="Category"
+								wire:model="form.category"
+								id="category"
+								class="mt-1 block w-full" />
+					</div>
+
+					<div>
+						<x-textarea
+								label="Description"
+								wire:model="form.description"
+								id="description"
+								class="mt-1 block w-full" />
+					</div>
+
+					<div class="flex items-center">
+						<x-checkbox
+								label="Private"
+								wire:model="form.is_private"
+								id="is_private" />
+					</div>
+				</div>
+
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-4">
+						<x-button
+								flat
+								text="Cancel"
+								wire:click="$toggle('showUploadModal')" />
+						<x-button
+								primary
+								label="Upload"
+								text="Upload"
+								wire:click="uploadDocument"
+								wire:loading.attr="disabled" />
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
+
+	<!-- View Document Modal -->
+	<template x-teleport="body">
+		<x-modal
+				wire="showViewModal"
+				max-width="4xl">
+			<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
+				@if($currentDocument && $documentUrl)
+					<div class="space-y-4">
+						<div class="flex justify-between">
+							<div>
+								<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
+								<p class="text-sm text-gray-500">
+									Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
+								<p class="text-sm text-gray-500">
+									Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
+							</div>
+							<div>
+								<x-button
+										href="{{ $documentUrl }}"
+										target="_blank"
+										primary
+										label="Expand"
+										icon="arrows-pointing-out" />
+							</div>
+						</div>
+						
+						<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
+							@if(Str::startsWith($currentDocument->file_type, 'image/'))
+								<img
+										src="{{ $documentUrl }}"
+										alt="{{ $currentDocument->name }}"
+										class="max-w-full h-auto mx-auto" />
+							@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
+								<iframe
+										src="{{ $documentUrl }}"
+										class="w-full h-96"
+										frameborder="0"></iframe>
+							@else
+								<div class="text-center py-8">
+									<p>Preview not available for this file type.</p>
+									<p class="mt-2">Please download the file to view it.</p>
+								</div>
+							@endif
+						</div>
+						
+						@if($currentDocument->description)
+							<div>
+								<h3 class="text-sm font-medium">Description</h3>
+								<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
 							</div>
 						@endif
 					</div>
-
-					@if($currentDocument->description)
-						<div>
-							<h3 class="text-sm font-medium">Description</h3>
-							<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
-						</div>
-					@endif
-				</div>
-			@else
-				<div class="py-8 text-center">
-					<p>Document not found or unable to generate preview.</p>
-				</div>
-			@endif
-
-			<x-slot:footer>
-				<div class="flex justify-end">
-					<x-button
-							flat
-							label="Close"
-							x-on:click="close" />
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				@else
+					<div class="py-8 text-center">
+						<p>Document not found or unable to generate preview.</p>
+					</div>
+				@endif
+				
+				<x-slot:footer>
+					<div class="flex justify-end">
+						<x-button
+								flat
+								label="Close"
+								x-on:click="close" />
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 </div>
