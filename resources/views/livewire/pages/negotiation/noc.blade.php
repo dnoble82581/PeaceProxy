@@ -1,29 +1,27 @@
 <?php
 
 	use App\Models\Negotiation;
-	use App\Services\NegotiationUser\NegotiationUserUpdatingService;
+	use App\Models\Subject;
 	use App\Services\ContactPoint\ContactPointFetchingService;
-	use Illuminate\Foundation\Application;
-	use Illuminate\Http\RedirectResponse;
-	use Illuminate\Routing\Redirector;
+	use Illuminate\View\View;
 	use Livewire\Attributes\Layout;
 	use Livewire\Attributes\On;
 	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
-	use Illuminate\View\View;
 	use TallStackUi\Traits\Interactions;
 
 
 	new #[Layout('layouts.negotiation'), Title('NOC - Peace Proxy')] class extends Component {
 
-		public ?Negotiation $negotiation;
+		public ?Negotiation $negotiation = null;
 		public bool $showPhoneModal = false;
-		public \App\Models\Subject $primarySubject;
-		public $phoneNumbers = [];
+		public ?Subject $primarySubject = null;
+		/** @var array<int, array{label:string, number:string|null, ext:string, isPrimary:string, fullDisplay:string}> */
+		public array $phoneNumbers = [];
 		use Interactions;
 
 
-		public function mount($negotiation)
+		public function mount(Negotiation $negotiation):void
 		{
 			$this->negotiation = $negotiation;
 			$this->primarySubject = $negotiation->primarySubject();
@@ -36,30 +34,32 @@
 		}
 
 		#[On('togglePhoneModal')]
-		public function toggleShowPhoneModal()
+		public function toggleShowPhoneModal():void
 		{
 			$this->showPhoneModal = !$this->showPhoneModal;
 		}
 
 		/**
-		 * Load all phone numbers for the primary subject
+		 * Load all phone numbers for the primary subject.
 		 */
 		public function loadPhoneNumbers():void
 		{
-			if ($this->primarySubject) {
-				// Get all contact points for the subject
-				$contactPoints = app(ContactPointFetchingService::class)->getContactPointsBySubject($this->primarySubject);
+			if ($this->primarySubject === null) {
+				$this->phoneNumbers = [];
+				return;
+			}
 
-				// Filter to get only phone contact points
-				$phoneContactPoints = $contactPoints->filter(function ($contactPoint) {
-					return $contactPoint->kind === 'phone';
-				});
+			$contactPoints = app(ContactPointFetchingService::class)
+				->getContactPointsBySubject($this->primarySubject);
 
-				// Extract phone numbers from contact points
-				$this->phoneNumbers = $phoneContactPoints->map(function ($contactPoint) {
+			$this->phoneNumbers = $contactPoints
+				->filter(static function ($contactPoint):bool {
+					return $contactPoint->kind === 'phone' && $contactPoint->phone !== null;
+				})
+				->map(static function ($contactPoint):array {
 					$label = $contactPoint->label?: 'Phone';
-					$number = $contactPoint->phone->e164;
-					$ext = $contactPoint->phone->ext? ' ext. '.$contactPoint->phone->ext : '';
+					$number = $contactPoint->phone?->e164;
+					$ext = $contactPoint->phone?->ext? ' ext. '.$contactPoint->phone->ext : '';
 					$isPrimary = $contactPoint->is_primary? ' (Primary)' : '';
 
 					return [
@@ -67,10 +67,11 @@
 						'number' => $number,
 						'ext' => $ext,
 						'isPrimary' => $isPrimary,
-						'fullDisplay' => "$label: $number$ext$isPrimary"
+						'fullDisplay' => "$label: $number$ext$isPrimary",
 					];
-				})->toArray();
-			}
+				})
+				->values()
+				->all();
 		}
 	}
 
@@ -97,8 +98,10 @@
 		<div class="p-4">
 			@if(count($phoneNumbers) > 0)
 				<div class="space-y-2">
-					@foreach($phoneNumbers as $phone)
-						<div class="flex items-center gap-2">
+					@foreach($phoneNumbers as $index => $phone)
+						<div
+								class="flex items-center gap-2"
+								wire:key="phone-{{ $index }}">
 							<x-icon
 									class="w-6 h-6 text-primary-500 flex-shrink-0"
 									name="phone" />
