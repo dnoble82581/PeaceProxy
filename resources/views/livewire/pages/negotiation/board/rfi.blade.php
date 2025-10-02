@@ -700,10 +700,11 @@
 	</div>
 
 	<!-- Create RFI Modal -->
-	<x-modal
-			id="create-rfi-modal"
-			wire="showCreateModal"
-			x-on:hidden.window="$wire.closeModal()">
+	<template x-teleport="body">
+		<x-modal
+				id="create-rfi-modal"
+				wire="showCreateModal"
+				x-on:hidden.window="$wire.closeModal()">
 		<x-card title="Create New Request for Information">
 			<div class="space-y-4">
 				<x-input
@@ -782,13 +783,15 @@
 				</div>
 			</x-slot:footer>
 		</x-card>
-	</x-modal>
+		</x-modal>
+	</template>
 
 	<!-- Edit RFI Modal -->
-	<x-modal
-			id="edit-rfi-modal"
-			wire="showEditModal"
-			x-on:hidden.window="$wire.closeModal()">
+	<template x-teleport="body">
+		<x-modal
+				id="edit-rfi-modal"
+				wire="showEditModal"
+				x-on:hidden.window="$wire.closeModal()">
 		<x-card title="Edit Request for Information">
 			<div class="space-y-4">
 				<x-input
@@ -835,14 +838,16 @@
 				</div>
 			</x-slot:footer>
 		</x-card>
-	</x-modal>
+		</x-modal>
+	</template>
 
 	<!-- View Request Details and Responses Modal -->
-	<x-modal
-			size="6xl"
-			id="view-responses-modal"
-			wire="showResponsesModal"
-			x-on:hidden.window="$wire.closeModal()">
+	<template x-teleport="body">
+		<x-modal
+				size="6xl"
+				id="view-responses-modal"
+				wire="showResponsesModal"
+				x-on:hidden.window="$wire.closeModal()">
 		<x-card title="Request Details & Responses">
 			<div class="space-y-6">
 				<!-- Request Details Section -->
@@ -969,10 +974,12 @@
 				</div>
 			</x-slot:footer>
 		</x-card>
-	</x-modal>
+		</x-modal>
+	</template>
 
 	<!-- Upload RFI Document Modal -->
-	<x-modal wire="showUploadDocModal">
+	<template x-teleport="body">
+		<x-modal wire="showUploadDocModal">
 		<x-card title="Upload Document">
 			<div class="space-y-4">
 				<div>
@@ -1025,12 +1032,14 @@
 				</div>
 			</x-slot:footer>
 		</x-card>
-	</x-modal>
+		</x-modal>
+	</template>
 
 	<!-- View RFI Document Modal -->
-	<x-modal
-			wire="showViewDocModal"
-			max-width="4xl">
+	<template x-teleport="body">
+		<x-modal
+				wire="showViewDocModal"
+				max-width="4xl">
 		<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
 			@if($currentDocument && $documentUrl)
 				<div class="space-y-4">
@@ -1091,4 +1100,5 @@
 			</x-slot:footer>
 		</x-card>
 	</x-modal>
+	</template>
 </div>

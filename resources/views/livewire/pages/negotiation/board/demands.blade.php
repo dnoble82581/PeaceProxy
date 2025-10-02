@@ -442,31 +442,37 @@
 		@endif
 
 	</div>
-	<x-modal
-			id="create-demand-modal"
-			center
-			title="Create Demand"
-			wire="showCreateDemandModal">
-		<livewire:forms.demand.create-demand
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
-	</x-modal>
-	<x-modal
-			id="edit-demand-modal"
-			center
-			title="Edit Demand"
-			wire="showEditDemandModal"
-			x-on:hidden.window="$wire.closeModal()">
-		@if($demandToEdit)
-			<livewire:forms.demand.edit-demand
-					:demand="$demandToEdit"
-					:key="'demand-'.$demandToEdit->id" />
-		@endif
-	</x-modal>
+	<template x-teleport="body">
+		<x-modal
+				id="create-demand-modal"
+				center
+				title="Create Demand"
+				wire="showCreateDemandModal">
+			<livewire:forms.demand.create-demand
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		</x-modal>
+	</template>
+	<template x-teleport="body">
+		<x-modal
+				id="edit-demand-modal"
+				center
+				title="Edit Demand"
+				wire="showEditDemandModal"
+				x-on:hidden.window="$wire.closeModal()">
+			@if($demandToEdit)
+				<livewire:forms.demand.edit-demand
+						:demand="$demandToEdit"
+						:key="'demand-'.$demandToEdit->id" />
+			@endif
+		</x-modal>
+	</template>
 
 	{{--	SHOW DELIVERY PLAN MODAL--}}
-	<x-modal wire="showViewDeliveryPlansModal">
-		<livewire:forms.delivery.show-delivery-plan />
-	</x-modal>
+	<template x-teleport="body">
+		<x-modal wire="showViewDeliveryPlansModal">
+			<livewire:forms.delivery.show-delivery-plan />
+		</x-modal>
+	</template>
 
 </div>
