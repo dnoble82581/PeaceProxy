@@ -9,6 +9,7 @@
 
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
+	use Stripe\Exception\ApiErrorException;
 
 	new class extends Component {
 		public string $clientSecret = '';
@@ -56,7 +57,8 @@
 			try {
 				// Ensure absolute return URL and tenant-aware domain if you use subdomains
 				$returnUrl = route('billing.index', ['tenantSubdomain' => tenant()->subdomain], true);
-				return $tenant->redirectToBillingPortal($returnUrl);
+				$url = $tenant->billingPortalUrl($returnUrl);
+				return $this->redirect($url);
 			} catch (\Stripe\Exception\ApiErrorException $e) {
 				// This is what you’ll see when portal isn’t configured in the current mode
 				report($e);
@@ -107,10 +109,10 @@
                 if(!window.__ppElements){
                     window.__ppElements = window.__ppStripe.elements({ clientSecret: @js($clientSecret) });
                 }
-                if(window.__ppPayment){
-                    try { window.__ppPayment.unmount(); } catch(e) {}
+                if(!window.__ppPayment){
+                    window.__ppPayment = window.__ppElements.create('payment');
                 }
-                window.__ppPayment = window.__ppElements.create('payment');
+                try { window.__ppPayment.unmount(); } catch(e) {}
                 window.__ppPayment.mount('#pp-payment-element');
             } catch(e){
                 this.errorMessage = (e && e.message) ? e.message : 'Unable to initialize Stripe Elements.';
@@ -254,7 +256,7 @@
 			<div class="flex items-center justify-between">
 				<h3 class="text-lg font-semibold">Add payment method</h3>
 				<button
-						@click="modal=false"
+						@click="modal=false; try { window.__ppPayment && window.__ppPayment.unmount(); } catch(e) {}"
 						class="p-1 rounded-lg hover:bg-neutral-100 dark:text-dark-700">✕
 				</button>
 			</div>
