@@ -404,23 +404,25 @@
 	</div>
 
 	<!-- Delete Confirmation Modal -->
-	<x-modal
-			persistent
-			center
-			wire="showDeleteHostageModal">
-		<x-card title="Confirm Delete">
-			<p class="mb-4">Are you sure you want to delete this hostage? This action cannot be undone.</p>
+	<template x-teleport="body">
+		<x-modal
+				persistent
+				center
+				wire="showDeleteHostageModal">
+			<x-card title="Confirm Delete">
+				<p class="mb-4">Are you sure you want to delete this hostage? This action cannot be undone.</p>
 
-			<div class="flex justify-end space-x-2">
-				<x-button
-						wire:click="$toggle('showDeleteHostageModal')"
-						color="secondary">Cancel
-				</x-button>
-				<x-button
-						wire:click="deleteHostage"
-						color="red">Delete
-				</x-button>
-			</div>
-		</x-card>
-	</x-modal>
+				<div class="flex justify-end space-x-2">
+					<x-button
+							wire:click="$toggle('showDeleteHostageModal')"
+							color="secondary">Cancel
+						</x-button>
+					<x-button
+							wire:click="deleteHostage"
+							color="red">Delete
+						</x-button>
+				</div>
+			</x-card>
+		</x-modal>
+	</template>
 </div>

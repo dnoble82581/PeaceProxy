@@ -413,131 +413,134 @@
 		</div>
 
 		<!-- Template Selection Slide -->
-		<x-modal
-				center
-				wire="showCreateForm"
-				size="md">
-			<x-slot:title>
-				<div class="flex justify-between items-center">
-					<h1 class="text-xl font-bold">Select Assessment Template</h1>
+		<template x-teleport="body">
+			<x-modal
+					center
+					wire="showCreateForm"
+					size="md">
+				<x-slot:title>
+					<div class="flex justify-between items-center">
+						<h1 class="text-xl font-bold">Select Assessment Template</h1>
+					</div>
+				</x-slot:title>
+
+				<div class="p-4">
+					<p class="text-gray-600 dark:text-gray-400 mb-6">
+						Select a template to start a new assessment for {{ $subject->name }}.
+					</p>
+
+					@if(count($templates) > 0)
+						<div class="space-y-4">
+							<div>
+								<x-select.styled
+										wire:model="selectedTemplateId"
+										placeholder="Select a template"
+										:options="$templates->map(fn($template) => ['value' => $template->id, 'label' => $template->name])->toArray()" />
+								@error('selectedTemplateId')
+								<span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+							</div>
+
+							<div class="flex justify-end space-x-2 mt-6">
+								<x-button
+										color="gray"
+										wire:click="hideCreateForm"
+										class="mr-2">
+									Cancel
+									</x-button>
+								<x-button
+										text="Start Assessment"
+										color="blue"
+										wire:click="selectTemplate"
+									/>
+							</div>
+						</div>
+					@else
+						<div class="bg-white dark:bg-dark-800 rounded-lg shadow p-3 text-center">
+							<p class="text-gray-500 dark:text-gray-400 text-sm">No assessment templates available. Please
+							                                                    create a template first.</p>
+						</div>
+					@endif
 				</div>
-			</x-slot:title>
-
-			<div class="p-4">
-				<p class="text-gray-600 dark:text-gray-400 mb-6">
-					Select a template to start a new assessment for {{ $subject->name }}.
-				</p>
-
-				@if(count($templates) > 0)
-					<div class="space-y-4">
-						<div>
-							<x-select.styled
-									wire:model="selectedTemplateId"
-									placeholder="Select a template"
-									:options="$templates->map(fn($template) => ['value' => $template->id, 'label' => $template->name])->toArray()" />
-							@error('selectedTemplateId')
-							<span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-						</div>
-
-						<div class="flex justify-end space-x-2 mt-6">
-							<x-button
-									color="gray"
-									wire:click="hideCreateForm"
-									class="mr-2">
-								Cancel
-							</x-button>
-							<x-button
-									text="Start Assessment"
-									color="blue"
-									wire:click="selectTemplate"
-							/>
-						</div>
-					</div>
-				@else
-					<div class="bg-white dark:bg-dark-800 rounded-lg shadow p-3 text-center">
-						<p class="text-gray-500 dark:text-gray-400 text-sm">No assessment templates available. Please
-						                                                    create a template first.</p>
-					</div>
-				@endif
-			</div>
-		</x-modal>
+			</x-modal>
+		</template>
 
 		<!-- Questions Slide -->
-		<x-slide
-				wire="showQuestionsSlide"
-				size="xl">
-			<x-slot:title>
-				<div class="flex justify-between items-center">
-					<h1 class="text-xl font-bold">{{ $subject->name }} Assessment</h1>
-				</div>
-			</x-slot:title>
+		<template x-teleport="body">
+			<x-slide
+					wire="showQuestionsSlide"
+					size="xl">
+				<x-slot:title>
+					<div class="flex justify-between items-center">
+						<h1 class="text-xl font-bold">{{ $subject->name }} Assessment</h1>
+					</div>
+				</x-slot:title>
 
-			<div class="p-4">
-				<p class="text-gray-600 dark:text-gray-400 mb-6">
-					Complete the assessment by answering the questions below.
-				</p>
+				<div class="p-4">
+					<p class="text-gray-600 dark:text-gray-400 mb-6">
+						Complete the assessment by answering the questions below.
+					</p>
 
-				<form wire:submit.prevent="submitAssessment">
-					<div class="space-y-6">
-						@if(count($questions) > 0)
-							@foreach($questions as $question)
-								<div class="border-b border-gray-200 dark:border-dark-600 pb-4 mb-4 last:border-b-0">
-									<div class="mb-2">
-										<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-											{{ $question->question }}
-											@if($question->is_required)
-												<span class="text-red-500">*</span>
-											@endif
-										</label>
-									</div>
+					<form wire:submit.prevent="submitAssessment">
+						<div class="space-y-6">
+							@if(count($questions) > 0)
+								@foreach($questions as $question)
+									<div class="border-b border-gray-200 dark:border-dark-600 pb-4 mb-4 last:border-b-0">
+										<div class="mb-2">
+											<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+												{{ $question->question }}
+												@if($question->is_required)
+													<span class="text-red-500">*</span>
+												@endif
+											</label>
+										</div>
 
-									@switch($question->question_type)
-										@case('text')
-											<x-input
-													wire:model="answers.{{ $question->id }}"
-													placeholder="Enter your answer" />
-											@break
+										@switch($question->question_type)
+											@case('text')
+												<x-input
+														wire:model="answers.{{ $question->id }}"
+														placeholder="Enter your answer" />
+												@break
 
-										@case('textarea')
-											<x-textarea
-													wire:model="answers.{{ $question->id }}"
-													placeholder="Enter your answer"
-													rows="3" />
-											@break
+											@case('textarea')
+												<x-textarea
+														wire:model="answers.{{ $question->id }}"
+														placeholder="Enter your answer"
+														rows="3" />
+												@break
 
-										@case('number')
-											<x-input
-													type="number"
-													wire:model="answers.{{ $question->id }}"
-													placeholder="Enter a number" />
-											@break
+											@case('number')
+												<x-input
+														type="number"
+														wire:model="answers.{{ $question->id }}"
+														placeholder="Enter a number" />
+												@break
 
-										@case('boolean')
-											<div class="space-y-2">
-												<div class="flex items-center">
-													<x-radio
-															wire:model="answers.{{ $question->id }}"
-															value="true"
-															label="Yes" />
+											@case('boolean')
+												<div class="space-y-2">
+													<div class="flex items-center">
+														<x-radio
+																wire:model="answers.{{ $question->id }}"
+																value="true"
+																label="Yes" />
+													</div>
+													<div class="flex items-center">
+														<x-radio
+																wire:model="answers.{{ $question->id }}"
+																value="false"
+																label="No" />
+													</div>
 												</div>
-												<div class="flex items-center">
-													<x-radio
-															wire:model="answers.{{ $question->id }}"
-															value="false"
-															label="No" />
-												</div>
-											</div>
-											@break
+												@break
 
-										@case('select')
-											<x-select.styled
-													wire:model="answers.{{ $question->id }}"
-													placeholder="Select an option"
-													:options="collect(json_decode($question->options))->map(fn($option) => ['value' => $option, 'label' => $option])->toArray()" />
-											@break
+											@case('select')
+												<x-select.styled
+														wire:model="answers.{{ $question->id }}"
+														placeholder="Select an option"
+														:options="collect(json_decode($question->options))->map(fn($option) => ['value' => $option, 'label' => $option])->toArray()" />
+												@break
 
-										@case('multiselect')
-											<div class="space-y-2">
+											@case('multiselect')
+												<div class="space-y-2">
 												@foreach(json_decode($question->options) as $option)
 													<div class="flex items-center">
 														<x-checkbox
@@ -659,6 +662,7 @@
 				</form>
 			</div>
 		</x-slide>
+		</template>
 		<!-- Success message is now handled through the notification system -->
 	</div>
 </div>

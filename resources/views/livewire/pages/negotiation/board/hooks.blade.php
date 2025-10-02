@@ -325,25 +325,29 @@
 		@endif
 
 	</div>
-	<x-modal
-			id="create-hook-modal"
-			center
-			title="Create Hook"
-			wire="showCreateHookModal">
-		<livewire:forms.hook.create-hook
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
-	</x-modal>
-	<x-modal
-			id="edit-hook-modal"
-			center
-			title="Edit Hook"
-			wire="showEditHookModal"
-			x-on:hidden.window="$wire.closeModal()">
-		@if($hookToEdit)
-			<livewire:forms.hook.edit-hook
-					:hook="$hookToEdit"
-					:key="'hook-'.$hookToEdit->id" />
-		@endif
-	</x-modal>
+	<template x-teleport="body">
+		<x-modal
+				id="create-hook-modal"
+				center
+				title="Create Hook"
+				wire="showCreateHookModal">
+			<livewire:forms.hook.create-hook
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		</x-modal>
+	</template>
+	<template x-teleport="body">
+		<x-modal
+				id="edit-hook-modal"
+				center
+				title="Edit Hook"
+				wire="showEditHookModal"
+				x-on:hidden.window="$wire.closeModal()">
+			@if($hookToEdit)
+				<livewire:forms.hook.edit-hook
+						:hook="$hookToEdit"
+						:key="'hook-'.$hookToEdit->id" />
+			@endif
+		</x-modal>
+	</template>
 </div>
