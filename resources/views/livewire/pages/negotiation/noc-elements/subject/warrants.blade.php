@@ -245,7 +245,6 @@
 	<template x-teleport="body">
 		<x-slide
 				size="3xl"
-				{{--				title="Create Warrant"--}}
 				wire="showCreateWarrantModal"
 				class="">
 			<x-slot:title>

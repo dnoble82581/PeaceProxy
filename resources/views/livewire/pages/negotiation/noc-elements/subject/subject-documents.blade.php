@@ -295,6 +295,7 @@
 								label="File"
 								wire:model="file"
 								id="file"
+								close-after-upload
 								class="mt-1 block w-full" />
 					</div>
 
@@ -333,10 +334,12 @@
 				<x-slot:footer>
 					<div class="flex justify-end gap-x-4">
 						<x-button
-								flat
+								sm
+								color="secondary"
 								text="Cancel"
 								wire:click="$toggle('showUploadModal')" />
 						<x-button
+								sm
 								primary
 								label="Upload"
 								text="Upload"
@@ -373,7 +376,7 @@
 										icon="arrows-pointing-out" />
 							</div>
 						</div>
-						
+
 						<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
 							@if(Str::startsWith($currentDocument->file_type, 'image/'))
 								<img
@@ -392,7 +395,7 @@
 								</div>
 							@endif
 						</div>
-						
+
 						@if($currentDocument->description)
 							<div>
 								<h3 class="text-sm font-medium">Description</h3>
@@ -405,7 +408,7 @@
 						<p>Document not found or unable to generate preview.</p>
 					</div>
 				@endif
-				
+
 				<x-slot:footer>
 					<div class="flex justify-end">
 						<x-button

@@ -535,7 +535,7 @@
 				<div class="space-y-4 md:space-y-8">
 					<h2 class="text-3xl md:text-4xl font-bold">
 						<span class="text-zinc-900 dark:text-white">Phone</span>
-						<span class="text-primary-500">Integration</span>
+						<span class="text-primary-500">Integration (Comming Soon...)</span>
 					</h2>
 					<p class="text-dark-800 dark:text-white">Seamlessly integrate phone communications into your crisis
 					                                         management
@@ -775,6 +775,138 @@
 			</div>
 		</div>
 
+	</section>
+
+	<!-- Support The Project -->
+	<section
+			id="support-the-project"
+			class="bg-white dark:bg-dark-900 py-16 sm:py-24">
+		<div class="container mx-auto px-4 sm:px-8 md:px-12 lg:px-20 max-w-7xl">
+			<div class="mx-auto max-w-3xl text-center">
+				<h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+					We're building this in the open — and it's still moving
+				</h2>
+				<p class="mt-4 text-gray-600 dark:text-dark-300">
+					Peace Proxy is an ongoing project. If this mission resonates with you and you'd like to help it move
+					faster,
+					your support directly funds development, infrastructure, and research.
+				</p>
+			</div>
+
+			@if(session('ok') || session('info') || session('error'))
+				<div class="mx-auto max-w-2xl mt-8">
+					<div
+							class="rounded-lg border p-4"
+							@class([
+							   'bg-green-50 border-green-200 text-green-800' => session('ok'),
+							   'bg-blue-50 border-blue-200 text-blue-800' => session('info'),
+							   'bg-red-50 border-red-200 text-red-800' => session('error'),
+							])>
+						<p class="text-sm">
+							{{ session('ok') ?? session('info') ?? session('error') }}
+						</p>
+					</div>
+				</div>
+			@endif
+
+			<div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+				<div class="bg-zinc-50 dark:bg-dark-800 rounded-xl p-6 sm:p-8">
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-white">Why this matters</h3>
+					<ul class="mt-4 space-y-3 text-gray-700 dark:text-dark-200 text-sm">
+						<li class="list-disc ml-4">Faster feature delivery for teams using Peace Proxy in the field</li>
+						<li class="list-disc ml-4">Sustained research into negotiation workflows and comms reliability
+						</li>
+						<li class="list-disc ml-4">Infrastructure and security to keep the platform stable under
+						                           pressure
+						</li>
+					</ul>
+					<p class="mt-4 text-xs text-gray-500 dark:text-dark-400">No paywalls. No gimmicks. Just
+					                                                         progress—made possible by people who
+					                                                         believe this should exist.</p>
+				</div>
+
+				<div
+						class="bg-white dark:bg-dark-800 rounded-xl p-6 sm:p-8 border border-zinc-200 dark:border-dark-700"
+						x-data="{ amount: 25, preset(a){ this.amount = a }, isActive(a){ return Number(this.amount) === Number(a) } }">
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-white">Support development</h3>
+					<form
+							method="POST"
+							action="{{ route('donations.checkout') }}"
+							class="mt-6 space-y-6">
+						@csrf
+						<input
+								type="hidden"
+								name="amount"
+								:value="amount">
+
+						<div>
+							<label class="block text-sm font-medium text-gray-700 dark:text-dark-200">Choose an
+							                                                                          amount</label>
+							<div class="mt-3 grid grid-cols-4 gap-2">
+								<button
+										type="button"
+										@click="preset(5)"
+										:class="isActive(5) ? 'bg-primary-600 text-white' : 'bg-zinc-100 dark:bg-dark-700 text-gray-800 dark:text-dark-200'"
+										class="px-3 py-2 rounded-lg text-sm font-semibold">$5
+								</button>
+								<button
+										type="button"
+										@click="preset(10)"
+										:class="isActive(10) ? 'bg-primary-600 text-white' : 'bg-zinc-100 dark:bg-dark-700 text-gray-800 dark:text-dark-200'"
+										class="px-3 py-2 rounded-lg text-sm font-semibold">$10
+								</button>
+								<button
+										type="button"
+										@click="preset(25)"
+										:class="isActive(25) ? 'bg-primary-600 text-white' : 'bg-zinc-100 dark:bg-dark-700 text-gray-800 dark:text-dark-200'"
+										class="px-3 py-2 rounded-lg text-sm font-semibold">$25
+								</button>
+								<button
+										type="button"
+										@click="preset(50)"
+										:class="isActive(50) ? 'bg-primary-600 text-white' : 'bg-zinc-100 dark:bg-dark-700 text-gray-800 dark:text-dark-200'"
+										class="px-3 py-2 rounded-lg text-sm font-semibold">$50
+								</button>
+							</div>
+						</div>
+
+						<div>
+							<label
+									for="custom-amount"
+									class="block text-sm font-medium text-gray-700 dark:text-dark-200">Or enter a custom
+							                                                                           amount</label>
+							<div class="mt-2 flex rounded-lg overflow-hidden border border-zinc-200 dark:border-dark-600">
+								<span class="px-3 py-2 bg-zinc-100 dark:bg-dark-700 text-gray-700 dark:text-dark-300">$</span>
+								<input
+										id="custom-amount"
+										type="number"
+										min="1"
+										step="1"
+										x-model.number="amount"
+										class="w-full px-3 py-2 bg-white dark:bg-dark-800 text-gray-900 dark:text-white focus:outline-none"
+										placeholder="25" />
+							</div>
+							<p class="mt-2 text-xs text-gray-500 dark:text-dark-400">One-time donation
+							                                                         in {{ strtoupper(config('cashier.currency', 'usd')) }}
+							                                                         .</p>
+						</div>
+
+						<div class="flex justify-end">
+							<button
+									type="submit"
+									class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 focus:outline-none">
+								<x-icon
+										name="heart"
+										class="size-4" />
+								Donate
+							</button>
+						</div>
+					</form>
+					<p class="mt-4 text-xs text-gray-500 dark:text-dark-400">Processed securely by Stripe. We do not
+					                                                         store your card details.</p>
+				</div>
+			</div>
+		</div>
 	</section>
 
 	<footer class="bg-zinc-100 dark:bg-dark-900 pt-12 pb-6">

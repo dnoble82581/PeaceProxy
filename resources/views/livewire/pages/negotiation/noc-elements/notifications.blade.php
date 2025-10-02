@@ -162,33 +162,29 @@
 ?>
 
 <div
-		class="relative mt-2 mb-2"
+		class="relative mt-4"
 		x-data="{ open: false, hasNewNotifications: false }"
 		x-init="
 			$wire.on('notePinned', () => { if (!open) hasNewNotifications = true; });
 			$wire.on('objectivePinned', () => { if (!open) hasNewNotifications = true; });
 		">
 	<!-- Toggle buttons - always positioned on the right -->
-	<div class="flex justify-end mb-2 space-x-2">
+	<div class="inline-flex space-x-2 dark:bg-dark-800 p-2 rounded-md">
 		<x-button
 				color="emerald"
-				flat
 				wire:click="$toggle('showActivityLogModal')"
-				sm
 				icon="clock"
 				class="relative">
-			Activity Logs
+
 		</x-button>
 
 		<x-button
 				color="sky"
-				flat
 				@click="open = !open; if (open) hasNewNotifications = false;"
-				sm
 				icon="bell"
 				class="relative">
-			<span x-text="open ? 'Hide' : 'Show'"></span> Notifications
-			                                              <!-- Alert indicator for new notifications -->
+			{{--			<span x-text="open ? 'Hide' : 'Show'"></span>--}}
+			<!-- Alert indicator for new notifications -->
 			<span
 					x-show="!open && hasNewNotifications"
 					class="absolute -top-1 -right-1 flex h-3 w-3">
@@ -200,7 +196,7 @@
 
 	<!-- Notifications container -->
 	<div
-			class="p-2 mb-2 bg-white dark:bg-dark-800 rounded-md shadow"
+			class="p-2 mb-2 bg-white dark:bg-dark-800 rounded-md shadow mt-2"
 			x-show="open"
 			x-transition>
 		{{--		<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Notifications</h2>--}}

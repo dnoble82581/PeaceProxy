@@ -55,7 +55,6 @@
 			wire:submit="createWarrant"
 			class="space-y-6 mt-6">
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold dark:text-white text-dark-800 mb-4">Warrant Information</h2>
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<!-- Warrant Type -->
 				<div>
