@@ -255,64 +255,68 @@
 	@endif
 
 	<!-- Create Note Modal -->
-	<x-modal
-			id="create-note-modal"
-			wire="showCreateModal"
-			x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Create New Note">
-			<div class="space-y-4">
-				<x-input
-						label="Title"
-						wire:model="title" />
-				<x-textarea
-						label="Content"
-						wire:model="body"
-						rows="5" />
-			</div>
-
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showCreateModal', false)">Cancel
-					</x-button>
-					<x-button
-							primary
-							wire:click="createNote">Save
-					</x-button>
+	<template x-teleport="body">
+		<x-modal
+				id="create-note-modal"
+				wire="showCreateModal"
+				x-on:hidden.window="$wire.closeModal()">
+			<x-card title="Create New Note">
+				<div class="space-y-4">
+					<x-input
+							label="Title"
+							wire:model="title" />
+					<x-textarea
+							label="Content"
+							wire:model="body"
+							rows="5" />
 				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-2">
+						<x-button
+								flat
+								wire:click="$set('showCreateModal', false)">Cancel
+						</x-button>
+						<x-button
+								primary
+								wire:click="createNote">Save
+						</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 
 	<!-- Edit Note Modal -->
-	<x-modal
-			id="edit-note-modal"
-			wire="showEditModal"
-			x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Edit Note">
-			<div class="space-y-4">
-				<x-input
-						label="Title"
-						wire:model="title" />
-				<x-textarea
-						label="Content"
-						wire:model="body"
-						rows="5" />
-			</div>
-
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showEditModal', false)">Cancel
-					</x-button>
-					<x-button
-							primary
-							wire:click="updateNote">Update
-					</x-button>
+	<template x-teleport="body">
+		<x-modal
+				id="edit-note-modal"
+				wire="showEditModal"
+				x-on:hidden.window="$wire.closeModal()">
+			<x-card title="Edit Note">
+				<div class="space-y-4">
+					<x-input
+							label="Title"
+							wire:model="title" />
+					<x-textarea
+							label="Content"
+							wire:model="body"
+							rows="5" />
 				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-2">
+						<x-button
+								flat
+								wire:click="$set('showEditModal', false)">Cancel
+						</x-button>
+						<x-button
+								primary
+								wire:click="updateNote">Update
+						</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 </div>
