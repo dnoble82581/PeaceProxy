@@ -306,16 +306,16 @@
 									Profile Settings
 								</button>
 							</li>
-							<li class="mr-2">
-								@can('update', tenant())
-									<button
-											wire:click="setActiveTab('billing')"
-											class="inline-block p-4 {{ $activeTab === 'billing' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
-									>
-										Billing
-									</button>
-								@endcan
-							</li>
+							{{--							<li class="mr-2">--}}
+							{{--								@can('update', tenant())--}}
+							{{--									<button--}}
+							{{--											wire:click="setActiveTab('billing')"--}}
+							{{--											class="inline-block p-4 {{ $activeTab === 'billing' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"--}}
+							{{--									>--}}
+							{{--										Billing--}}
+							{{--									</button>--}}
+							{{--								@endcan--}}
+							{{--							</li>--}}
 						</ul>
 					</div>
 
@@ -738,15 +738,15 @@
 					</div>
 
 					<!-- Billing Tab -->
-					@can('update', \tenant())
-						<div class="{{ $activeTab === 'billing' ? 'block' : 'hidden' }}">
-							@if ($tenant->subscribed('default'))
-								<livewire:billing.index />
-							@else
-								<livewire:billing.pricing />
-							@endif
-						</div>
-					@endcan
+					{{--					@can('update', \tenant())--}}
+					{{--						<div class="{{ $activeTab === 'billing' ? 'block' : 'hidden' }}">--}}
+					{{--							@if ($tenant->subscribed('default'))--}}
+					{{--								<livewire:billing.index />--}}
+					{{--							@else--}}
+					{{--								<livewire:billing.pricing />--}}
+					{{--							@endif--}}
+					{{--						</div>--}}
+					{{--					@endcan--}}
 				</div>
 			</div>
 		</div>
