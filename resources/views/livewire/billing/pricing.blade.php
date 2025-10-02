@@ -73,21 +73,54 @@
         modal:false,
         selectedPrice:null,
         processing:false,
+        errorMessage:'',
+        async waitForStripe(maxTries = 20){
+            let tries = 0;
+            while(typeof window.Stripe === 'undefined' && tries < maxTries){
+                await new Promise(r => setTimeout(r, 150));
+                tries++;
+            }
+            return typeof window.Stripe !== 'undefined';
+        },
         async open(price){
+            this.errorMessage = '';
             this.selectedPrice = price;
             this.modal = true;
             await this.$nextTick();
-            // Initialize Stripe Elements only once per open
-            if(!window.__ppStripe){
-                window.__ppStripe = Stripe(@js($publishableKey));
-                const elements = window.__ppStripe.elements({clientSecret: @js($clientSecret)});
-                const paymentElement = elements.create('payment');
-                paymentElement.mount('#pp-payment-element');
-                window.__ppElements = elements;
+
+            const pk = @js($publishableKey);
+            if(location.protocol !== 'https:' && pk.startsWith('pk_live_')){
+                this.errorMessage = 'Stripe requires HTTPS when using live keys. Please open this site over HTTPS or switch to test keys.';
+                return;
+            }
+
+            const stripeReady = await this.waitForStripe();
+            if(!stripeReady){
+                this.errorMessage = 'Stripe.js failed to load. Please refresh the page.';
+                return;
+            }
+
+            try{
+                if(!window.__ppStripe){
+                    window.__ppStripe = Stripe(pk);
+                }
+                if(!window.__ppElements){
+                    window.__ppElements = window.__ppStripe.elements({ clientSecret: @js($clientSecret) });
+                }
+                if(window.__ppPayment){
+                    try { window.__ppPayment.unmount(); } catch(e) {}
+                }
+                window.__ppPayment = window.__ppElements.create('payment');
+                window.__ppPayment.mount('#pp-payment-element');
+            } catch(e){
+                this.errorMessage = (e && e.message) ? e.message : 'Unable to initialize Stripe Elements.';
             }
         },
         async subscribe(){
-            if(!window.__ppStripe || !window.__ppElements) return;
+            if(!window.__ppStripe || !window.__ppElements){
+                this.$dispatch('toast', {type:'error', text: 'Payment form is not ready yet.'});
+                return;
+            }
             this.processing = true;
             const {error, setupIntent} = await window.__ppStripe.confirmSetup({
                 elements: window.__ppElements,
@@ -98,7 +131,6 @@
                 this.$dispatch('toast', {type:'error', text: error.message});
                 return;
             }
-            // Pass PM to Livewire action
             $wire.startSubscription(this.selectedPrice, setupIntent.payment_method);
         }
     }"
@@ -211,6 +243,7 @@
 
 	<!-- Modal -->
 	<div
+			x-cloak
 			x-show="modal"
 			x-transition.opacity
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -225,12 +258,22 @@
 						class="p-1 rounded-lg hover:bg-neutral-100 dark:text-dark-700">✕
 				</button>
 			</div>
-			<div
-					class="mt-4"
-					id="pp-payment-element"></div>
+
+			<template x-if="errorMessage">
+				<div
+						class="mt-4 rounded-lg bg-amber-50 text-amber-900 p-3 text-sm"
+						x-text="errorMessage"></div>
+			</template>
+
+			<template x-if="!errorMessage">
+				<div
+						class="mt-4"
+						id="pp-payment-element"></div>
+			</template>
+
 			<button
 					@click="subscribe()"
-					:disabled="processing"
+					:disabled="processing || errorMessage"
 					class="mt-6 w-full rounded-xl bg-black text-white py-3 font-medium disabled:opacity-60"
 			>
 				<span x-show="!processing">Confirm & Subscribe</span>

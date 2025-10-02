@@ -9,6 +9,7 @@
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 	use Stripe\Price;
+	use Stripe\Stripe;
 
 	new class extends Component {
 		public ?array $subscription = null;   // short array form for blade ease
@@ -37,7 +38,7 @@
 				];
 
 				try {
-					\Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+					Stripe::setApiKey(config('services.stripe.secret'));
 					$price = Price::retrieve($sub->stripe_price);
 
 					$this->subscription['price_display'] =
@@ -134,7 +135,7 @@
 				];
 
 				try {
-					\Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+					Stripe::setApiKey(config('services.stripe.secret'));
 					$price = Price::retrieve($sub->stripe_price);
 
 					$this->subscription['price_display'] =

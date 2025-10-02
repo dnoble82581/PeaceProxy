@@ -13,6 +13,11 @@ Route::middleware([
 ])->group(function () {
     Volt::route('/', 'pages.welcome');
     Volt::route('/about', 'pages.about.about-us')->name('about');
+
+    // Donations
+    Route::post('/donate/checkout', [\App\Http\Controllers\DonationController::class, 'checkout'])->name('donations.checkout');
+    Route::get('/donate/success', [\App\Http\Controllers\DonationController::class, 'success'])->name('donations.success');
+    Route::get('/donate/cancel', [\App\Http\Controllers\DonationController::class, 'cancel'])->name('donations.cancel');
 });
 
 // TENANT AWARE ROUTES
