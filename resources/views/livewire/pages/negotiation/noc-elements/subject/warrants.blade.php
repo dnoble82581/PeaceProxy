@@ -242,46 +242,50 @@
 			</table>
 		</div>
 	</div>
-	<x-slide
-			size="3xl"
-			{{--			title="Create Warrant"--}}
-			wire="showCreateWarrantModal"
-			class="">
-		<x-slot:title>
-			<div class="text-center">
-				<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Create Warrant</h1>
-				<p class="text-xs">Creating a warrant for:
-					<span class="text-primary-400">{{ $subject->name }}</span></p>
-			</div>
-		</x-slot:title>
-		<livewire:pages.subject.create-warrant
-				:subject="$subject"
-				:negotiationId="$negotiationId" />
-	</x-slide>
+	<template x-teleport="body">
+		<x-slide
+				size="3xl"
+				{{--				title="Create Warrant"--}}
+				wire="showCreateWarrantModal"
+				class="">
+			<x-slot:title>
+				<div class="text-center">
+					<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Create Warrant</h1>
+					<p class="text-xs">Creating a warrant for:
+						<span class="text-primary-400">{{ $subject->name }}</span></p>
+				</div>
+			</x-slot:title>
+			<livewire:pages.subject.create-warrant
+					:subject="$subject"
+					:negotiationId="$negotiationId" />
+		</x-slide>
+	</template>
 
 	{{-- Remove the @if($this->warrantToEditId) guard so the slide exists from the start --}}
-	<x-slide
-			id="update-warrant-slide"
-			size="3xl"
-			wire="showUpdateWarrantModal"
-			x-on:open="$focusOn('edit-warrant-first-field', 400)" {{-- optional: see (C) --}}
-	>
-		<x-slot:title>
-			<div class="text-center">
-				<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Edit Warrant</h1>
-				<p class="text-xs">
-					Editing a warrant for:
-					<span class="text-primary-400">{{ $subject->name }}</span>
-				</p>
-			</div>
-		</x-slot:title>
+	<template x-teleport="body">
+		<x-slide
+				id="update-warrant-slide"
+				size="3xl"
+				wire="showUpdateWarrantModal"
+				x-on:open="$focusOn('edit-warrant-first-field', 400)" {{-- optional: see (C) --}}
+		>
+			<x-slot:title>
+				<div class="text-center">
+					<h1 class="text-2xl text-gray-600 dark:text-gray-400 font-semibold uppercase">Edit Warrant</h1>
+					<p class="text-xs">
+						Editing a warrant for:
+						<span class="text-primary-400">{{ $subject->name }}</span>
+					</p>
+				</div>
+			</x-slot:title>
 
-		{{-- Keep this child mounted; do NOT pass :warrant-id so it won’t remount on first open --}}
-		<div wire:ignore>
-			<livewire:pages.subject.update-warrant
-					:negotiation-id="$negotiationId"
-					wire:key="update-warrant-slide"
-			/>
-		</div>
-	</x-slide>
+			{{-- Keep this child mounted; do NOT pass :warrant-id so it won’t remount on first open --}}
+			<div wire:ignore>
+				<livewire:pages.subject.update-warrant
+						:negotiation-id="$negotiationId"
+						wire:key="update-warrant-slide"
+				/>
+			</div>
+		</x-slide>
+	</template>
 </div>

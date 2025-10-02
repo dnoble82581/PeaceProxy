@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/dustynoble/Library/Application Support/Herd/bin/php83",
+            "args": [
+                "/Users/dustynoble/Herd/peaceproxy/artisan",
+                "boost:mcp"
+            ]
+        },
+        "herd": {
+            "command": "/Users/dustynoble/Library/Application Support/Herd/bin/php83",
+            "args": [
+                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
+            ],
+            "env": {
+                "SITE_PATH": "/Users/dustynoble/Herd/peaceproxy"
+            }
+        }
+    }
+}
