@@ -5,14 +5,20 @@
 	use Livewire\Volt\Component;
 
 	new class extends Component {
-		public int $negotiationId;
-		public int $subjectId;
+		public int $negotiationId = 0;
+		public int $subjectId = 0;
 		public string $tab = 'board';
 
 		public function mount($negotiationId)
 		{
-			$this->negotiationId = $negotiationId;
-			$this->subjectId = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId)->primarySubject()->id;
+			$this->negotiationId = (int) ($negotiationId ?? 0);
+			$neg = app(NegotiationFetchingService::class)->getNegotiationById($this->negotiationId);
+			if ($neg) {
+				$primary = $neg->primarySubject();
+				$this->subjectId = $primary?->id ?? 0;
+			} else {
+				$this->subjectId = 0;
+			}
 
 		}
 

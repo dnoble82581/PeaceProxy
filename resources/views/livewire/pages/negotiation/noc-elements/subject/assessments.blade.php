@@ -42,14 +42,19 @@
 
 		public function mount($subjectId, $negotiationId)
 		{
-			$this->subject = Subject::findOrFail($subjectId);
-			$this->negotiation = Negotiation::findOrFail($negotiationId);
-			$this->loadTemplates();
-			$this->loadAssessments();
+			$this->subject = Subject::find($subjectId);
+			$this->negotiation = Negotiation::find($negotiationId);
+			if ($this->subject) {
+				$this->loadTemplates();
+				$this->loadAssessments();
+			}
 		}
 
 		public function loadAssessments()
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->assessments = $this->subject->riskAssessments()
 				->with('assessmentTemplate')
 				->orderBy('created_at', 'desc')
@@ -58,6 +63,10 @@
 
 		public function loadTemplates()
 		{
+			if (!function_exists('tenant') || !tenant()) {
+				$this->templates = collect();
+				return;
+			}
 			$this->templates = AssessmentTemplate::where('tenant_id', tenant()->id)
 				->orderBy('name')
 				->get();
@@ -73,6 +82,9 @@
 
 		public function selectTemplate()
 		{
+			if (!$this->subject || !$this->negotiation) {
+				return;
+			}
 			$this->validate();
 
 			$template = AssessmentTemplate::with('questions')->find($this->selectedTemplateId);
@@ -131,6 +143,9 @@
 
 		public function submitAssessment()
 		{
+			if (!$this->subject || !$this->negotiation) {
+				return;
+			}
 			// Validate required questions
 			$requiredQuestions = $this->questions->where('is_required', true);
 			$dynamicRules = [];

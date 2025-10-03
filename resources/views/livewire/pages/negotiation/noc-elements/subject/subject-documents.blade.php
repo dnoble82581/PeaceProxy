@@ -14,7 +14,7 @@
 	new class extends Component {
 		use WithFileUploads;
 
-		public Subject $subject;
+		public ?Subject $subject = null;
 		public CreateDocumentForm $form;
 		public int $negotiationId;
 		public $file;
@@ -32,14 +32,19 @@
 		public function mount($subjectId, $negotiationId)
 		{
 			$this->subject = $this->fetchSubject($subjectId);
-			$this->form->tenant_id = auth()->user()->tenant_id;
-			$this->form->documentable_type = 'App\\Models\\Subject';
-			$this->form->documentable_id = $this->subject->id;
-			$this->negotiationId = $negotiationId;
+			if (auth()->check() && $this->subject) {
+				$this->form->tenant_id = auth()->user()->tenant_id;
+				$this->form->documentable_type = 'App\\Models\\Subject';
+				$this->form->documentable_id = $this->subject->id;
+			}
+			$this->negotiationId = (int) $negotiationId;
 		}
 
 		private function fetchSubject($subjectId)
 		{
+			if (empty($subjectId)) {
+				return null;
+			}
 			return Subject::query()
 				->with([
 					'documents' => function ($query) {
@@ -48,17 +53,23 @@
 					}
 				])
 				->select('id', 'name')
-				->findOrFail($subjectId);
+				->find($subjectId);
 		}
 
 		public function deleteDocument($documentId):void
 		{
+			if (!$this->subject) {
+				return;
+			}
 			app(DocumentDestructionService::class)->deleteDocument($documentId);
 			$this->subject = $this->fetchSubject($this->subject->id);
 		}
 
 		public function uploadDocument():void
 		{
+			if (!$this->subject || !auth()->check()) {
+				return;
+			}
 			$this->validate([
 				'file' => 'required|file|max:10240', // 10MB max
 				'form.name' => 'required|string|max:255',
@@ -69,7 +80,7 @@
 
 			$data = $this->form->all();
 			$data['negotiation_id'] = $this->negotiationId;
-			$data['uploaded_by_id'] = authUser()->id;
+			$data['uploaded_by_id'] = auth()->id();
 
 			app(DocumentStorageService::class)->createSubjectDocument($data, $this->subject->id, $this->file);
 
@@ -92,6 +103,9 @@
 
 		public function resetForm():void
 		{
+			if (!auth()->check() || !$this->subject) {
+				return;
+			}
 			$this->reset('file');
 			$this->form->reset();
 			$this->form->tenant_id = auth()->user()->tenant_id;
@@ -112,6 +126,9 @@
 
 		public function handleDocumentCreated(array $event)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			// Refresh the documents relation
 			$this->subject->load('documents');
 
@@ -142,6 +159,9 @@
 
 		public function handleDocumentDeleted(array $event)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$details = $event['details'] ?? null;
 			if ($details) {
 				$createdBy = $details['createdBy'] ?? 'Someone';
@@ -165,6 +185,9 @@
 
 		public function getListeners()
 		{
+			if (!$this->subject) {
+				return [];
+			}
 			$subjectId = $this->subject->id;
 			return [
 				'echo-private:'.\App\Support\Channels\Subject::subjectDocument($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::DOCUMENT_CREATED => 'handleDocumentCreated',
@@ -178,6 +201,7 @@
 ?>
 
 <div>
+	@if($subject)
 	<div class="mt-2 flow-root overflow-hidden rounded-t-lg">
 		<div class="">
 			<table class="w-full text-left">
@@ -284,7 +308,11 @@
 			</table>
 		</div>
 	</div>
+	@else
+		<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No documents to display.</div>
+	@endif
 
+	@isset($subject)
 	<!-- Upload Document Modal -->
 	<template x-teleport="body">
 		<x-modal wire="showUploadModal">
@@ -420,4 +448,5 @@
 			</x-card>
 		</x-modal>
 	</template>
+	@endisset
 </div>

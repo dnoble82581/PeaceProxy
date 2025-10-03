@@ -9,41 +9,47 @@
 
 
 	new class extends Component {
-		public Subject $primarySubject;
+		public ?Subject $primarySubject = null;
 		public Negotiation $negotiation;
 
-		public function mount($negotiation)
+		public function mount($negotiation): void
 		{
 			$this->negotiation = $negotiation;
-			$this->primarySubject = $negotiation->primarySubject();
+			// Safely resolve the primary subject; may be null
+			$this->primarySubject = $negotiation?->primarySubject();
 		}
 
-		public function rendering(View $view):void
+		public function rendering(View $view): void
 		{
 			$view->layoutData(['negotiation' => $this->negotiation]);
 		}
 
-		public function editSubject()
+		public function editSubject(): mixed
 		{
-			return $this->redirect(route('subject.edit',
-				[
-					'subject' => $this->primarySubject,
-					'negotiation' => $this->negotiation,
-					'tenantSubdomain' => tenant()->subdomain
-				]));
+			if ($this->primarySubject === null) {
+				return null;
+			}
+			return $this->redirect(route('subject.edit', [
+				'subject' => $this->primarySubject,
+				'negotiation' => $this->negotiation,
+				// URL::defaults will usually provide this; fall back safely if available
+				'tenantSubdomain' => optional(tenant())->subdomain,
+			]));
 		}
 
-		public function viewSubject()
+		public function viewSubject(): mixed
 		{
-			return $this->redirect(route('subject.show',
-				[
-					'subject' => $this->primarySubject,
-					'negotiation' => $this->negotiation,
-					'tenantSubdomain' => tenant()->subdomain
-				]));
+			if ($this->primarySubject === null) {
+				return null;
+			}
+			return $this->redirect(route('subject.show', [
+				'subject' => $this->primarySubject,
+				'negotiation' => $this->negotiation,
+				'tenantSubdomain' => optional(tenant())->subdomain,
+			]));
 		}
 
-		public function handleSubjectUpdated() {}
+		public function handleSubjectUpdated(): void {}
 	}
 
 ?>
@@ -160,36 +166,60 @@
 	</div>
 
 	<div x-show="tab === 'general'">
-		<livewire:pages.negotiation.noc-elements.subject.subject-general
-				:primary-subject="$primarySubject"
-				:negotiation="$negotiation" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.subject-general
+					:primary-subject="$primarySubject"
+					:negotiation="$negotiation" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No primary subject has been selected for this negotiation.</div>
+		@endif
 	</div>
 
 	<div x-show="tab === 'history'">
-		<livewire:pages.negotiation.noc-elements.subject.subject-history :subjectId="$primarySubject->id" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.subject-history :subjectId="$primarySubject->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No subject history available.</div>
+		@endif
 	</div>
 
 	<div x-show="tab === 'documents'">
-		<livewire:pages.negotiation.noc-elements.subject.subject-documents
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.subject-documents
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No subject documents available.</div>
+		@endif
 	</div>
 	<div
 			x-show="tab === 'warrants'"
 			class="">
-		<livewire:pages.negotiation.noc-elements.subject.warrants
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.warrants
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No warrants to display.</div>
+		@endif
 	</div>
 	<div x-show="tab === 'contacts'">
-		<livewire:pages.negotiation.noc-elements.subject.contacts
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.contacts
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No contacts available.</div>
+		@endif
 	</div>
 
 	<div x-show="tab === 'assessments'">
-		<livewire:pages.negotiation.noc-elements.subject.assessments
-				:subjectId="$primarySubject->id"
-				:negotiationId="$negotiation->id" />
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.assessments
+					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No assessments available.</div>
+		@endif
 	</div>
 </div>
