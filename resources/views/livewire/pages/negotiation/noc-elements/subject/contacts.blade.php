@@ -9,7 +9,7 @@
 	use Livewire\Volt\Component;
 
 	new class extends Component {
-		public Subject $subject;
+		public ?Subject $subject = null;
 		public int $negotiationId;
 
 		public bool $showCreateModal = false;
@@ -18,16 +18,23 @@
 		public function mount($subjectId, $negotiationId)
 		{
 			$this->subject = $this->fetchSubject($subjectId);
-			$this->negotiationId = $negotiationId;
+			$this->negotiationId = (int) $negotiationId;
 		}
 
 		private function fetchSubject($subjectId)
 		{
+			if (empty($subjectId)) {
+				return null;
+			}
 			// First, get the subject with just the basic contact points data
 			$subject = Subject::query()
 				->with(['contactPoints:id,contactable_id,contactable_type,tenant_id,kind,label,is_primary,is_verified,priority'])
 				->select('id', 'name')
-				->findOrFail($subjectId);
+				->find($subjectId);
+
+			if (!$subject) {
+				return null;
+			}
 
 			// Then, load the specific relationship data for each contact point based on its kind
 			$emailContactPoints = $subject->contactPoints->where('kind', 'email')->pluck('id');
@@ -61,12 +68,18 @@
 
 		public function deleteContactPoint($contactPointId):void
 		{
+			if (!$this->subject) {
+				return;
+			}
 			app(ContactPointDeletionService::class)->deleteContactPoint($contactPointId);
 			$this->refreshSubject();
 		}
 
 		public function editContactPoint(int $id)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->dispatch('load-contact', contactPointId: $id)->to('forms.contact.edit-contact-point');
 			$this->showContactEditModal = true;
 		}
@@ -76,26 +89,41 @@
 		 */
 		private function refreshSubject()
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->subject = $this->fetchSubject($this->subject->id);
 		}
 
 		public function handleContactCreated(array $event)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->refreshSubject();
 		}
 
 		public function handleContactDeleted(array $event)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->refreshSubject();
 		}
 
 		public function handleContactUpdated(array $event)
 		{
+			if (!$this->subject) {
+				return;
+			}
 			$this->refreshSubject();
 		}
 
 		public function getListeners()
 		{
+			if (!$this->subject) {
+				return [];
+			}
 			return [
 				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_CREATED => 'handleContactCreated',
 				'echo-private:'.\App\Support\Channels\Subject::subjectContact($this->subject->id).',.'.SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
@@ -119,6 +147,7 @@
 ?>
 
 <div>
+	@if($subject)
 	<div class="mt-2 flow-root overflow-hidden rounded-t-lg">
 		<div class="">
 			<table class="w-full text-left">
@@ -246,6 +275,10 @@
 			</table>
 		</div>
 	</div>
+	@else
+		<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No contacts available.</div>
+	@endif
+	@isset($subject)
 	<template x-teleport="body">
 		<x-slide
 				wire="showCreateModal"
@@ -278,4 +311,5 @@
 					:subject-id="$subject->id" />
 		</x-slide>
 	</template>
+	@endisset
 </div>

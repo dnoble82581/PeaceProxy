@@ -67,6 +67,7 @@
 
 		<div class="flex justify-end">
 			<x-button
+					color="primary"
 					type="submit">Login
 			</x-button>
 		</div>

@@ -303,7 +303,7 @@
 										wire:click="setActiveTab('profile')"
 										class="inline-block p-4 {{ $activeTab === 'profile' ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}"
 								>
-									Profile Settings
+									Profile Settingsx
 								</button>
 							</li>
 							{{--							<li class="mr-2">--}}

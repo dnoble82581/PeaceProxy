@@ -27,8 +27,8 @@
 
 		public function mount($negotiationId = null)
 		{
-			$this->negotiationId = $negotiationId;
-			$this->tenantId = tenant()->id;
+			$this->negotiationId = $negotiationId ?: 0;
+			$this->tenantId = auth()->check() ? (int) auth()->user()->tenant_id : 0;
 			$this->loadNotes(); // This now also loads pinned notes
 		}
 
@@ -58,6 +58,9 @@
 
 		public function createNote()
 		{
+			if (!auth()->check() || empty($this->negotiationId)) {
+				return;
+			}
 			$this->validate([
 				'title' => 'required|string|max:255',
 				'body' => 'required|string',
@@ -84,6 +87,9 @@
 		public function openEditModal($noteId)
 		{
 			$note = app(NoteFetchingService::class)->getNote($noteId);
+			if (!$note) {
+				return;
+			}
 			$this->editingNoteId = $noteId;
 			$this->title = $note->title;
 			$this->body = $note->body;
@@ -92,6 +98,9 @@
 
 		public function updateNote()
 		{
+			if (!$this->editingNoteId) {
+				return;
+			}
 			$this->validate([
 				'title' => 'required|string|max:255',
 				'body' => 'required|string',
@@ -99,6 +108,9 @@
 
 			$note = app(NoteFetchingService::class)->getNote($this->editingNoteId);
 
+			if (!$note) {
+				return;
+			}
 			$noteDTO = new NoteDTO(
 				$this->editingNoteId,
 				$note->negotiation_id,
@@ -142,6 +154,9 @@
 
 		public function getListeners()
 		{
+			if (empty($this->tenantId) || empty($this->negotiationId)) {
+				return [];
+			}
 			return [
 				"echo-private:tenants.$this->tenantId.notifications,.NotePinned" => 'loadNotes',
 				"echo-private:tenants.$this->tenantId.notifications,.NoteUnpinned" => 'loadNotes',
@@ -156,6 +171,9 @@
 
 		public function pinNote($noteId):void
 		{
+			if (!auth()->check()) {
+				return;
+			}
 			$note = app(NoteFetchingService::class)->getNote($noteId);
 
 			if ($note) {
@@ -168,7 +186,10 @@
 				);
 
 				app(PinCreationService::class)->createPin($pinDTO);
-				event(new \App\Events\Pin\NotePinnedEvent(tenant()->id, $noteId));
+				$tenantId = $this->tenantId ?? (auth()->check() ? auth()->user()->tenant_id : null);
+				if ($tenantId) {
+					event(new \App\Events\Pin\NotePinnedEvent($tenantId, $noteId));
+				}
 				$this->loadPinnedNotes();
 			}
 		}

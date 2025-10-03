@@ -38,14 +38,14 @@
 		/** @var bool Flag to control the visibility of the edit delivery plan modal */
 		public bool $showEditDeliveryModal = false;
 
-		/** @var Negotiation The negotiation being viewed */
-		public Negotiation $negotiation;
+		/** @var Negotiation|null The negotiation being viewed */
+		public ?Negotiation $negotiation = null;
 
-		/** @var Subject The primary subject of the negotiation */
-		public Subject $primarySubject;
+		/** @var Subject|null The primary subject of the negotiation */
+		public ?Subject $primarySubject = null;
 
 		/** @var int The ID of the negotiation */
-		public int $negotiationId;
+		public int $negotiationId = 0;
 
 		/** @var Demand|null The demand being edited */
 		public $demandToEdit;
@@ -74,11 +74,18 @@
 		public function mount($negotiationId)
 		{
 			$this->negotiation = app(NegotiationFetchingService::class)->getNegotiationById($negotiationId);
-			$this->primarySubject = $this->negotiation->primarySubject();
-			$this->negotiationId = $this->negotiation->id;
+			if (!$this->negotiation) {
+				$this->negotiationId = 0;
+				$this->primarySubject = null;
+				return;
+			}
+			$this->primarySubject = $this->negotiation?->primarySubject();
+			$this->negotiationId = (int) $this->negotiation->id;
 
 			// Eager load demands with their relationships to prevent N+1 queries
-			$this->primarySubject->load(['demands.deliveryPlans']);
+			if ($this->primarySubject) {
+				$this->primarySubject->load(['demands.deliveryPlans']);
+			}
 		}
 
 		/**
@@ -88,6 +95,9 @@
 		 */
 		public function getListeners():array
 		{
+			if (!auth()->check() || empty($this->negotiationId)) {
+				return [];
+			}
 			$tenantId = auth()->user()->tenant_id;
 			$negotiationId = $this->negotiationId;
 			return [
@@ -103,7 +113,9 @@
 
 		public function handleDeliveryPlanCreated(array $event)
 		{
-			$this->primarySubject->load('demands');
+			if ($this->primarySubject) {
+				$this->primarySubject->load('demands');
+			}
 		}
 
 		/**
@@ -126,7 +138,9 @@
 			$this->toast()->timeout()->success($message)->send();
 
 			// Refresh the subject with related demands and delivery plans
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			if ($this->primarySubject) {
+				$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			}
 		}
 
 		/**
@@ -159,7 +173,9 @@
 			$this->toast()->timeout()->info($message)->send();
 
 			// Refresh the subject with related demands and delivery plans
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			if ($this->primarySubject) {
+				$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			}
 		}
 
 		public function handleDemandDestroyed(array $data)
@@ -170,7 +186,9 @@
 				$message = "A demand has been deleted.";
 			}
 			$this->toast()->timeout()->success($message)->send();
-			$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			if ($this->primarySubject) {
+				$this->primarySubject = $this->primarySubject->fresh(['demands.deliveryPlans']);
+			}
 		}
 
 		/**
@@ -253,6 +271,9 @@
 		 */
 		public function getSortedDemands():\Illuminate\Support\Collection
 		{
+			if (!$this->primarySubject) {
+				return collect();
+			}
 			return $this->primarySubject->demands->sortBy($this->sortBy);
 		}
 
@@ -283,7 +304,7 @@
 	<div class="bg-indigo-600 dark:bg-indigo-700 px-4 py-2 rounded-lg flex items-center justify-between">
 		<h3 class="text-sm font-semibold">Demands <span
 					x-show="!showDemands"
-					x-transition>({{ $primarySubject->demands->count() }})</span></h3>
+					x-transition>({{ $primarySubject?->demands?->count() ?? 0 }})</span></h3>
 		<div class="flex items-center gap-2">
 			<select
 					wire:model.live="sortBy"
@@ -313,8 +334,9 @@
 			class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4"
 			x-show="showDemands"
 			x-transition>
-		@if($primarySubject->demands->isNotEmpty())
-			@foreach($this->getSortedDemands() as $demand)
+		@if($primarySubject)
+			@if($primarySubject->demands->isNotEmpty())
+				@foreach($this->getSortedDemands() as $demand)
 				<div
 						wire:key="tsui-card-{{ $demand->id }}">
 					<x-card color="secondary">
@@ -440,8 +462,14 @@
 				<p class="text-sm text-gray-400">Click the + button above to create a new demand.</p>
 			</div>
 		@endif
+	@else
+		<div class="col-span-2 text-center py-8">
+			<p class="text-gray-500">No subject selected. Demands cannot be displayed.</p>
+		</div>
+	@endif
 
 	</div>
+	@isset($primarySubject, $negotiation)
 	<template x-teleport="body">
 		<x-modal
 				id="create-demand-modal"
@@ -453,6 +481,7 @@
 					:negotiationId="$negotiation->id" />
 		</x-modal>
 	</template>
+	@endisset
 	<template x-teleport="body">
 		<x-modal
 				id="edit-demand-modal"

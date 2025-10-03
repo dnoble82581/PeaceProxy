@@ -67,7 +67,7 @@ class DonationController
      */
     public function success(Request $request): RedirectResponse
     {
-        return redirect()->to(url('/') . '#support-the-project')
+        return redirect()->to(url('/').'#support-the-project')
             ->with('ok', 'Thank you! Your donation helps keep Peace Proxy moving forward.');
     }
 
@@ -76,7 +76,7 @@ class DonationController
      */
     public function cancel(Request $request): RedirectResponse
     {
-        return redirect()->to(url('/') . '#support-the-project')
+        return redirect()->to(url('/').'#support-the-project')
             ->with('info', 'Donation cancelled. No charges were made.');
     }
 }
