@@ -19,6 +19,8 @@ final class Subject
 
     public const SUBJECT_CONTACT_PATTERN = 'subject.{subjectId}.contact';
 
+    public const SUBJECT_SOR_CHECK_PATTERN = 'subject.{subjectId}.sor-check';
+
     // Concrete builders (used in events / listeners at runtime)
     public static function subject(int $id): string
     {
@@ -53,5 +55,10 @@ final class Subject
     public static function subjectContact(int $id): string
     {
         return "subject.$id.contact";
+    }
+
+    public static function subjectSORCheck(int $id): string
+    {
+        return "subject.$id.sor-check";
     }
 }

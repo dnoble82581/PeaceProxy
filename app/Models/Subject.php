@@ -49,7 +49,7 @@ class Subject extends Model
             $this->load('images');
         }
 
-        // First try to find an image marked as primary
+        // First, try to find an image marked as primary
         $primaryImage = $this->images->first();
 
         // If no primary image, use the first image available
@@ -88,7 +88,7 @@ class Subject extends Model
     public function deliveryPlans()
     {
         return $this->morphToMany(DeliveryPlan::class, 'planable', 'delivery_planables')
-            ->withPivot(['role','notes'])->withTimestamps();
+            ->withPivot(['role', 'notes'])->withTimestamps();
     }
 
     public function riskAssessments(): HasMany

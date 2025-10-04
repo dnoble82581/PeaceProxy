@@ -81,6 +81,10 @@ Broadcast::channel(Negotiation::NEGOTIATION_TRIGGERS_PATTERN, function (User $us
     return true;
 });
 
+Broadcast::channel(Subject::SUBJECT_SOR_CHECK_PATTERN, function (User $user, int $subjectId) {
+    return true;
+});
+
 Broadcast::channel(Subject::SUBJECT_PATTERN, function (User $user, int $subjectId) {
     // Retrieve the subject instance
     $subject = App\Models\Subject::find($subjectId);

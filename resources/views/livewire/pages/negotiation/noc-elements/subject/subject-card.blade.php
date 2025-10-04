@@ -3,6 +3,7 @@
 	use App\Factories\MessageFactory;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
+	use App\Services\SOR\SubjectScreeningService;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
@@ -12,19 +13,39 @@
 		public ?Subject $primarySubject = null;
 		public Negotiation $negotiation;
 
-		public function mount($negotiation): void
+		public function mount($negotiation):void
 		{
 			$this->negotiation = $negotiation;
 			// Safely resolve the primary subject; may be null
 			$this->primarySubject = $negotiation?->primarySubject();
 		}
 
-		public function rendering(View $view): void
+		public function rendering(View $view):void
 		{
 			$view->layoutData(['negotiation' => $this->negotiation]);
 		}
 
-		public function editSubject(): mixed
+		public function checkSOR(SubjectScreeningService $screen)
+		{
+			$matches = $screen->checkSubject($this->primarySubject);
+			$images = [];
+
+			foreach ($matches as $match) {
+				$images[] = $match['photo'];
+			}
+
+			dd($images);
+//			dd(response()->json([
+//				'subject_id' => $this->primarySubject->id,
+//				'results' => [
+//					'count' => count($matches),
+//					'records' => $matches,
+//				]
+//			],
+//			));
+		}
+
+		public function editSubject():mixed
 		{
 			if ($this->primarySubject === null) {
 				return null;
@@ -32,12 +53,11 @@
 			return $this->redirect(route('subject.edit', [
 				'subject' => $this->primarySubject,
 				'negotiation' => $this->negotiation,
-				// URL::defaults will usually provide this; fall back safely if available
 				'tenantSubdomain' => optional(tenant())->subdomain,
 			]));
 		}
 
-		public function viewSubject(): mixed
+		public function viewSubject():mixed
 		{
 			if ($this->primarySubject === null) {
 				return null;
@@ -49,7 +69,7 @@
 			]));
 		}
 
-		public function handleSubjectUpdated(): void {}
+		public function handleSubjectUpdated():void {}
 	}
 
 ?>
@@ -160,6 +180,18 @@
 							</x-slot:right>
 						</x-icon>
 					</button>
+					<button
+							@click="tab = 'sor'"
+							:class="{'border-b-primary-500 text-primary-500 dark:text-primary-400': tab === 'sor'}"
+							class="border-b-1 px-1 py-2 text-sm font-medium whitespace-nowrap text-gray-700 hover:border-gray-200 hover:text-gray-500 dark:text-dark-300 dark:hover:border-dark-400 dark:hover:text-dark-400 hover:cursor-pointer">
+						<x-icon
+								name="chart-bar"
+								class="h-4 w-4">
+							<x-slot:right>
+								SOR
+							</x-slot:right>
+						</x-icon>
+					</button>
 				</nav>
 			</div>
 		</div>
@@ -171,7 +203,9 @@
 					:primary-subject="$primarySubject"
 					:negotiation="$negotiation" />
 		@else
-			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No primary subject has been selected for this negotiation.</div>
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No primary subject has been selected for this
+			                                                          negotiation.
+			</div>
 		@endif
 	</div>
 
@@ -217,6 +251,15 @@
 		@if($primarySubject)
 			<livewire:pages.negotiation.noc-elements.subject.assessments
 					:subjectId="$primarySubject->id"
+					:negotiationId="$negotiation->id" />
+		@else
+			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No assessments available.</div>
+		@endif
+	</div>
+	<div x-show="tab === 'sor'">
+		@if($primarySubject)
+			<livewire:pages.negotiation.noc-elements.subject.sor
+					:subject="$primarySubject"
 					:negotiationId="$negotiation->id" />
 		@else
 			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No assessments available.</div>
