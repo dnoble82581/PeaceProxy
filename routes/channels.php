@@ -30,8 +30,9 @@ Broadcast::channel(Subject::SUBJECT_MOOD_PATTERN, function (User $user, int $sub
         'id' => $user->id,
         'name' => $user->name,
     ];
-
 });
+
+
 
 Broadcast::channel(Negotiation::NEGOTIATION_OBJECTIVE_PATTERN, function (User $user, int $negotiationId) {
     return true;

@@ -121,10 +121,12 @@
 		<div class="flex gap-4 items-center px-4">
 			<div class="flex gap-4 items-center">
 				<x-button
+						sm
 						text="{{ $editingId ? 'Update' : 'Save' }}"
 						type="submit" />
 				@if($editingId)
 					<x-button
+							sm
 							flat
 							color="slate"
 							text="Cancel"

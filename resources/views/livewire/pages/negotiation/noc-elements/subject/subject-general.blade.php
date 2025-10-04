@@ -406,7 +406,7 @@
 			@mouseenter="isHovering = true"
 			@mouseleave="isHovering = false"
 	>
-		<div class="overflow-hidden rounded-lg w-32 h-32 relative shadow-md">
+		<div class="overflow-hidden rounded-lg w-30 h-30 relative shadow-md">
 			<template
 					x-for="(s, i) in slides"
 					:key="s.key ?? i">
@@ -627,7 +627,7 @@
 								class="text-gray-300 dark:text-dark-500"
 								stroke-width="2" />
 					</svg>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Not enough mood data yet.</p>
+					<p class="text-xs text-gray-500 dark:text-gray-400">Data Needed</p>
 				@endif
 			</div>
 		</div>
