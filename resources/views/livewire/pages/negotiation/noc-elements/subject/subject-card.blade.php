@@ -25,26 +25,6 @@
 			$view->layoutData(['negotiation' => $this->negotiation]);
 		}
 
-		public function checkSOR(SubjectScreeningService $screen)
-		{
-			$matches = $screen->checkSubject($this->primarySubject);
-			$images = [];
-
-			foreach ($matches as $match) {
-				$images[] = $match['photo'];
-			}
-
-			dd($images);
-//			dd(response()->json([
-//				'subject_id' => $this->primarySubject->id,
-//				'results' => [
-//					'count' => count($matches),
-//					'records' => $matches,
-//				]
-//			],
-//			));
-		}
-
 		public function editSubject():mixed
 		{
 			if ($this->primarySubject === null) {
@@ -180,18 +160,6 @@
 							</x-slot:right>
 						</x-icon>
 					</button>
-					<button
-							@click="tab = 'sor'"
-							:class="{'border-b-primary-500 text-primary-500 dark:text-primary-400': tab === 'sor'}"
-							class="border-b-1 px-1 py-2 text-sm font-medium whitespace-nowrap text-gray-700 hover:border-gray-200 hover:text-gray-500 dark:text-dark-300 dark:hover:border-dark-400 dark:hover:text-dark-400 hover:cursor-pointer">
-						<x-icon
-								name="chart-bar"
-								class="h-4 w-4">
-							<x-slot:right>
-								SOR
-							</x-slot:right>
-						</x-icon>
-					</button>
 				</nav>
 			</div>
 		</div>
@@ -251,15 +219,6 @@
 		@if($primarySubject)
 			<livewire:pages.negotiation.noc-elements.subject.assessments
 					:subjectId="$primarySubject->id"
-					:negotiationId="$negotiation->id" />
-		@else
-			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No assessments available.</div>
-		@endif
-	</div>
-	<div x-show="tab === 'sor'">
-		@if($primarySubject)
-			<livewire:pages.negotiation.noc-elements.subject.sor
-					:subject="$primarySubject"
 					:negotiationId="$negotiation->id" />
 		@else
 			<div class="p-4 text-sm text-gray-600 dark:text-dark-300">No assessments available.</div>
