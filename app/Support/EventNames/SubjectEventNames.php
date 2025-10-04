@@ -27,4 +27,6 @@ class SubjectEventNames
     public const CONTACT_CREATED = 'ContactCreated';
     public const CONTACT_UPDATED = 'ContactUpdated';
     public const CONTACT_DELETED = 'ContactDeleted';
+
+    public const SOR_CHECK_CREATED = 'SORCheckCreated';
 }
