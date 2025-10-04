@@ -1,5 +1,7 @@
 <?php
 
+	use App\Support\Channels\Negotiation;
+	use App\Support\EventNames\NegotiationEventNames;
 	use Illuminate\Contracts\View\View;
 	use Illuminate\Database\Eloquent\Builder;
 	use Livewire\Attributes\On;
@@ -42,6 +44,7 @@
 		public $negotiationId = null;
 		public $replies = [];
 		public $replyBody = '';
+		public bool $canReply = false;
 
 		// Document attachments state for RFI
 		public $docFile = null;
@@ -124,14 +127,20 @@
 					$recipient = app(RequestForInformationRecipientFetchingService::class)
 						->getRecipientByRfiIdAndUserId($rfi->id, $authUserId);
 
+					$isCreator = ($rfi->user_id === $authUserId);
 					$unreadRepliesCount = 0;
 					$showAlert = false;
 
 					if ($recipient && !$recipient->is_read) {
+						// Initial unread state for recipients shows all replies until opened
 						$unreadRepliesCount = $repliesCount;
 						$showAlert = true;
-					} elseif ($recipient) {
-						$unreadRepliesCount = (int) $rfi->replies()->where('is_read', false)->count();
+					} elseif ($recipient || $isCreator) {
+						// For both recipient (after initially marked read) and creator, show unread replies authored by others
+						$unreadRepliesCount = (int) $rfi->replies()
+							->where('is_read', false)
+							->where('user_id', '!=', $authUserId)
+							->count();
 						$showAlert = $unreadRepliesCount > 0;
 					}
 
@@ -303,7 +312,7 @@
 				]);
 
 				$data = [
-					'name' => $this->docName ?: ($this->title.' Attachment'),
+					'name' => $this->docName?: ($this->title.' Attachment'),
 					'category' => $this->docCategory,
 					'description' => $this->docDescription,
 					'is_private' => (bool) $this->docPrivate,
@@ -314,7 +323,8 @@
 					'tenant_id' => $this->tenantId,
 				];
 
-				app(\App\Services\Document\DocumentStorageService::class)->createRfiDocument($data, $rfi->id, $this->docFile);
+				app(\App\Services\Document\DocumentStorageService::class)->createRfiDocument($data, $rfi->id,
+					$this->docFile);
 			}
 
 			$this->reset('title', 'body', 'status', 'selectedRecipients');
@@ -419,18 +429,24 @@
 			$this->loadReplies();
 			$this->showResponsesModal = true;
 
-			// Mark as read if current user is a recipient
+			// Determine if the current user is a recipient and mark the RFI as read
 			$recipient = app(RequestForInformationRecipientFetchingService::class)
 				->getRecipientByRfiIdAndUserId($rfiId, auth()->id());
+
+			$isCreator = $this->viewingRfi && $this->viewingRfi->user_id === auth()->id();
+			$this->canReply = (bool) $recipient || $isCreator;
 
 			if ($recipient && !$recipient->is_read) {
 				app(RequestForInformationRecipientUpdateService::class)->updateReadStatus($recipient->id, true);
 			}
 
-			// Mark all replies as read
-			if ($recipient) {
-				// Get all unread replies for this RFI
-				$unreadReplies = $this->viewingRfi->replies()->where('is_read', false)->get();
+			// Mark unread replies (authored by others) as read when recipient or creator opens
+			if ($recipient || $isCreator) {
+				// Get all unread replies for this RFI that were not authored by the current user
+				$unreadReplies = $this->viewingRfi->replies()
+					->where('is_read', false)
+					->where('user_id', '!=', auth()->id())
+					->get();
 
 				// Mark each reply as read
 				foreach ($unreadReplies as $reply) {
@@ -438,8 +454,7 @@
 					$reply->save();
 				}
 
-//				ToDO:Fix this piece in the table
-				// Update the row data to reflect that all replies are now read
+				// Update the row data to reflect that all replies are now read by the current user
 				foreach ($this->rows as &$row) {
 					if ($row['id'] === $rfiId) {
 						$row['unread_replies_count'] = 0;
@@ -464,6 +479,17 @@
 			$this->validate([
 				'replyBody' => 'required|string',
 			]);
+
+			// Server-side authorization: only the designated recipient or the RFI creator can reply
+			$recipient = app(RequestForInformationRecipientFetchingService::class)
+				->getRecipientByRfiIdAndUserId($this->viewingRfiId, auth()->id());
+			$rfi = app(RequestForInformationFetchingService::class)->getRfiById($this->viewingRfiId);
+			$isCreator = $rfi && $rfi->user_id === auth()->id();
+
+			if (! $recipient && ! $isCreator) {
+				$this->addError('replyBody', 'You are not authorized to reply to this request.');
+				return;
+			}
 
 			$replyDTO = new RequestForInformationReplyDTO(
 				null,
@@ -504,7 +530,8 @@
 				'tenant_id' => $this->tenantId,
 			];
 
-			app(\App\Services\Document\DocumentStorageService::class)->createRfiDocument($data, $this->viewingRfiId, $this->docFile);
+			app(\App\Services\Document\DocumentStorageService::class)->createRfiDocument($data, $this->viewingRfiId,
+				$this->docFile);
 
 			$this->resetDocForm();
 			$this->showUploadDocModal = false;
@@ -559,13 +586,41 @@
 			$tenantId = tenant()->id;
 
 			return [
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiCreated" => 'handleRfiCreated',
-				"echo-private:private.negotiation.$this->negotiationId.$tenantId,.RfiReplyPosted" => 'handleReplyPosted',
+				'echo-private:'.Negotiation::negotiationRfi($this->negotiationId).',.'.NegotiationEventNames::RFI_CREATED => "handleRfiCreated",
+				'echo-private:'.Negotiation::negotiationRfi($this->negotiationId).',.'.NegotiationEventNames::RFI_RESPONDED => "handleReplyPosted",
+				'echo-private:'.Negotiation::negotiationRfi($this->negotiationId).',.'.NegotiationEventNames::RFI_DELETED => "handleRfiDeleted",
 			];
 		}
 
 		public function handleRfiCreated(array $data)
 		{
+			logger($data);
+			$this->loadRfis();
+		}
+
+		public function handleRfiDeleted(array $data)
+		{
+			// If we're currently viewing or editing the RFI that was deleted, reset state to avoid
+			// Livewire attempting to hydrate a now-missing Eloquent model instance.
+			$deletedId = $data['rfiId'] ?? null;
+			if ($deletedId !== null) {
+				if ($this->viewingRfiId === $deletedId) {
+					$this->showResponsesModal = false;
+					$this->viewingRfiId = null;
+					$this->viewingRfi = null;
+					$this->replies = [];
+					$this->canReply = false;
+					$this->replyBody = '';
+				}
+				if ($this->editingRfiId === $deletedId) {
+					$this->showEditModal = false;
+					$this->editingRfiId = null;
+					$this->title = '';
+					$this->body = '';
+					$this->status = 'Pending';
+					$this->selectedRecipients = [];
+				}
+			}
 			$this->loadRfis();
 		}
 
@@ -582,20 +637,18 @@
 					$recipient = app(RequestForInformationRecipientFetchingService::class)
 						->getRecipientByRfiIdAndUserId($row['id'], $authUserId);
 
-					// If the user is a recipient and hasn't read the RFI, update unread count and show alert
-					if ($recipient && !$recipient->is_read) {
-						$row['unread_replies_count'] = $data['replies_count'];
-						$row['show_alert'] = true;
-					} // If the user is a recipient and has read the RFI, check for unread replies
-					elseif ($recipient) {
-						// Get the RFI
-						$rfi = app(RequestForInformationFetchingService::class)->getRfiById($row['id']);
-						// Count unread replies
-						$unreadReplies = $rfi->replies()->where('is_read', false)->count();
-						if ($unreadReplies > 0) {
-							$row['unread_replies_count'] = $unreadReplies;
-							$row['show_alert'] = true;
-						}
+					// Get the RFI and determine if the authenticated user is the creator
+					$rfi = app(RequestForInformationFetchingService::class)->getRfiById($row['id']);
+					$isCreator = $rfi && $rfi->user_id === $authUserId;
+
+					// If the other party posted (not the current user) and the current user is involved (creator or recipient), show unread
+					if (($recipient || $isCreator) && $data['user_id'] !== $authUserId) {
+						$unreadReplies = $rfi->replies()
+							->where('is_read', false)
+							->where('user_id', '!=', $authUserId)
+							->count();
+						$row['unread_replies_count'] = $unreadReplies;
+						$row['show_alert'] = $unreadReplies > 0;
 					}
 
 					break;
@@ -616,10 +669,31 @@
 			$this->showCreateModal = false;
 			$this->showEditModal = false;
 			$this->showResponsesModal = false;
+			$this->canReply = false;
+			$this->replyBody = '';
 		}
 
 		public function deleteRfi($rfiId):void
 		{
+			// If deleting the RFI we are currently viewing or editing, proactively clear model properties
+			// to prevent Livewire from trying to synthesize a now-null Eloquent model instance.
+			if ($this->viewingRfiId === $rfiId) {
+				$this->showResponsesModal = false;
+				$this->viewingRfiId = null;
+				$this->viewingRfi = null;
+				$this->replies = [];
+				$this->canReply = false;
+				$this->replyBody = '';
+			}
+			if ($this->editingRfiId === $rfiId) {
+				$this->showEditModal = false;
+				$this->editingRfiId = null;
+				$this->title = '';
+				$this->body = '';
+				$this->status = 'Pending';
+				$this->selectedRecipients = [];
+			}
+
 			app(RequestForInformationDestructionService::class)->deleteRfi($rfiId);
 			$this->loadRfis();
 		}
@@ -705,84 +779,84 @@
 				id="create-rfi-modal"
 				wire="showCreateModal"
 				x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Create New Request for Information">
-			<div class="space-y-4">
-				<x-input
-						label="Title"
-						wire:model="title" />
-				<x-textarea
-						label="Content"
-						wire:model="body"
-						rows="5" />
-				<x-select.styled
-						label="Status"
-						wire:model="status"
-						:options="['Pending', 'Approved', 'Rejected', 'Processing']" />
-				<div>
-					<x-label>Recipients</x-label>
-					<div class="mt-2 space-y-2">
-						@foreach($availableUsers as $user)
-							<label class="flex items-center">
-								<x-checkbox
-										wire:model="selectedRecipients"
-										value="{{ $user->id }}" />
-								<span class="ml-2">
+			<x-card title="Create New Request for Information">
+				<div class="space-y-4">
+					<x-input
+							label="Title"
+							wire:model="title" />
+					<x-textarea
+							label="Content"
+							wire:model="body"
+							rows="5" />
+					<x-select.styled
+							label="Status"
+							wire:model="status"
+							:options="['Pending', 'Approved', 'Rejected', 'Processing']" />
+					<div>
+						<x-label>Recipients</x-label>
+						<div class="mt-2 space-y-2">
+							@foreach($availableUsers as $user)
+								<label class="flex items-center">
+									<x-checkbox
+											wire:model="selectedRecipients"
+											value="{{ $user->id }}" />
+									<span class="ml-2">
 									{{ is_string($user->name) ? $user->name : '' }}
-									@if(userRole($user, $negotiationId))
-										<x-badge
-												text="{{ userRole($user, $negotiationId)->label() }}"
-												color="cyan" />
-									@endif
+										@if(userRole($user, $negotiationId))
+											<x-badge
+													text="{{ userRole($user, $negotiationId)->label() }}"
+													color="cyan" />
+										@endif
 								</span>
-							</label>
-						@endforeach
+								</label>
+							@endforeach
+						</div>
 					</div>
-				</div>
 
-				<!-- Optional Document Attachment -->
-				<div class="mt-4 border-t pt-4">
-					<h3 class="text-sm font-medium text-gray-700 dark:text-dark-200">Attach Document (optional)</h3>
-					<div class="mt-3 grid grid-cols-1 gap-3">
-						<x-upload
-								label="File"
-								wire:model="docFile"
-								id="neg-rfi-create-doc-file" />
-						<x-input
-								label="Name"
-								wire:model="docName"
-								id="neg-rfi-create-doc-name" />
-						<x-input
-								label="Category"
-								wire:model="docCategory"
-								id="neg-rfi-create-doc-category" />
-						<x-textarea
-								label="Description"
-								wire:model="docDescription"
-								id="neg-rfi-create-doc-description"
-								rows="3" />
-						<div class="flex items-center">
-							<x-checkbox
-									label="Private"
-									wire:model="docPrivate"
-									id="neg-rfi-create-doc-private" />
+					<!-- Optional Document Attachment -->
+					<div class="mt-4 border-t pt-4">
+						<h3 class="text-sm font-medium text-gray-700 dark:text-dark-200">Attach Document (optional)</h3>
+						<div class="mt-3 grid grid-cols-1 gap-3">
+							<x-upload
+									label="File"
+									wire:model="docFile"
+									id="neg-rfi-create-doc-file" />
+							<x-input
+									label="Name"
+									wire:model="docName"
+									id="neg-rfi-create-doc-name" />
+							<x-input
+									label="Category"
+									wire:model="docCategory"
+									id="neg-rfi-create-doc-category" />
+							<x-textarea
+									label="Description"
+									wire:model="docDescription"
+									id="neg-rfi-create-doc-description"
+									rows="3" />
+							<div class="flex items-center">
+								<x-checkbox
+										label="Private"
+										wire:model="docPrivate"
+										id="neg-rfi-create-doc-private" />
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showCreateModal', false)">Cancel
-					</x-button>
-					<x-button
-							primary
-							wire:click="createRfi">Save
-					</x-button>
-				</div>
-			</x-slot:footer>
-		</x-card>
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-2">
+						<x-button
+								flat
+								wire:click="$set('showCreateModal', false)">Cancel
+						</x-button>
+						<x-button
+								primary
+								wire:click="createRfi">Save
+						</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
 		</x-modal>
 	</template>
 
@@ -792,52 +866,52 @@
 				id="edit-rfi-modal"
 				wire="showEditModal"
 				x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Edit Request for Information">
-			<div class="space-y-4">
-				<x-input
-						label="Title"
-						wire:model="title" />
-				<x-textarea
-						label="Content"
-						wire:model="body"
-						rows="5" />
-				<x-select.styled
-						label="Status"
-						wire:model="status"
-						:options="['Pending', 'Approved', 'Rejected', 'Processing']" />
-				<div>
-					<x-label>Recipients</x-label>
-					<div class="mt-2 space-y-2">
-						@foreach($availableUsers as $user)
-							<label class="flex items-center">
-								<x-checkbox
-										wire:model="selectedRecipients"
-										value="{{ $user->id }}" />
-								<span class="ml-2">
+			<x-card title="Edit Request for Information">
+				<div class="space-y-4">
+					<x-input
+							label="Title"
+							wire:model="title" />
+					<x-textarea
+							label="Content"
+							wire:model="body"
+							rows="5" />
+					<x-select.styled
+							label="Status"
+							wire:model="status"
+							:options="['Pending', 'Approved', 'Rejected', 'Processing']" />
+					<div>
+						<x-label>Recipients</x-label>
+						<div class="mt-2 space-y-2">
+							@foreach($availableUsers as $user)
+								<label class="flex items-center">
+									<x-checkbox
+											wire:model="selectedRecipients"
+											value="{{ $user->id }}" />
+									<span class="ml-2">
 									{{ is_string($user->name) ? $user->name : '' }}
-									@if(userRole($user, $negotiationId))
-										<span class="text-sm text-gray-400 ml-1">({{ userRole($user, $negotiationId)->label() }})</span>
-									@endif
+										@if(userRole($user, $negotiationId))
+											<span class="text-sm text-gray-400 ml-1">({{ userRole($user, $negotiationId)->label() }})</span>
+										@endif
 								</span>
-							</label>
-						@endforeach
+								</label>
+							@endforeach
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showEditModal', false)">Cancel
-					</x-button>
-					<x-button
-							primary
-							wire:click="updateRfi">Update
-					</x-button>
-				</div>
-			</x-slot:footer>
-		</x-card>
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-2">
+						<x-button
+								flat
+								wire:click="$set('showEditModal', false)">Cancel
+						</x-button>
+						<x-button
+								primary
+								wire:click="updateRfi">Update
+						</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
 		</x-modal>
 	</template>
 
@@ -848,13 +922,13 @@
 				id="view-responses-modal"
 				wire="showResponsesModal"
 				x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Request Details & Responses">
-			<div class="space-y-6">
-				<!-- Request Details Section -->
-				@if($viewingRfi)
-					<div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 border border-gray-200 dark:border-dark-600">
-						<h3 class="text-lg font-semibold mb-2">{{ $viewingRfi->title }}</h3>
-						<div class="flex items-center mb-3">
+			<x-card title="Request Details & Responses">
+				<div class="space-y-6">
+					<!-- Request Details Section -->
+					@if($viewingRfi)
+						<div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 border border-gray-200 dark:border-dark-600">
+							<h3 class="text-lg font-semibold mb-2">{{ $viewingRfi->title }}</h3>
+							<div class="flex items-center mb-3">
 							<span
 									class="px-2 py-1 text-xs rounded-full
 								@if($viewingRfi->status == 'Approved') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
@@ -864,174 +938,180 @@
 								@endif">
 								{{ $viewingRfi->status }}
 							</span>
-							<span class="text-xs text-gray-500 dark:text-dark-300 ml-3">
+								<span class="text-xs text-gray-500 dark:text-dark-300 ml-3">
 								Created {{ $viewingRfi->created_at->format('Y-m-d H:i') }}
 							</span>
+							</div>
+							<div class="prose dark:prose-invert max-w-none">
+								<p>{{ $viewingRfi->body }}</p>
+							</div>
+							<div class="mt-3 text-sm text-gray-500 dark:text-dark-300">
+								<p>From: {{ $viewingRfi->sender->name }}</p>
+							</div>
 						</div>
-						<div class="prose dark:prose-invert max-w-none">
-							<p>{{ $viewingRfi->body }}</p>
-						</div>
-						<div class="mt-3 text-sm text-gray-500 dark:text-dark-300">
-							<p>From: {{ $viewingRfi->sender->name }}</p>
-						</div>
-					</div>
-				@endif
-
-				<!-- Documents Section -->
-				<div>
-					<h4 class="text-md font-semibold mb-3 text-gray-700 dark:text-dark-200">Documents</h4>
-					<div class="mt-2 flow-root overflow-hidden rounded-lg border border-gray-200 dark:border-dark-600">
-						<table class="w-full text-left">
-							<thead class="bg-gray-50 dark:bg-dark-700">
-							<tr>
-								<th class="px-3 py-2 text-xs font-semibold">Name</th>
-								<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Type</th>
-								<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Size</th>
-								<th class="px-3 py-2 text-xs font-semibold">Category</th>
-								<th class="py-2 pl-3 text-right">
-									<x-button.circle
-											wire:click="$set('showUploadDocModal', true)"
-											sm
-											flat
-											icon="plus" />
-								</th>
-							</tr>
-							</thead>
-							<tbody>
-							@forelse(($viewingRfi?->documents ?? []) as $document)
-								<tr>
-									<td class="px-3 py-2 text-xs font-medium">{{ $document->name }}</td>
-									<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->file_type }}</td>
-									<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $this->formatFileSize($document->file_size) }}</td>
-									<td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->category }}</td>
-									<td class="px-3 py-2 text-right">
-										<x-button.circle
-												wire:click="viewRfiDocument({{ $document->id }})"
-												flat
-												color="sky"
-												icon="eye"
-												sm />
-										<x-button.circle
-												wire:click="deleteRfiDocument({{ $document->id }})"
-												flat
-												color="red"
-												icon="trash"
-												sm />
-									</td>
-								</tr>
-							@empty
-								<tr>
-									<td
-											colspan="5"
-											class="text-center p-4 text-gray-500">No documents attached.
-									</td>
-								</tr>
-							@endforelse
-							</tbody>
-						</table>
-					</div>
-
-					<h4 class="text-md font-semibold mt-6 mb-3 text-gray-700 dark:text-dark-200">Responses</h4>
-					@if($viewingRfiId && count($replies) > 0)
-						<div class="space-y-4">
-							@foreach($replies as $reply)
-								<div class="border rounded-lg p-4 border-gray-200 dark:border-dark-600">
-									<div class="flex justify-between items-start">
-										<div>
-											<p class="font-semibold text-gray-800 dark:text-dark-100">{{ is_string($reply->user->name) ? $reply->user->name : '' }}</p>
-											<p class="text-sm text-gray-500 dark:text-dark-300">{{ $reply->created_at ? $reply->created_at->format('Y-m-d H:i') : '' }}</p>
-										</div>
-									</div>
-									<div class="mt-2">
-										<p class="text-gray-700 dark:text-dark-200">{{ is_string($reply->body) ? $reply->body : '' }}</p>
-									</div>
-								</div>
-							@endforeach
-						</div>
-					@else
-						<p class="text-center text-gray-500 dark:text-dark-300">No responses yet.</p>
 					@endif
 
-					<div class="mt-4">
-						<x-textarea
-								label="Your Response"
-								wire:model="replyBody"
-								rows="3" />
-					</div>
-				</div>
-			</div>
+					<!-- Documents Section -->
+					<div>
+						<h4 class="text-md font-semibold mb-3 text-gray-700 dark:text-dark-200">Documents</h4>
+						<div class="mt-2 flow-root overflow-hidden rounded-lg border border-gray-200 dark:border-dark-600">
+							<table class="w-full text-left">
+								<thead class="bg-gray-50 dark:bg-dark-700">
+								<tr>
+									<th class="px-3 py-2 text-xs font-semibold">Name</th>
+									<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Type</th>
+									<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Size</th>
+									<th class="px-3 py-2 text-xs font-semibold">Category</th>
+									<th class="py-2 pl-3 text-right">
+										<x-button.circle
+												wire:click="$set('showUploadDocModal', true)"
+												sm
+												flat
+												icon="plus" />
+									</th>
+								</tr>
+								</thead>
+								<tbody>
+								@forelse(($viewingRfi?->documents ?? []) as $document)
+									<tr>
+										<td class="px-3 py-2 text-xs font-medium">{{ $document->name }}</td>
+										<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->file_type }}</td>
+										<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $this->formatFileSize($document->file_size) }}</td>
+										<td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->category }}</td>
+										<td class="px-3 py-2 text-right">
+											<x-button.circle
+													wire:click="viewRfiDocument({{ $document->id }})"
+													flat
+													color="sky"
+													icon="eye"
+													sm />
+											<x-button.circle
+													wire:click="deleteRfiDocument({{ $document->id }})"
+													flat
+													color="red"
+													icon="trash"
+													sm />
+										</td>
+									</tr>
+								@empty
+									<tr>
+										<td
+												colspan="5"
+												class="text-center p-4 text-gray-500">No documents attached.
+										</td>
+									</tr>
+								@endforelse
+								</tbody>
+							</table>
+						</div>
 
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showResponsesModal', false)">Close
-					</x-button>
-					<x-button
-							primary
-							wire:click="submitReply">Submit Response
-					</x-button>
-				</div>
-			</x-slot:footer>
-		</x-card>
+						<h4 class="text-md font-semibold mt-6 mb-3 text-gray-700 dark:text-dark-200">Responses</h4>
+						@if($viewingRfiId && count($replies) > 0)
+							<div class="space-y-4">
+								@foreach($replies as $reply)
+									<div class="border rounded-lg p-4 border-gray-200 dark:border-dark-600">
+										<div class="flex justify-between items-start">
+											<div>
+												<p class="font-semibold text-gray-800 dark:text-dark-100">{{ is_string($reply->user->name) ? $reply->user->name : '' }}</p>
+												<p class="text-sm text-gray-500 dark:text-dark-300">{{ $reply->created_at ? $reply->created_at->format('Y-m-d H:i') : '' }}</p>
+											</div>
+										</div>
+										<div class="mt-2">
+											<p class="text-gray-700 dark:text-dark-200">{{ is_string($reply->body) ? $reply->body : '' }}</p>
+										</div>
+									</div>
+								@endforeach
+							</div>
+						@else
+							<p class="text-center text-gray-500 dark:text-dark-300">No responses yet.</p>
+						@endif
+
+ 					<div class="mt-4">
+ 						@if($canReply)
+ 							<x-textarea
+ 									label="Your Response"
+ 									wire:model="replyBody"
+ 									rows="3" />
+ 						@else
+  						<p class="text-sm text-gray-500 dark:text-dark-300">Only the recipient or the creator of this RFI can reply.</p>
+ 						@endif
+ 					</div>
+ 				</div>
+ 			</div>
+		
+ 			<x-slot:footer>
+ 				<div class="flex justify-end gap-x-2">
+ 					<x-button
+ 							flat
+ 							wire:click="$set('showResponsesModal', false)">Close
+ 					</x-button>
+ 					@if($canReply)
+ 						<x-button
+ 								primary
+ 								wire:click="submitReply">Submit Response
+ 						</x-button>
+ 					@endif
+ 				</div>
+ 			</x-slot:footer>
+			</x-card>
 		</x-modal>
 	</template>
 
 	<!-- Upload RFI Document Modal -->
 	<template x-teleport="body">
 		<x-modal wire="showUploadDocModal">
-		<x-card title="Upload Document">
-			<div class="space-y-4">
-				<div>
-					<x-upload
-							label="File"
-							wire:model="docFile"
-							id="neg-rfi-doc-file"
-							class="mt-1 block w-full" />
+			<x-card title="Upload Document">
+				<div class="space-y-4">
+					<div>
+						<x-upload
+								label="File"
+								wire:model="docFile"
+								id="neg-rfi-doc-file"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-input
+								label="Name"
+								wire:model="docName"
+								id="neg-rfi-doc-name"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-input
+								label="Category"
+								wire:model="docCategory"
+								id="neg-rfi-doc-category"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-textarea
+								label="Description"
+								wire:model="docDescription"
+								id="neg-rfi-doc-description"
+								class="mt-1 block w-full" />
+					</div>
+					<div class="flex items-center">
+						<x-checkbox
+								label="Private"
+								wire:model="docPrivate"
+								id="neg-rfi-doc-private" />
+					</div>
 				</div>
-				<div>
-					<x-input
-							label="Name"
-							wire:model="docName"
-							id="neg-rfi-doc-name"
-							class="mt-1 block w-full" />
-				</div>
-				<div>
-					<x-input
-							label="Category"
-							wire:model="docCategory"
-							id="neg-rfi-doc-category"
-							class="mt-1 block w-full" />
-				</div>
-				<div>
-					<x-textarea
-							label="Description"
-							wire:model="docDescription"
-							id="neg-rfi-doc-description"
-							class="mt-1 block w-full" />
-				</div>
-				<div class="flex items-center">
-					<x-checkbox
-							label="Private"
-							wire:model="docPrivate"
-							id="neg-rfi-doc-private" />
-				</div>
-			</div>
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-4">
-					<x-button
-							flat
-							text="Cancel"
-							wire:click="$toggle('showUploadDocModal')" />
-					<x-button
-							primary
-							label="Upload"
-							text="Upload"
-							wire:click="uploadRfiDocument"
-							wire:loading.attr="disabled" />
-				</div>
-			</x-slot:footer>
-		</x-card>
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-4">
+						<x-button
+								flat
+								text="Cancel"
+								wire:click="$toggle('showUploadDocModal')" />
+						<x-button
+								primary
+								label="Upload"
+								text="Upload"
+								wire:click="uploadRfiDocument"
+								wire:loading.attr="disabled" />
+					</div>
+				</x-slot:footer>
+			</x-card>
 		</x-modal>
 	</template>
 
@@ -1040,65 +1120,65 @@
 		<x-modal
 				wire="showViewDocModal"
 				max-width="4xl">
-		<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
-			@if($currentDocument && $documentUrl)
-				<div class="space-y-4">
-					<div class="flex justify-between">
-						<div>
-							<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
-							<p class="text-sm text-gray-500">
-								Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
-							<p class="text-sm text-gray-500">
-								Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
+			<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
+				@if($currentDocument && $documentUrl)
+					<div class="space-y-4">
+						<div class="flex justify-between">
+							<div>
+								<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
+								<p class="text-sm text-gray-500">
+									Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
+								<p class="text-sm text-gray-500">
+									Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
+							</div>
+							<div>
+								<x-button
+										href="{{ $documentUrl }}"
+										target="_blank"
+										primary
+										label="Expand"
+										icon="arrows-pointing-out" />
+							</div>
 						</div>
-						<div>
-							<x-button
-									href="{{ $documentUrl }}"
-									target="_blank"
-									primary
-									label="Expand"
-									icon="arrows-pointing-out" />
+						<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
+							@if(Str::startsWith($currentDocument->file_type, 'image/'))
+								<img
+										src="{{ $documentUrl }}"
+										alt="{{ $currentDocument->name }}"
+										class="max-w-full h-auto mx-auto" />
+							@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
+								<iframe
+										src="{{ $documentUrl }}"
+										class="w-full h-96"
+										frameborder="0"></iframe>
+							@else
+								<div class="text-center py-8">
+									<p>Preview not available for this file type.</p>
+									<p class="mt-2">Please download the file to view it.</p>
+								</div>
+							@endif
 						</div>
-					</div>
-					<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
-						@if(Str::startsWith($currentDocument->file_type, 'image/'))
-							<img
-									src="{{ $documentUrl }}"
-									alt="{{ $currentDocument->name }}"
-									class="max-w-full h-auto mx-auto" />
-						@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
-							<iframe
-									src="{{ $documentUrl }}"
-									class="w-full h-96"
-									frameborder="0"></iframe>
-						@else
-							<div class="text-center py-8">
-								<p>Preview not available for this file type.</p>
-								<p class="mt-2">Please download the file to view it.</p>
+						@if($currentDocument->description)
+							<div>
+								<h3 class="text-sm font-medium">Description</h3>
+								<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
 							</div>
 						@endif
 					</div>
-					@if($currentDocument->description)
-						<div>
-							<h3 class="text-sm font-medium">Description</h3>
-							<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
-						</div>
-					@endif
-				</div>
-			@else
-				<div class="py-8 text-center">
-					<p>Document not found or unable to generate preview.</p>
-				</div>
-			@endif
-			<x-slot:footer>
-				<div class="flex justify-end">
-					<x-button
-							flat
-							label="Close"
-							x-on:click="close" />
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				@else
+					<div class="py-8 text-center">
+						<p>Document not found or unable to generate preview.</p>
+					</div>
+				@endif
+				<x-slot:footer>
+					<div class="flex justify-end">
+						<x-button
+								flat
+								label="Close"
+								x-on:click="close" />
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
 	</template>
 </div>

@@ -3,6 +3,8 @@
 namespace App\Events\Rfi;
 
 use App\Models\RequestForInformationReply;
+use App\Support\Channels\Negotiation;
+use App\Support\EventNames\NegotiationEventNames;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -21,12 +23,12 @@ class RfiReplyPostedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel("private.negotiation.{$this->reply->tenant_id}.{$this->negotiationId}");
+        return new PrivateChannel(Negotiation::negotiationRfi($this->negotiationId));
     }
 
     public function broadcastAs(): string
     {
-        return 'RfiReplyPosted';
+        return NegotiationEventNames::RFI_RESPONDED;
     }
 
     public function broadcastWith()
