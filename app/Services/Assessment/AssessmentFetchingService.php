@@ -28,7 +28,7 @@ class AssessmentFetchingService
     {
         $assessment = $this->getAssessment($assessmentId);
 
-        if (!$assessment) {
+        if (! $assessment) {
             return null;
         }
 

@@ -21,6 +21,7 @@ return new class () extends Migration {
             // Role and Position
             $table->string('permissions')->nullable(); // e.g., 'admin', 'user', 'superadmin', 'observer'
             $table->string('rank_or_title')->nullable(); // Officer rank or mental health job title
+            $table->foreignId('primary_team_id')->nullable()->index();
 
             // Identity / Credentials
             $table->string('badge_number')->nullable(); // for law enforcement

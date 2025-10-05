@@ -44,6 +44,14 @@ enum TenantTypes: string
         };
     }
 
+    public static function options(): array
+    {
+        return array_map(
+            fn (self $e) => ['label' => $e->label(), 'value' => $e->value],
+            self::cases()
+        );
+    }
+
     /**
      * Create an enum instance from an array representation.
      *
@@ -58,6 +66,11 @@ enum TenantTypes: string
         }
 
         return self::tryFrom($array['value']);
+    }
+
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
     }
 
     /**

@@ -32,7 +32,7 @@ class Tenant extends Model
 
     public function riskAssessments(): HasMany
     {
-        return $this->hasMany(AssessmentQuestionResponse::class, 'tenant_id');
+        return $this->hasMany(AssessmentQuestionsAnswer::class, 'tenant_id');
     }
 
     public function negotiations(): HasMany
@@ -46,5 +46,10 @@ class Tenant extends Model
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+
+    public function teams(): HasMany
+    {
+        return $this->hasMany(Team::class);
     }
 }

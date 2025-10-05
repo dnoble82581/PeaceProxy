@@ -63,6 +63,20 @@
 			}
 		}
 
+		public function getListeners()
+		{
+			return [
+				'echo-private:'.\App\Support\Channels\Subject::subjectMood($this->primarySubject->id).',.'.\App\Support\EventNames\SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
+				'echo-private:'.\App\Support\Channels\Subject::subject($this->primarySubject->id).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
+				'echo-private:'.\App\Support\Channels\Subject::subject($this->primarySubject->id).',.'.\App\Support\EventNames\SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
+			];
+		}
+
+		public function handleSubjectUpdated()
+		{
+			$this->prepareImages();
+		}
+
 		private function determineArmedStatus():string
 		{
 			try {
@@ -105,13 +119,53 @@
 		header="Target">
 	<div class="flex gap-4">
 		<div class="h-full flex">
-			<div class="grid grid-cols-1 gap-2">
-				@foreach(array_slice($imageUrls, 0, 5) as $idx => $url)
-					<img
-							src="{{ $url }}"
-							alt="Subject Image {{ $idx+1 }}"
-							class="w-24 h-24 object-cover rounded-md border border-gray-200 dark:border-dark-500" />
-				@endforeach
+			<div
+				x-data="{
+    activeSlide: 0,
+    isHovering: false,
+    slides: @entangle('imageUrls'),
+    nextSlide() {
+      if (!this.slides.length) return;
+      this.activeSlide = (this.activeSlide + 1) % this.slides.length;
+    },
+    prevSlide() {
+      if (!this.slides.length) return;
+      this.activeSlide = (this.activeSlide - 1 + this.slides.length) % this.slides.length;
+    }
+  }"
+				class="relative w-32 h-32"
+				@mouseenter="isHovering = true"
+				@mouseleave="isHovering = false"
+			>
+				<div class="overflow-hidden rounded-md w-32 h-32 relative border border-gray-200 dark:border-dark-500">
+					<template x-for="(s, i) in slides" x-bind:key="s.key ?? i">
+						<div
+							x-show="activeSlide === i"
+							x-transition:enter="transition ease-out duration-300"
+							x-transition:enter-start="opacity-0 transform scale-90"
+							x-transition:enter-end="opacity-100 transform scale-100"
+							x-transition:leave="transition ease-in duration-300"
+							x-transition:leave-start="opacity-100 transform scale-100"
+							x-transition:leave-end="opacity-0 transform scale-90"
+							class="absolute inset-0"
+						>
+							<img class="w-full h-full object-cover" x-bind:src="(s.src ?? s)" x-bind:alt="s.caption ?? (`Image ${s.id ?? ''}`)">
+						</div>
+					</template>
+
+					<button @click="prevSlide" class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-r transition-opacity duration-200" x-show="slides.length > 1 && isHovering" x-transition.opacity>
+						<x-icon name="chevron-left" class="w-4 h-4" />
+					</button>
+					<button @click="nextSlide" class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-l transition-opacity duration-200" x-show="slides.length > 1 && isHovering" x-transition.opacity>
+						<x-icon name="chevron-right" class="w-4 h-4" />
+					</button>
+
+					<div class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1" x-show="slides.length > 1">
+						<template x-for="(s, i) in slides" x-bind:key="'dot-'+(s.key ?? i)">
+							<button @click="activeSlide = i" x-bind:class="{'bg-white': activeSlide === i, 'bg-white/50 hover:bg-white/80': activeSlide !== i}" class="w-1.5 h-1.5 rounded-full transition-colors"></button>
+						</template>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="text-sm text-gray-900 dark:text-dark-50 space-y-1">
@@ -128,7 +182,7 @@
 				@if(count($firstTwoPhones) > 0)
 					<div class="text-sm text-gray-900 dark:text-dark-50">
 						@foreach($firstTwoPhones as $phone)
-							<p>{{ $phone }}</p>
+							<p>{{ $phone}}</p>
 						@endforeach
 					</div>
 				@else

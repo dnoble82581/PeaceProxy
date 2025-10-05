@@ -271,7 +271,7 @@
 				];
 		}
 
-		public function handleSubjectUpdated(array $event)
+		public function handleSubjectUpdated(array $event):void
 		{
 			// Rebuild slides (this method already resets the array)
 			$this->loadImageUrls();

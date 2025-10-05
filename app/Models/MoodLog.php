@@ -19,6 +19,7 @@ class MoodLog extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'mood_level' => MoodLevels::class,
+        'meta_data' => 'array',
     ];
 
     public function subject(): BelongsTo

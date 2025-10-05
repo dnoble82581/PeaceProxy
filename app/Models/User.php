@@ -34,6 +34,47 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (empty($user->tenant_id)) {
+                $tenantId = null;
+
+                if (function_exists('tenant') && tenant()) {
+                    $tenantId = tenant()->id;
+                }
+
+                if (! $tenantId && app()->environment('testing')) {
+                    $tenantId = Tenant::factory()->create()->id;
+                }
+
+                if ($tenantId) {
+                    $user->tenant_id = $tenantId;
+                }
+            }
+        });
+    }
+
+    public function primaryTeam()
+    {
+        // if you added primary_team_id
+        return $this->belongsTo(Team::class, 'primary_team_id');
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class)->withTimestamps()->withPivot('is_primary');
+    }
+
+    public function activeIncidentAssignment()
+    {
+        // Implement per your schema; example using a generic table:
+        return $this->hasOne(NegotiationUser::class)
+            ->whereNull('left_at')
+            ->with('negotiation')
+            ->latestOfMany();
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -94,6 +135,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Warning::class, 'created_by_id');
     }
+
     /**
      * Get the conversations created by this user.
      */
