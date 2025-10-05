@@ -36,6 +36,7 @@ return new class () extends Migration {
 
             // Risk assessment
             $table->json('risk_factors')->nullable();
+            $table->boolean('armed_cached')->nullable()->index();
 
             // Notes and status
             $table->text('notes')->nullable();

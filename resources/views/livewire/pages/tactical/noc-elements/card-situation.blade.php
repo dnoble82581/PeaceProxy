@@ -53,6 +53,22 @@
 			}
 			return 'Unknown';
 		}
+
+		public function handleSubjectUpdated(array $event)
+		{
+			$this->armedStatus = $this->determineArmedStatus();
+		}
+
+		public function getListeners()
+		{
+			$subjectId = $this->primarySubject->id;
+			return
+				[
+					'echo-private:'.\App\Support\Channels\Subject::subjectMood($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
+				];
+		}
 	};
 
 ?>

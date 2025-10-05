@@ -1,3 +1,4 @@
+@php use App\Enums\Team\TeamDiscipline;use App\Enums\User\UserPermission; @endphp
 <div>
 	<x-modal
 			:title="__('Update User: #:id', ['id' => $user?->id])"
@@ -22,13 +23,20 @@
 
 			<div>
 				<x-select.styled
-						:disabled="authUser()->cannot('update', \tenant()) || authUser()->id === $user?->id"
+						label="Team Discipline"
+						wire:model="user.primary_team_id"
+						:options="App\Models\Team::all()->map(fn($team) => ['label' => $team->name, 'value' => $team->id])->toArray()" />
+			</div>
+
+			<div>
+				<x-select.styled
+						:disabled="!authUser() || !tenant() || authUser()->cannot('update', tenant()) || authUser()->id === $user?->id"
 						label="Permissions"
 						wire:model="user.permissions"
-						:options="collect(\App\Enums\User\UserPermission::cases())->map(fn($permission) => [
-																				'label' => $permission->label(),
-																				'value' => $permission->value,
-																				])->toArray()" />
+						:options="collect(UserPermission::cases())->map(fn($permission) => [
+																'label' => $permission->label(),
+																'value' => $permission->value,
+																])->toArray()" />
 			</div>
 
 			<div>

@@ -46,6 +46,9 @@ class CreateUserForm extends Form
     #[Validate(['nullable', 'date'])]
     public $last_login_at = null;
 
+    #[Validate(['nullable', 'integer'])]
+    public $primary_team_id = null;
+
     #[Validate(['nullable'])]
     public $last_login_ip = '';
 

@@ -20,7 +20,7 @@ class MoodLogCreationService
     {
         $newMood = $this->moodLogRepository->createMoodLog($moodLogDTO->toArray());
 
-        $log = $this->addLogEntry($newMood);
+        $this->addLogEntry($newMood);
 
         event(new MoodCreatedEvent($newMood));
 

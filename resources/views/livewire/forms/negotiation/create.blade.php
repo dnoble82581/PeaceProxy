@@ -14,6 +14,7 @@
 	use App\Models\Negotiation;
 	use App\Models\Subject;
 	use App\Services\ContactPoint\ContactPointCreationService;
+	use App\Services\MoodLog\MoodLogCreationService;
 	use App\Services\NegotiationSubject\NegotiationSubjectCreationService;
 	use App\Services\NegotiationUser\NegotiationUserCreationService;
 	use App\Services\Subject\SubjectCreationService;
@@ -29,6 +30,8 @@
 		public NegotiationForm $negotiationForm;
 		public string $subjectName = '';
 		public string $subjectPhone = '';
+
+		public MoodLevels $current_mood;
 
 
 		public function mount():void
@@ -150,6 +153,28 @@
 				SubjectNegotiationRoles::primary
 			);
 
+			$moodMetaData = [
+				'createdByName' => authUser()->name,
+				'subjectName' => $newSubject->name,
+				'moodDescription' => $this->current_mood->description(),
+				'moodName' => $this->current_mood->label()
+			];
+
+			$moodDto = new \App\DTOs\MoodLog\MoodLogDTO(
+				id: null,
+				tenant_id: tenant()->id,
+				subject_id: $newSubject->id,
+				logged_by_id: authUser()->id,
+				negotiation_id: $newNegotiation->id,
+				mood_level: $this->current_mood->value,
+				context: 'Created at new negotiation',
+				meta_data: $moodMetaData,
+				created_at: now(),
+				updated_at: now()
+			);
+
+			app(MoodLogCreationService::class)->createMoodLog($moodDto);
+
 			// Add the authenticated user to the negotiation
 			$this->addAuthUserToNegotiation($newNegotiation->id);
 
@@ -217,7 +242,7 @@
 
 				<x-input
 						icon="user"
-						label="Subject Name"
+						label="Subject Name *"
 						wire:model="subjectName"
 						placeholder="Enter subject name" />
 
@@ -231,7 +256,7 @@
 						class="w-full"
 						icon="user"
 						label="Current Mood *"
-						wire:model="negotiationForm.current_mood"
+						wire:model="current_mood"
 						:options="collect(App\Enums\Subject\MoodLevels::cases())->map(fn($type) => [
 						'label' => $type->label(),
 						'value' => $type->value,
@@ -337,20 +362,20 @@
 		})
 
 		// Fill form with random data for development purposes
-		document.addEventListener('DOMContentLoaded', function() {
+		document.addEventListener('DOMContentLoaded', function () {
 			const fillRandomDataBtn = document.getElementById('fillRandomDataBtn')
 			if (fillRandomDataBtn) {
-				fillRandomDataBtn.addEventListener('click', function() {
+				fillRandomDataBtn.addEventListener('click', function () {
 					// Helper functions for generating random data
-					function getRandomInt(min, max) {
+					function getRandomInt (min, max) {
 						return Math.floor(Math.random() * (max - min + 1)) + min
 					}
 
-					function getRandomElement(array) {
+					function getRandomElement (array) {
 						return array[Math.floor(Math.random() * array.length)]
 					}
 
-					function getRandomString(length = 10) {
+					function getRandomString (length = 10) {
 						const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 						let result = ''
 						for (let i = 0; i < length; i++) {
@@ -359,7 +384,7 @@
 						return result
 					}
 
-					function getRandomSentence(wordCount = 8) {
+					function getRandomSentence (wordCount = 8) {
 						const words = [
 							'negotiation', 'subject', 'situation', 'crisis', 'resolution', 'communication',
 							'strategy', 'approach', 'team', 'response', 'incident', 'location', 'emergency',
@@ -373,7 +398,7 @@
 						return sentence.trim().charAt(0).toUpperCase() + sentence.trim().slice(1)
 					}
 
-					function getRandomParagraph(sentenceCount = 3) {
+					function getRandomParagraph (sentenceCount = 3) {
 						let paragraph = ''
 						for (let i = 0; i < sentenceCount; i++) {
 							paragraph += getRandomSentence(getRandomInt(5, 12)) + '. '
@@ -381,47 +406,47 @@
 						return paragraph.trim()
 					}
 
-					function getRandomPhoneNumber() {
+					function getRandomPhoneNumber () {
 						return `${getRandomInt(100, 999)}-${getRandomInt(100, 999)}-${getRandomInt(1000, 9999)}`
 					}
 
-					function getRandomName() {
+					function getRandomName () {
 						const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'Robert', 'Jessica', 'William', 'Jennifer']
 						const lastNames = ['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor']
 						return `${getRandomElement(firstNames)} ${getRandomElement(lastNames)}`
 					}
 
-					function getRandomCity() {
+					function getRandomCity () {
 						const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose']
 						return getRandomElement(cities)
 					}
 
-					function getRandomState() {
+					function getRandomState () {
 						const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
 						return getRandomElement(states)
 					}
 
-					function getRandomAddress() {
+					function getRandomAddress () {
 						const streetTypes = ['St', 'Ave', 'Blvd', 'Dr', 'Ln', 'Rd', 'Way', 'Pl', 'Ct']
 						return `${getRandomInt(100, 9999)} ${getRandomString(6).charAt(0).toUpperCase() + getRandomString(6).slice(1)} ${getRandomElement(streetTypes)}`
 					}
 
-					function getRandomZipCode() {
+					function getRandomZipCode () {
 						return getRandomInt(10000, 99999)
 					}
 
-					function getRandomTags() {
+					function getRandomTags () {
 						const possibleTags = ['urgent', 'high-risk', 'resolved', 'in-progress', 'standby', 'training', 'hostage', 'barricaded', 'suicidal', 'domestic', 'public', 'school', 'workplace', 'armed', 'unarmed']
 						const tagCount = getRandomInt(1, 4)
 						const tags = []
-						
+
 						for (let i = 0; i < tagCount; i++) {
 							const tag = getRandomElement(possibleTags)
 							if (!tags.includes(tag)) {
 								tags.push(tag)
 							}
 						}
-						
+
 						return tags
 					}
 

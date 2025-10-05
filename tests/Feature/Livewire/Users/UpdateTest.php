@@ -7,7 +7,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->original = User::factory()->create([
         'name' => 'Original Name',
-        'email' => 'original@example.com'
+        'email' => 'original@example.com',
     ]);
 });
 
@@ -59,7 +59,7 @@ it('requires name', function () {
 
 it('validates unique email with ignore', function () {
     User::factory()->create([
-        'email' => 'existing@example.com'
+        'email' => 'existing@example.com',
     ]);
 
     Livewire::test(Update::class, ['user' => $this->original])

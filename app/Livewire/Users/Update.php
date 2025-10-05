@@ -55,7 +55,8 @@ class Update extends Component
                 'string',
                 'min:8',
                 'confirmed'
-            ]
+            ],
+            'user.primary_team_id' => 'required|integer|exists:teams,id'
         ];
     }
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\IdentifyTenantMiddleware;
+use App\Http\Middleware\RedirectToNocMiddleware;
 use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
 use Livewire\Volt\Volt;
 
@@ -47,9 +48,9 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
 
     });
 
-    //	Testing Calls here. delete later
-    Volt::route('/dev/call-ui', 'pages.calls.call-tester')
-        ->name('dev.call.ui');
+    Route::get('/noc', fn () => null)
+        ->middleware(RedirectToNocMiddleware::class)
+        ->name('noc');
 
     //	NEGOTIATIONS ROUTES
     Route::prefix('/negotiations')->group(function () {

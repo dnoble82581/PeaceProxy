@@ -76,6 +76,24 @@ class Subject extends Model
         return 'https://api.dicebear.com/9.x/initials/svg?seed='.$fullName;
     }
 
+    // Derived attribute when you don't want to rely on cache:
+
+    public function weapons()
+    {
+        return $this->hasMany(Weapon::class);
+    }
+
+    public function getArmedAttribute(): bool
+    {
+        // Treat "recovered" as not armed, adjust as needed
+        return $this->relationLoaded('weapons')
+            ? $this->weapons->where('status', '!=', 'recovered')->isNotEmpty()
+            : Weapon::query()
+                ->where('subject_id', $this->id)
+                ->where('status', '!=', 'recovered')
+                ->exists();
+    }
+
     public function subjectAge(): int
     {
         if ($this->date_of_birth) {

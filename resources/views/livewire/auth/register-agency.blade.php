@@ -1,7 +1,9 @@
 <?php
 
+	use App\Enums\Tenant\TenantTypes;
 	use App\Livewire\Forms\CreateTenantForm;
 	use App\Livewire\Forms\CreateUserForm;
+	use App\Models\Tenant;
 	use App\Services\Tenant\TenantCreationService;
 	use App\Services\User\CreateUserService;
 	use Illuminate\Support\Facades\Auth;
@@ -24,7 +26,8 @@
 			$newUser->update([
 				'permissions' => 'admin',
 				'last_login_ip' => request()->ip(),
-				'last_login_at' => now()
+				'last_login_at' => now(),
+				'primary_team_id' => $this->fetchDefaultTeam($newTenant)
 			]);
 
 			$newTenant->update([
@@ -39,6 +42,11 @@
 			$protocol = request()->secure()? 'https://' : 'http://';
 			$dashboardUrl = "{$protocol}{$tenantSubdomain}.".config('app.domain')."/dashboard";
 			$this->redirect($dashboardUrl);
+		}
+
+		private function fetchDefaultTeam(Tenant $tenant)
+		{
+			return $tenant->teams()->where('name', 'Negotiation')->first()->id ?? $tenant->teams()->first()->id;
 		}
 	}
 
@@ -88,11 +96,9 @@
 						icon="building-office"
 						label="Agency Type *"
 						value=""
+						searchable="true"
 						wire:model="tenantForm.agency_type"
-						:options="collect(\App\Enums\Tenant\TenantTypes::cases())->map(fn($type) => [
-																				'label' => $type->label(),
-																				'value' => $type->value,
-																				])->toArray()"
+						:options="TenantTypes::options()"
 				/>
 				<x-input
 						icon="envelope"
@@ -101,6 +107,7 @@
 						wire:model="tenantForm.agency_email" />
 				<x-input
 						icon="phone"
+						x-mask="(999) 999-9999"
 						label="Agency Phone"
 						wire:model="tenantForm.agency_phone" />
 				<x-input
@@ -128,6 +135,10 @@
 						icon="phone"
 						label="Contact Phone"
 						wire:model="userForm.phone" />
+				{{--				<x-select.styled--}}
+				{{--						label="Team Affiliation"--}}
+				{{--						icon="user"--}}
+				{{--						:options="\App\Enums\Team\TeamDiscipline::options()" />--}}
 			</div>
 		</div>
 		<div class="mb-6">

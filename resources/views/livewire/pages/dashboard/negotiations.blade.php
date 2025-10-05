@@ -1,6 +1,8 @@
 <?php
 
 	use App\DTOs\NegotiationUser\NegotiationUserDTO;
+	use App\Enums\Negotiation\NegotiationStatuses;
+	use App\Enums\Negotiation\NegotiationTypes;
 	use App\Enums\User\UserNegotiationRole;
 	use App\Models\Negotiation;
 	use App\Services\Negotiation\NegotiationFetchingService;
@@ -108,8 +110,8 @@
 				'location_city' => $this->location_city ?? null,
 				'location_state' => $this->location_state ?? null,
 				'location_zip' => $this->location_zip ?? null,
-				'status' => \App\Enums\Negotiation\NegotiationStatuses::from($this->status),
-				'type' => \App\Enums\Negotiation\NegotiationTypes::from($this->type),
+				'status' => NegotiationStatuses::from($this->status),
+				'type' => NegotiationTypes::from($this->type),
 				'summary' => $this->summary ?? null,
 				'initial_complaint' => $this->initial_complaint ?? null,
 				'negotiation_strategy' => $this->negotiation_strategy ?? null,
@@ -176,10 +178,12 @@
 				return;
 			}
 
-			$this->redirect(route('negotiation-noc', [
-				'tenantSubdomain' => tenant()->subdomain,
-				'negotiation' => $title
-			]));
+			$this->redirect(route('noc', tenant()->subdomain));
+
+//			$this->redirect(route('negotiation-noc', [
+//				'tenantSubdomain' => tenant()->subdomain,
+//				'negotiation' => $title
+//			]));
 		}
 
 		private function addUserToNegotiation(int $negotiationId):void
@@ -401,7 +405,7 @@
 																						label="Status *"
 																						wire:model="status"
 																						placeholder="Enter status"
-																						:options="collect(\App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
+																						:options="collect(App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
 																						'label' => $status->label(),
 																						'value' => $status->value,
 																						])->toArray()"
@@ -414,7 +418,7 @@
 																						label="Type *"
 																						wire:model="type"
 																						placeholder="Enter type"
-																						:options="collect(\App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
+																						:options="collect(App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
 																						'label' => $type->label(),
 																						'value' => $type->value,
 																						])->toArray()"

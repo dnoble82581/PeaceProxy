@@ -28,7 +28,7 @@ class AssessmentTemplateFetchingService
     {
         $template = $this->getAssessmentTemplate($templateId);
 
-        if (!$template) {
+        if (! $template) {
             return null;
         }
 

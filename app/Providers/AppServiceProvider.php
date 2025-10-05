@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Tenant;
+use App\Models\Weapon;
+use App\Observers\Weapon\WeaponObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 
@@ -16,14 +19,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
         Cashier::useCustomerModel(Tenant::class);   // <-- critical
 
-        //        TallStackUi::personalize()
-        //            ->form('carousel')
-        //            ->block('wrapper')
-        //            ->replace('rounded-md', 'rounded-full');
+        Weapon::observe(WeaponObserver::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\ActivityRepositoryInterface;
+use App\Contracts\AssessmentRepositoryInterface;
 use App\Contracts\CallRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
 use App\Contracts\ConversationRepositoryInterface;
@@ -31,6 +32,7 @@ use App\Contracts\TriggerRepositoryInterface;
 use App\Contracts\WarningRepositoryInterface;
 use App\Contracts\WarrantRepositoryInterface;
 use App\Repositories\Activity\ActivityRepository;
+use App\Repositories\Assessment\AssessmentRepository;
 use App\Repositories\Call\CallRepository;
 use App\Repositories\Contact\ContactRepository;
 use App\Repositories\Conversation\ConversationRepository;
@@ -243,6 +245,14 @@ class RepositoryServiceProvider extends ServiceProvider
             ActivityRepositoryInterface::class,
             ActivityRepository::class
         );
+
+        // Bind Assessment repository (assessments)
+        $this->app->bind(
+            AssessmentRepositoryInterface::class,
+            AssessmentRepository::class,
+        );
+
+
     }
 
     public function boot(): void

@@ -25,6 +25,7 @@
 			['index' => 'id', 'label' => '#'],
 			['index' => 'name', 'label' => 'Name'],
 			['index' => 'email', 'label' => 'Email'],
+			['index' => 'team', 'label' => 'Team'],
 			['index' => 'permissions', 'label' => 'Permissions'],
 			['index' => 'created_at', 'label' => 'Created'],
 			['index' => 'action', 'sortable' => false, 'label' => 'Actions'],
@@ -40,7 +41,10 @@
 			$searchTerm = $this->search !== null? trim($this->search) : null;
 
 			return User::query()
-				->select(['id', 'name', 'email', 'permissions', 'created_at']) // Select only needed fields
+				->select([
+					'id', 'name', 'email', 'permissions', 'primary_team_id', 'created_at'
+				]) // Select only needed fields
+				->with('primaryTeam')
 				->where('tenant_id', $tenantId)
 				->when($searchTerm, function ($query) use ($searchTerm) {
 					$query->where(function ($q) use ($searchTerm) {
@@ -102,7 +106,11 @@
 				loading
 				:quantity="[5, 10, 25, 50]">
 			@interact('column_permissions', $row)
-			{{ $row->permissions ?: 'None' }}
+			{{ ucfirst($row->permissions) ?: 'None' }}
+			@endinteract
+
+			@interact('column_team', $row)
+			{{ $row->primaryTeam->name ?: 'None' }}
 			@endinteract
 
 			@interact('column_created_at', $row)

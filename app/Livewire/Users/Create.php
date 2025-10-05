@@ -3,8 +3,10 @@
 namespace App\Livewire\Users;
 
 use App\Livewire\Traits\Alert;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\App as AppFacade;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 

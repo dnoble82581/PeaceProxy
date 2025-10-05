@@ -12,6 +12,11 @@ class AssessmentTemplateQuestion extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'options' => 'array',
+        'is_required' => 'boolean',
+    ];
+
     public function assessmentTemplate(): BelongsTo
     {
         return $this->belongsTo(AssessmentTemplate::class);
