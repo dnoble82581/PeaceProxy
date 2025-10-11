@@ -11,18 +11,7 @@ class RedirectToNocMiddleware
     {
         $user = $request->user();
 
-        // 1) Active assignment overrides
         $assignment = $user->activeIncidentAssignment;
-        //    case TeamCoordinator = 'team_coordinator';
-        //    case TeamLeader = 'team_leader';
-        //    case PrimaryNegotiator = 'primary_negotiator';
-        //    case SecondaryNegotiator = 'secondary_negotiator';
-        //    case Recorder = 'recorder';
-        //    case IntelligenceCoordinator = 'intelligence_coordinator';
-        //    case MentalHealthCoordinator = 'mental_health_coordinator';
-        //    case TacticalCommander = 'tactical_commander';
-        //    case TacticalUser = 'tactical_user';
-        //    case Administration = 'administration';
 
         if ($assignment) {
             return match ($assignment->team?->slug ?? $assignment->role) {

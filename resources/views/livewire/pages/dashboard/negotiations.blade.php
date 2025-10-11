@@ -45,7 +45,8 @@
 		public function mount():void
 		{
 			// Eager load any relationships that might be needed in the view
-			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
+			$this->negotiations = app(NegotiationFetchingService::class)
+				->fetchByTenant(authUser()->tenant_id);
 		}
 
 		public function openRoleModal(int $negotiationId):void
@@ -121,7 +122,7 @@
 			// Close the slide-over panel
 			$this->editModal = false;
 
-			// Refresh the negotiations list
+			// Refresh the negotiation list
 			$this->negotiations = app(NegotiationFetchingService::class)->fetchByTenant(authUser()->tenant_id);
 		}
 
@@ -168,8 +169,8 @@
 
 			// Redirect based on selected role
 			if (in_array($this->choseRole, [
-				\App\Enums\User\UserNegotiationRole::TacticalUser->value,
-				\App\Enums\User\UserNegotiationRole::TacticalCommander->value,
+				App\Enums\User\UserNegotiationRole::TacticalUser->value,
+				App\Enums\User\UserNegotiationRole::TacticalCommander->value,
 			])) {
 				$this->redirect(route('negotiation.tactical-noc', [
 					'tenantSubdomain' => tenant()->subdomain,
@@ -180,10 +181,6 @@
 
 			$this->redirect(route('noc', tenant()->subdomain));
 
-//			$this->redirect(route('negotiation-noc', [
-//				'tenantSubdomain' => tenant()->subdomain,
-//				'negotiation' => $title
-//			]));
 		}
 
 		private function addUserToNegotiation(int $negotiationId):void
@@ -204,7 +201,7 @@
 				// Create a new record with the chosen role
 				$negotiationUserDTO = new NegotiationUserDTO(
 					negotiation_id: $negotiationId, user_id: authUser()->id,
-					role: UserNegotiationRole::from($this->choseRole), status: 'active',
+					role: App\Enums\User\UserNegotiationRole::from($this->choseRole), status: 'active',
 					joined_at: now(), left_at: null,
 					created_at: now(), updated_at: now(),
 				);
@@ -349,7 +346,7 @@
 																		@else
 																			<option value="">Make Selection</option>
 																		@endif
-																		@foreach(\App\Enums\User\UserNegotiationRole::cases() as $role)
+																		@foreach(App\Enums\User\UserNegotiationRole::cases() as $role)
 																			<option value="{{ $role->value }}">{{ $role->label() }}</option>
 																		@endforeach
 																	</select>

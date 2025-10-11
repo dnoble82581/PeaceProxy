@@ -5,24 +5,21 @@ namespace App\Livewire\Forms;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
-class CreateTenantForm extends Form
+class UpdateTenantForm extends Form
 {
     // Core Identification
     #[Validate(['required', 'string', 'min:3', 'max:255'])]
     public $agency_name = '';
 
-    #[Validate(['required', 'unique:tenants,subdomain'])]
+    #[Validate(['required'])]
     public $subdomain = '';
 
     #[Validate(['required', 'string'])]
     public $agency_type = '';
 
     // Contact Info
-    #[Validate(['required', 'email', 'max:255'])]
+    #[Validate(['required', 'email'])]
     public $agency_email = '';
-
-    #[ Validate(['nullable', 'string', 'max:255'])]
-    public $logo_path = '';
 
     #[Validate(['nullable', 'string', 'max:20'])]
     public $agency_phone = '';

@@ -168,6 +168,11 @@
 			// Initialize score counter for 'yes' answers
 			$yesCount = 0;
 
+			// If editing/resuming, clear existing answers before re-saving to avoid duplicates
+			if ($this->assessmentId) {
+				AssessmentQuestionsAnswer::where('assessment_id', $this->assessmentId)->delete();
+			}
+
 			// Save answers to database
 			foreach ($this->questions as $question) {
 				$answer = $this->answers[$question->id] ?? null;
@@ -303,6 +308,33 @@
 				event(new AssessmentDeletedEvent($data));
 			}
 		}
+
+		public function resumeOrEdit(int $assessmentId):void
+		{
+			$assessment = Assessment::with(['assessmentTemplate.questions', 'answers'])->find($assessmentId);
+			if (!$assessment) {
+				return;
+			}
+
+			$this->assessmentId = $assessment->id;
+			$this->selectedTemplateId = $assessment->assessment_template_id;
+
+			$template = $assessment->assessmentTemplate;
+			$this->questions = $template?->questions ?? collect();
+
+			// Pre-fill answers from stored values
+			$this->answers = [];
+			$answers = $assessment->answers;
+			foreach ($answers as $ans) {
+				// decode JSON to PHP type
+				$decoded = json_decode($ans->answer, true);
+				$this->answers[$ans->assessment_template_question_id] = $decoded;
+			}
+
+			// Show editor UI
+			$this->showQuestionsSlide = true;
+			$this->showCreateForm = false;
+		}
 	}
 
 ?>
@@ -392,12 +424,19 @@
 								@endif
 							</td>
 							<td class="text-right">
-								<x-button.circle
-										wire:click="deleteAssessment({{ $assessment->id }})"
-										flat
-										color="red"
-										icon="trash"
-										sm />
+								<div class="flex items-center justify-end gap-2">
+									<x-button.circle
+											flat
+											icon="{{ $assessment->completed_at ? 'pencil-square' : 'arrow-path' }}"
+											sm
+											wire:click="resumeOrEdit({{ $assessment->id }})" />
+									<x-button.circle
+											wire:click="deleteAssessment({{ $assessment->id }})"
+											flat
+											color="red"
+											icon="trash"
+											sm />
+								</div>
 							</td>
 						</tr>
 					@empty
@@ -441,7 +480,7 @@
 
 				<div class="p-4">
 					<p class="text-gray-600 dark:text-gray-400 mb-6">
-						Select a template to start a new assessment for {{ $subject->name }}.
+						Select a template to start a new assessment for {{ $subject->name ?? '' }}.
 					</p>
 
 					@if(count($templates) > 0)
@@ -461,17 +500,18 @@
 										wire:click="hideCreateForm"
 										class="mr-2">
 									Cancel
-									</x-button>
+								</x-button>
 								<x-button
 										text="Start Assessment"
 										color="blue"
 										wire:click="selectTemplate"
-									/>
+								/>
 							</div>
 						</div>
 					@else
 						<div class="bg-white dark:bg-dark-800 rounded-lg shadow p-3 text-center">
-							<p class="text-gray-500 dark:text-gray-400 text-sm">No assessment templates available. Please
+							<p class="text-gray-500 dark:text-gray-400 text-sm">No assessment templates available.
+							                                                    Please
 							                                                    create a template first.</p>
 						</div>
 					@endif
@@ -486,7 +526,7 @@
 					size="xl">
 				<x-slot:title>
 					<div class="flex justify-between items-center">
-						<h1 class="text-xl font-bold">{{ $subject->name }} Assessment</h1>
+						<h1 class="text-xl font-bold">{{ $subject->name ?? '' }} Assessment</h1>
 					</div>
 				</x-slot:title>
 
@@ -556,127 +596,127 @@
 
 											@case('multiselect')
 												<div class="space-y-2">
-												@foreach(json_decode($question->options) as $option)
-													<div class="flex items-center">
-														<x-checkbox
-																wire:model="answers.{{ $question->id }}"
-																value="{{ $option }}"
-																label="{{ $option }}" />
-													</div>
-												@endforeach
-											</div>
-											@break
+													@foreach(json_decode($question->options) as $option)
+														<div class="flex items-center">
+															<x-checkbox
+																	wire:model="answers.{{ $question->id }}"
+																	value="{{ $option }}"
+																	label="{{ $option }}" />
+														</div>
+													@endforeach
+												</div>
+												@break
 
-										@case('radio')
-											<div class="space-y-2">
-												@foreach(json_decode($question->options) as $option)
-													<div class="flex items-center">
-														<x-radio
-																wire:model="answers.{{ $question->id }}"
-																value="{{ $option }}"
-																label="{{ $option }}" />
-													</div>
-												@endforeach
-											</div>
-											@break
+											@case('radio')
+												<div class="space-y-2">
+													@foreach(json_decode($question->options) as $option)
+														<div class="flex items-center">
+															<x-radio
+																	wire:model="answers.{{ $question->id }}"
+																	value="{{ $option }}"
+																	label="{{ $option }}" />
+														</div>
+													@endforeach
+												</div>
+												@break
 
-										@case('checkbox')
-											<div class="space-y-2">
-												@foreach(json_decode($question->options) as $option)
-													<div class="flex items-center">
-														<x-checkbox
-																wire:model="answers.{{ $question->id }}"
-																value="{{ $option }}"
-																label="{{ $option }}" />
-													</div>
-												@endforeach
-											</div>
-											@break
+											@case('checkbox')
+												<div class="space-y-2">
+													@foreach(json_decode($question->options) as $option)
+														<div class="flex items-center">
+															<x-checkbox
+																	wire:model="answers.{{ $question->id }}"
+																	value="{{ $option }}"
+																	label="{{ $option }}" />
+														</div>
+													@endforeach
+												</div>
+												@break
 
-										@case('date')
-											<x-input
-													type="date"
-													wire:model="answers.{{ $question->id }}" />
-											@break
+											@case('date')
+												<x-input
+														type="date"
+														wire:model="answers.{{ $question->id }}" />
+												@break
 
-										@case('time')
-											<x-input
-													type="time"
-													wire:model="answers.{{ $question->id }}" />
-											@break
+											@case('time')
+												<x-input
+														type="time"
+														wire:model="answers.{{ $question->id }}" />
+												@break
 
-										@case('datetime')
-											<x-input
-													type="datetime-local"
-													wire:model="answers.{{ $question->id }}" />
-											@break
+											@case('datetime')
+												<x-input
+														type="datetime-local"
+														wire:model="answers.{{ $question->id }}" />
+												@break
 
-										@case('rating')
-											<div class="flex space-x-2">
-												@for($i = 1; $i <= 5; $i++)
-													<button
-															type="button"
-															wire:click="$set('answers.{{ $question->id }}', {{ $i }})"
-															class="p-2 rounded-full {{ $answers[$question->id] == $i ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-dark-600' }}">
-														{{ $i }}
-													</button>
-												@endfor
-											</div>
-											@break
+											@case('rating')
+												<div class="flex space-x-2">
+													@for($i = 1; $i <= 5; $i++)
+														<button
+																type="button"
+																wire:click="$set('answers.{{ $question->id }}', {{ $i }})"
+																class="p-2 rounded-full {{ $answers[$question->id] == $i ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-dark-600' }}">
+															{{ $i }}
+														</button>
+													@endfor
+												</div>
+												@break
 
-										@case('file')
-											<div>
-												<input
-														type="file"
-														class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-dark-700 dark:border-dark-600 dark:placeholder-gray-400"
-														wire:model.live="answers.{{ $question->id }}" />
-												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-													Select a file to upload
-												</p>
-												@if(isset($answers[$question->id]) && $answers[$question->id])
-													<div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-														File
-														selected: {{ is_string($answers[$question->id]) ? basename($answers[$question->id]) : $answers[$question->id]->getClientOriginalName() }}
-													</div>
-												@endif
-											</div>
-											@break
+											@case('file')
+												<div>
+													<input
+															type="file"
+															class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-dark-700 dark:border-dark-600 dark:placeholder-gray-400"
+															wire:model.live="answers.{{ $question->id }}" />
+													<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+														Select a file to upload
+													</p>
+													@if(isset($answers[$question->id]) && $answers[$question->id])
+														<div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+															File
+															selected: {{ is_string($answers[$question->id]) ? basename($answers[$question->id]) : $answers[$question->id]->getClientOriginalName() }}
+														</div>
+													@endif
+												</div>
+												@break
 
-										@default
-											<x-input
-													wire:model="answers.{{ $question->id }}"
-													placeholder="Enter your answer" />
-									@endswitch
+											@default
+												<x-input
+														wire:model="answers.{{ $question->id }}"
+														placeholder="Enter your answer" />
+										@endswitch
 
-									@error('answers.' . $question->id)
-									<span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+										@error('answers.' . $question->id)
+										<span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+									</div>
+								@endforeach
+
+								<div class="flex justify-end space-x-2">
+									<x-button
+											color="gray"
+											wire:click="closeQuestionsSlide"
+											class="mr-2">
+										Cancel
+									</x-button>
+									<x-button
+											color="blue"
+											type="submit"
+											wire:loading.attr="disabled">
+										<span wire:loading.remove>Submit Assessment</span>
+										<span wire:loading>Saving...</span>
+									</x-button>
 								</div>
-							@endforeach
-
-							<div class="flex justify-end space-x-2">
-								<x-button
-										color="gray"
-										wire:click="closeQuestionsSlide"
-										class="mr-2">
-									Cancel
-								</x-button>
-								<x-button
-										color="blue"
-										type="submit"
-										wire:loading.attr="disabled">
-									<span wire:loading.remove>Submit Assessment</span>
-									<span wire:loading>Saving...</span>
-								</x-button>
-							</div>
-						@else
-							<div class="text-center text-gray-500 dark:text-gray-400">
-								<p>No questions found for this template.</p>
-							</div>
-						@endif
-					</div>
-				</form>
-			</div>
-		</x-slide>
+							@else
+								<div class="text-center text-gray-500 dark:text-gray-400">
+									<p>No questions found for this template.</p>
+								</div>
+							@endif
+						</div>
+					</form>
+				</div>
+			</x-slide>
 		</template>
 		<!-- Success message is now handled through the notification system -->
 	</div>

@@ -3,7 +3,6 @@
 	use App\Factories\MessageFactory;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
-	use App\Services\SOR\SubjectScreeningService;
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;

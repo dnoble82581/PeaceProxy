@@ -23,6 +23,16 @@ class SubjectCreationService
         $subjectData = $subjectDTO->toArray();
         unset($subjectData['phone']);
 
+        // Normalize defaults to avoid violating NOT NULL/enum constraints
+        // If current_mood is null, let the DB default apply by unsetting it
+        if (array_key_exists('current_mood', $subjectData) && ($subjectData['current_mood'] === null || $subjectData['current_mood'] === '')) {
+            unset($subjectData['current_mood']);
+        }
+        // If status is null, allow DB default by unsetting
+        if (array_key_exists('status', $subjectData) && ($subjectData['status'] === null || $subjectData['status'] === '')) {
+            unset($subjectData['status']);
+        }
+
         // Create the subject without the phone number
         $subject = Subject::create($subjectData);
 

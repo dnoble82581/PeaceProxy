@@ -1,3 +1,8 @@
+@php use App\Models\Team; 
+    $teamOptions = (function_exists('tenant') && tenant())
+        ? Team::where('tenant_id', tenant()->id)->get()
+        : Team::all();
+@endphp
 <div>
 	<x-button
 			:text="__('Create New User')"
@@ -8,6 +13,7 @@
 			:title="__('Create New User')"
 			wire
 			x-on:open="setTimeout(() => $refs.name.focus(), 250)">
+		{{ $errors }}
 		<form
 				id="user-create"
 				wire:submit="save"
@@ -24,6 +30,14 @@
 				<x-input
 						label="{{ __('Email') }} *"
 						wire:model="user.email"
+						required />
+			</div>
+			<div>
+				<x-select.styled
+						label="{{ __('Primary Team') }}"
+						wire:model="user.primary_team_id"
+						:options="$teamOptions"
+						select="label:name|value:id"
 						required />
 			</div>
 

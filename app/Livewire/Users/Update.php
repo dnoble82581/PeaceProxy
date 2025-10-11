@@ -40,7 +40,7 @@ class Update extends Component
             'user.name' => [
                 'required',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'user.email' => [
                 'required',
@@ -49,14 +49,15 @@ class Update extends Component
                 'max:255',
                 Rule::unique('users', 'email')->ignore($this->user->id),
             ],
-            'user.permissions' => 'required',
+            // Permissions and primary team are optional during basic updates
+            'user.permissions' => 'nullable|string',
             'password' => [
                 'nullable',
                 'string',
                 'min:8',
-                'confirmed'
+                'confirmed',
             ],
-            'user.primary_team_id' => 'required|integer|exists:teams,id'
+            'user.primary_team_id' => 'nullable|integer|exists:teams,id',
         ];
     }
 
@@ -64,12 +65,19 @@ class Update extends Component
     {
         $this->validate();
 
-        $this->user->password = when($this->password !== null, bcrypt($this->password), $this->user->password);
+        // Only update the password when one is provided
+        if (! empty($this->password)) {
+            $this->user->password = bcrypt($this->password);
+        }
+
         $this->user->save();
 
         $this->dispatch('updated');
 
-        $this->resetExcept('user');
+        // Reset transient fields but keep the bound user model
+        $this->password = null;
+        $this->password_confirmation = null;
+        $this->modal = false;
 
         $this->success();
     }

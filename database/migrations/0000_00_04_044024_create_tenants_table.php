@@ -15,7 +15,7 @@ return new class () extends Migration {
             $table->string('agency_type'); // e.g., 'law_enforcement', 'mental_health'
 
             // Contact Info
-            $table->string('agency_email')->nullable();
+            $table->string('agency_email');
             $table->string('agency_phone')->nullable();
             $table->string('agency_website')->nullable();
 

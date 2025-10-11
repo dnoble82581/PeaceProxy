@@ -7,6 +7,7 @@ use App\Models\ContactAddress;
 use App\Models\ContactEmail;
 use App\Models\ContactPhone;
 use App\Models\ContactPoint;
+use App\Services\Log\LogService;
 use Illuminate\Support\Facades\DB;
 
 class ContactPointCreationService
@@ -44,7 +45,7 @@ class ContactPointCreationService
             $contactableType = $data['contactable_type'] ?? null;
 
             // If contactable_id is not provided but subject_id is, use subject_id as contactable_id
-            // and set contactable_type to Subject model
+            // and set contactable_type to a Subject model
             if ((! $contactableId || ! $contactableType) && isset($data['subject_id'])) {
                 $contactableId = $data['subject_id'];
                 $contactableType = 'App\\Models\\Subject';
@@ -103,7 +104,7 @@ class ContactPointCreationService
     {
         $user = auth()->user();
 
-        return app(\App\Services\Log\LogService::class)->write(
+        return app(LogService::class)->write(
             tenantId: tenant()->id,
             event: 'contactpoint.created',
             headline: "{$user->name} created a contact point",

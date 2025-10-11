@@ -31,7 +31,7 @@
 		public string $subjectName = '';
 		public string $subjectPhone = '';
 
-		public MoodLevels $current_mood;
+		public ?MoodLevels $current_mood = null;
 
 
 		public function mount():void
@@ -60,7 +60,7 @@
 			$newSubjectDTO = new SubjectDTO(
 				tenant_id: tenant()->id,
 				name: $this->subjectName,
-				current_mood: MoodLevels::Depressed,
+				current_mood: $this->current_mood,
 				status: SubjectNegotiationStatuses::active,
 				created_at: now(),
 				updated_at: now()
@@ -134,7 +134,7 @@
 				created_at: now(),
 				updated_at: now(),
 			);
-
+			
 			app(NegotiationUserCreationService::class)
 				->createNegotiationUser($negotiationUserDTO);
 		}
@@ -153,11 +153,12 @@
 				SubjectNegotiationRoles::primary
 			);
 
+			$selectedMood = $this->current_mood ?? MoodLevels::Neutral;
 			$moodMetaData = [
 				'createdByName' => authUser()->name,
 				'subjectName' => $newSubject->name,
-				'moodDescription' => $this->current_mood->description(),
-				'moodName' => $this->current_mood->label()
+				'moodDescription' => $selectedMood->description(),
+				'moodName' => $selectedMood->label()
 			];
 
 			$moodDto = new \App\DTOs\MoodLog\MoodLogDTO(
@@ -166,7 +167,7 @@
 				subject_id: $newSubject->id,
 				logged_by_id: authUser()->id,
 				negotiation_id: $newNegotiation->id,
-				mood_level: $this->current_mood->value,
+				mood_level: $selectedMood->value,
 				context: 'Created at new negotiation',
 				meta_data: $moodMetaData,
 				created_at: now(),

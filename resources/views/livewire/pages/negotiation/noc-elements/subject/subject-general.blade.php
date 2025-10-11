@@ -73,7 +73,7 @@
 			$seen = [];                          // prevent duplicates by URL
 			$limit = 5;
 
-			$primaryImageUrl = $this->primarySubject->primaryImage(); // current method returns URL
+			$primaryImageUrl = $this->primarySubject->primaryImage(); // the current method returns URL
 			$temporaryUrl = $this->primarySubject->temporaryImageUrl();
 
 			// Helper to push an item safely

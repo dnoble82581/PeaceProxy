@@ -37,7 +37,7 @@
 			// Cache tenant ID to avoid multiple function calls
 			$tenantId = tenant()->id;
 
-			// Trim search term once if it exists
+			// Trim a search term once if it exists
 			$searchTerm = $this->search !== null? trim($this->search) : null;
 
 			return User::query()
@@ -110,7 +110,7 @@
 			@endinteract
 
 			@interact('column_team', $row)
-			{{ $row->primaryTeam->name ?: 'None' }}
+			{{ $row->primaryTeam?->name ?? 'None' }}
 			@endinteract
 
 			@interact('column_created_at', $row)

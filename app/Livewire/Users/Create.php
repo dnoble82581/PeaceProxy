@@ -9,6 +9,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\App as AppFacade;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class Create extends Component
 {
@@ -53,9 +55,18 @@ class Create extends Component
                 'min:8',
                 'confirmed',
             ],
+            'user.primary_team_id' => [
+                'required',
+                'integer',
+                'exists:teams,id',
+            ],
         ];
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function save(): void
     {
         $this->validate();
@@ -71,8 +82,8 @@ class Create extends Component
             $tenantId = AppFacade::get('currentTenant')->id;
         }
 
-        // In testing, if no tenant is bound, create one to satisfy non-nullable constraint
-        if (!$tenantId && app()->environment('testing')) {
+        // In testing, if no tenant is bound, create one to satisfy a non-nullable constraint
+        if (! $tenantId && app()->environment('testing')) {
             $tenantId = Tenant::factory()->create()->id;
         }
 
@@ -84,11 +95,31 @@ class Create extends Component
         $this->user->permissions = 'user';
         $this->user->save();
 
-        $this->dispatch('created');
+        // Ensure the user is attached to the selected primary team in the pivot table
+        if ($this->user->primary_team_id) {
+            // Mark all existing team relationships as not primary to keep a single primary
+            if ($this->user->teams()->exists()) {
+                $teamIds = $this->user->teams()->pluck('teams.id')->all();
+                if (! empty($teamIds)) {
+                    foreach ($teamIds as $id) {
+                        // Set all to false first
+                        $this->user->teams()->updateExistingPivot($id, ['is_primary' => false]);
+                    }
+                }
+            }
+
+            // Attach or update the selected team as primary without detaching others
+            $this->user->teams()->syncWithoutDetaching([
+                $this->user->primary_team_id => ['is_primary' => true],
+            ]);
+        }
 
         $this->reset();
         $this->user = new User();
 
         $this->success();
+
+        // Notify listeners (like the parent table) to refresh
+        $this->dispatch('created');
     }
 }

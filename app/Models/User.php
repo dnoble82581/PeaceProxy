@@ -63,7 +63,10 @@ class User extends Authenticatable
 
     public function teams()
     {
-        return $this->belongsToMany(Team::class)->withTimestamps()->withPivot('is_primary');
+        // Explicitly define pivot table name to match migration (team_users)
+        return $this->belongsToMany(Team::class, 'team_users')
+            ->withTimestamps()
+            ->withPivot('is_primary');
     }
 
     public function activeIncidentAssignment()

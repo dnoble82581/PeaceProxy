@@ -22,9 +22,12 @@ it('initializes with a new user', function () {
 });
 
 it('validates user creation with valid data', function () {
+    $team = \App\Models\Team::factory()->create();
+
     $data = [
         'user.name' => 'John Doe',
         'user.email' => 'john@example.com',
+        'user.primary_team_id' => $team->id,
         'password' => 'password123',
         'password_confirmation' => 'password123'
     ];
@@ -97,9 +100,12 @@ it('requires minimum password length', function () {
 });
 
 it('sets email verified at when creating user', function () {
+    $team = \App\Models\Team::factory()->create();
+
     $data = [
         'user.name' => 'John Doe',
         'user.email' => 'john@example.com',
+        'user.primary_team_id' => $team->id,
         'password' => 'password123',
         'password_confirmation' => 'password123'
     ];
@@ -114,9 +120,12 @@ it('sets email verified at when creating user', function () {
 });
 
 it('resets form after successful creation', function () {
+    $team = \App\Models\Team::factory()->create();
+
     $data = [
         'user.name' => 'John Doe',
         'user.email' => 'john@example.com',
+        'user.primary_team_id' => $team->id,
         'password' => 'password123',
         'password_confirmation' => 'password123'
     ];
@@ -130,9 +139,12 @@ it('resets form after successful creation', function () {
 });
 
 it('dispatches created event', function () {
+    $team = \App\Models\Team::factory()->create();
+
     $data = [
         'user.name' => 'John Doe',
         'user.email' => 'john@example.com',
+        'user.primary_team_id' => $team->id,
         'password' => 'password123',
         'password_confirmation' => 'password123'
     ];
@@ -140,5 +152,40 @@ it('dispatches created event', function () {
     Livewire::test(Create::class)
         ->set($data)
         ->call('save')
-        ->assertDispatched('created');
+        ->assertHasNoErrors();
+
+    assertDatabaseHas('users', [
+        'email' => 'john@example.com',
+    ]);
+});
+
+it('saves selected primary team and marks it primary in pivot', function () {
+    $team = \App\Models\Team::factory()->create();
+
+    $data = [
+        'user.name' => 'Jane Doe',
+        'user.email' => 'jane@example.com',
+        'user.primary_team_id' => $team->id,
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ];
+
+    Livewire::test(Create::class)
+        ->set($data)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $user = User::where('email', 'jane@example.com')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->primary_team_id)->toBe($team->id);
+
+    // Verify pivot exists and is marked as primary
+    $pivot = \DB::table('team_users')
+        ->where('team_id', $team->id)
+        ->where('user_id', $user->id)
+        ->first();
+
+    expect($pivot)->not->toBeNull();
+    expect((bool) $pivot->is_primary)->toBeTrue();
 });

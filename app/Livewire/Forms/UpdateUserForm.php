@@ -5,18 +5,26 @@ namespace App\Livewire\Forms;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
-class CreateUserForm extends Form
+class UpdateUserForm extends Form
 {
-    #[Validate(['required', 'string', 'min:3', 'max:255'])]
+    #[Validate(['required'])]
     public $name = '';
 
-    #[Validate(['required', 'email', 'max:255', 'unique:users,email'])]
+    #[Validate(['required', 'email', 'max:254'])]
     public $email = '';
 
-    #[Validate(['string'])]
+    // Password is optional when updating; validate only when provided and require confirmation
+    #[Validate(['nullable', 'string', 'min:8', 'confirmed'])]
     public $password = '';
 
-    #[Validate(['nullable', 'integer'])]
+    // This property is required for the `confirmed` rule to work within a Livewire Form
+    #[Validate(['nullable', 'string', 'min:8'])]
+    public $password_confirmation = '';
+
+    #[Validate(['nullable', 'date'])]
+    public $email_verified_at = null;
+
+    #[Validate(['required', 'integer'])]
     public $tenant_id = '';
 
     #[Validate(['nullable'])]
@@ -24,6 +32,9 @@ class CreateUserForm extends Form
 
     #[Validate(['nullable'])]
     public $rank_or_title = '';
+
+    #[Validate(['nullable', 'integer'])]
+    public $primary_team_id = '';
 
     #[Validate(['nullable'])]
     public $badge_number = '';
@@ -44,10 +55,7 @@ class CreateUserForm extends Form
     public $alternate_email = '';
 
     #[Validate(['nullable', 'date'])]
-    public $last_login_at = null;
-
-    #[Validate(['nullable', 'integer'])]
-    public $primary_team_id = null;
+    public $last_login_at = '';
 
     #[Validate(['nullable'])]
     public $last_login_ip = '';
@@ -56,20 +64,32 @@ class CreateUserForm extends Form
     public $avatar_path = '';
 
     #[Validate(['required'])]
-    public $locale = 'en';
+    public $locale = '';
 
     #[Validate(['required'])]
-    public $timezone = 'America/Chicago';
+    public $timezone = '';
 
     #[Validate(['boolean'])]
-    public $dark_mode = false;
+    public $dark_mode = '';
 
     #[Validate(['boolean'])]
-    public $is_active = true;
+    public $is_active = '';
 
     #[Validate(['nullable'])]
     public $two_factor_secret = '';
 
     #[Validate(['nullable'])]
     public $two_factor_recovery_codes = '';
+
+    #[Validate(['nullable'])]
+    public $stripe_id = '';
+
+    #[Validate(['nullable'])]
+    public $pm_type = '';
+
+    #[Validate(['nullable'])]
+    public $pm_last_four = '';
+
+    #[Validate(['nullable', 'date'])]
+    public $trial_ends_at = '';
 }

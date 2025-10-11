@@ -56,12 +56,11 @@ enum TenantTypes: string
      * Create an enum instance from an array representation.
      *
      * @param  array  $array  The array containing the enum value
-     *
      * @return static|null The enum instance or null if not found
      */
     public static function fromArray(array $array): ?static
     {
-        if (!isset($array['value'])) {
+        if (! isset($array['value'])) {
             return null;
         }
 
@@ -80,7 +79,7 @@ enum TenantTypes: string
      *
      * @return string JSON representation of the enum
      */
-    public function toJson($options = 0): string
+    public function toJson(int $options = 0): string
     {
         return json_encode([
             'label' => $this->label(),

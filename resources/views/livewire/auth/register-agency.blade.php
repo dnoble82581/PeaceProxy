@@ -7,17 +7,31 @@
 	use App\Services\Tenant\TenantCreationService;
 	use App\Services\User\CreateUserService;
 	use Illuminate\Support\Facades\Auth;
+	use Illuminate\Support\Facades\Hash;
 	use Livewire\Attributes\Layout;
+	use Livewire\Attributes\Validate;
 	use Livewire\Volt\Component;
 
 	new #[Layout('layouts.auth'), \Livewire\Attributes\Title('Register - PeaceProxy')] class extends Component {
 		public CreateTenantForm $tenantForm;
 		public CreateUserForm $userForm;
 
+		public string $password_confirmation;
+
+		#[Validate('required|min:8|confirmed')]
+		public string $password = "";
+
 		public function saveTenant():void
 		{
+			// Validate the password (required, min:8, confirmed)
+			$this->validateOnly('password');
+
 			$validatedTenant = $this->tenantForm->validate();
 			$validatedUser = $this->userForm->validate();
+
+			// Ensure the user is created with a hashed password
+			$validatedUser['password'] = Hash::make($this->password);
+
 			$newTenant = app(TenantCreationService::class)
 				->createTenant($validatedTenant);
 			$newUser = app(CreateUserService::class)
@@ -34,8 +48,13 @@
 				'billing_owner_id' => $newUser->id
 			]);
 
+
 			// Authenticate the user
 			Auth::login($newUser);
+
+			$defaultTeam = \App\Models\Team::where('slug', 'negotiation')->pluck('id');
+
+			$newUser->teams()->attach($defaultTeam, ['is_primary' => true]);
 
 			// Redirect to the tenant dashboard after successful creation
 			$tenantSubdomain = $newTenant->subdomain;
@@ -53,21 +72,7 @@
 ?>
 
 <div>
-	@if (session()->has('csrf_debug'))
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-			<h3 class="font-bold">CSRF Debug Information</h3>
-			<ul class="list-disc pl-5">
-				<li>Session Token: {{ session('csrf_debug.session_token') }}</li>
-				<li>Header Token: {{ session('csrf_debug.header_token') }}</li>
-				<li>XSRF Token: {{ session('csrf_debug.xsrf_token') }}</li>
-				<li>Input Token: {{ session('csrf_debug.input_token') }}</li>
-				<li>Session ID: {{ session('csrf_debug.session_id') }}</li>
-				<li>Session Domain: {{ session('csrf_debug.session_domain') ?: 'Not configured' }}</li>
-				<li>App Domain: {{ session('csrf_debug.app_domain') }}</li>
-			</ul>
-		</div>
-	@endif
-
+	{{ $errors }}
 	<form
 			wire:submit.prevent="saveTenant"
 			class="space-y-4">
@@ -146,10 +151,11 @@
 			<p class="mb-2 text-sm text-gray-500">Create the password you will use to login.</p>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-password
-						wire:model="userForm.password"
+						wire:model="password"
 						label="Password" />
 				<x-password
-						label="Confirm Password" />
+						label="Confirm Password"
+						wire:model="password_confirmation" />
 			</div>
 		</div>
 		<div class="flex items-center justify-end">
