@@ -1,5 +1,7 @@
 <?php
 
+	use App\Events\Pin\NoteUnpinnedEvent;
+	use App\Events\Pin\ObjectiveUnpinnedEvent;
 	use Livewire\Volt\Component;
 	use App\Services\Pin\PinFetchingService;
 	use App\Services\Pin\PinDeletionService;
@@ -121,7 +123,7 @@
 		public function unpinNote($noteId)
 		{
 			app(PinDeletionService::class)->deletePinByPinnable('App\\Models\\Note', $noteId);
-			event(new \App\Events\Pin\NoteUnpinnedEvent(tenant()->id, $noteId));
+			event(new NoteUnpinnedEvent(tenant()->id, $noteId));
 			$this->loadPinnedNotes();
 		}
 
@@ -144,7 +146,7 @@
 		public function unpinObjective($objectiveId)
 		{
 			app(PinDeletionService::class)->deletePinByPinnable('App\\Models\\Objective', $objectiveId);
-			event(new \App\Events\Pin\ObjectiveUnpinnedEvent(tenant()->id, $objectiveId));
+			event(new ObjectiveUnpinnedEvent(tenant()->id, $objectiveId));
 			$this->loadPinnedNotes();
 		}
 
@@ -221,7 +223,7 @@
 								wire:click="showNote({{ $note->id }})">
 							<h3 class="font-medium text-gray-900 dark:text-dark-100">{{ $note->title }}</h3>
 							<p class="text-xs text-gray-500 dark:text-dark-300">Pinned
-							                                                    by {{ $note->author->name }} {{ $note->created_at->diffForHumans() }}</p>
+							                                                    by {{ $note->author->name ?: '' }} {{ $note->created_at->diffForHumans() ?? '' }}</p>
 						</div>
 						<div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
 							<x-button
@@ -261,7 +263,7 @@
 									{{ $objective->priority->label() }}
 								</span>
 								· Pinned
-								by {{ $objective->createdBy->name }} {{ $objective->created_at->diffForHumans() }}
+								by {{ $objective->createdBy->name ?? '' }} {{ $objective->created_at->diffForHumans() ?? '' }}
 							</p>
 						</div>
 						<div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -391,7 +393,7 @@
 								<div class="flex-1">
 									<h3 class="font-medium text-gray-900 dark:text-dark-100">{{ $log->headline }}</h3>
 									<p class="text-xs text-gray-500 dark:text-dark-300">
-										{{ $log->event }} · {{ $log->occurred_at->diffForHumans() }}
+										{{ $log->event }} · {{ $log->occurred_at->diffForHumans() ?? '' }}
 									</p>
 								</div>
 							</div>
