@@ -394,7 +394,7 @@
 												</div>
 												<div class="text-xs text-gray-400 block">
 													{{ $plan->creator->name }}
-													<span>({{ $plan->created_at->diffForHumans() }})</span>
+																<span>({{ $plan->created_at?->diffForHumans() ?? '' }})</span>
 												</div>
 											</div>
 										</x-dropdown.items>

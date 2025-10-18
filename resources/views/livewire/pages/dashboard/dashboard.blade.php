@@ -1246,7 +1246,7 @@
 											</span>
 										</p>
 										<span class="text-xs text-gray-400 dark:text-gray-500">
-											{{ $log->occurred_at->diffForHumans() }}
+														{{ $log->occurred_at?->diffForHumans() ?? '' }}
 										</span>
 									</div>
 									@if($log->description)

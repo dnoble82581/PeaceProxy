@@ -141,9 +141,9 @@
 			{{ $row->primaryTeam?->name ?? 'None' }}
 			@endinteract
 
-			@interact('column_created_at', $row)
-			{{ $row->created_at->diffForHumans() }}
-			@endinteract
+				@interact('column_created_at', $row)
+				{{ $row->created_at?->diffForHumans() ?? '' }}
+				@endinteract
 
 			@interact('column_action', $row)
 			<div class="flex gap-2">

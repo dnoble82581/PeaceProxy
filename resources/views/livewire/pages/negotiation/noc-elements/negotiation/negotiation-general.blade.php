@@ -85,7 +85,14 @@
 
 		public function getTimeAgo($createdAt):string
 		{
-			return Carbon::parse($createdAt)->diffForHumans();
+			if (empty($createdAt)) {
+				return '';
+			}
+			try {
+				return Carbon::parse($createdAt)->diffForHumans();
+			} catch (\Throwable $e) {
+				return '';
+			}
 		}
 
 

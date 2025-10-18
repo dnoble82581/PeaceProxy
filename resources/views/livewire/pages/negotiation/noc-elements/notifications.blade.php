@@ -222,8 +222,8 @@
 								class="flex-1 cursor-pointer"
 								wire:click="showNote({{ $note->id }})">
 							<h3 class="font-medium text-gray-900 dark:text-dark-100">{{ $note->title }}</h3>
-							<p class="text-xs text-gray-500 dark:text-dark-300">Pinned
-							                                                    by {{ $note->author->name ?: '' }} {{ $note->created_at->diffForHumans() ?? '' }}</p>
+								<p class="text-xs text-gray-500 dark:text-dark-300">Pinned
+								                                                    by {{ $note->author->name ?: '' }} {{ $note->created_at?->diffForHumans() ?? '' }}</p>
 						</div>
 						<div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
 							<x-button
@@ -262,8 +262,8 @@
 								<span class="inline-flex items-center rounded-md bg-{{ $objective->priority->color() }}-50 px-1.5 py-0.5 text-xs font-medium text-{{ $objective->priority->color() }}-700 ring-1 ring-inset ring-{{ $objective->priority->color() }}-600/20">
 									{{ $objective->priority->label() }}
 								</span>
-								· Pinned
-								by {{ $objective->createdBy->name ?? '' }} {{ $objective->created_at->diffForHumans() ?? '' }}
+									· Pinned
+									by {{ $objective->createdBy->name ?? '' }} {{ $objective->created_at?->diffForHumans() ?? '' }}
 							</p>
 						</div>
 						<div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -294,7 +294,7 @@
 				<div class="p-4">
 					<div class="mb-4">
 						<p class="text-sm text-gray-700 dark:text-gray-300">By {{ $selectedNote->author->name }}
-						                                                    · {{ $selectedNote->created_at->format('M d, Y') }}</p>
+						                                                    · {{ $selectedNote->created_at?->format('M d, Y') ?? '' }}</p>
 					</div>
 					<div class="prose dark:prose-invert max-w-none">
 						{{ $selectedNote->body }}
@@ -393,7 +393,7 @@
 								<div class="flex-1">
 									<h3 class="font-medium text-gray-900 dark:text-dark-100">{{ $log->headline }}</h3>
 									<p class="text-xs text-gray-500 dark:text-dark-300">
-										{{ $log->event }} · {{ $log->occurred_at->diffForHumans() ?? '' }}
+														{{ $log->event }} · {{ $log->occurred_at?->diffForHumans() ?? '' }}
 									</p>
 								</div>
 							</div>
@@ -429,7 +429,7 @@
 					<div class="mb-4">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $selectedLog->headline }}</h3>
 						<p class="text-sm text-gray-700 dark:text-gray-300">
-							{{ $selectedLog->occurred_at->format('M d, Y g:i A') }}
+							{{ $selectedLog->occurred_at?->format('M d, Y g:i A') ?? '' }}
 						</p>
 					</div>
 

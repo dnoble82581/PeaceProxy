@@ -230,7 +230,7 @@
 						<div class="flex justify-between items-center">
 							<div>
 								<p class="text-xs">Created
-								                   by {{ $note->author->name }} {{ $note->created_at->diffForHumans() }}</p>
+						                   by {{ $note->author->name }} {{ $note->created_at?->diffForHumans() ?? '' }}</p>
 							</div>
 							<div>
 								@if($this->isPinned($note->id))
