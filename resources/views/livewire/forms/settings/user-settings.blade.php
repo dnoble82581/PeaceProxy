@@ -1,72 +1,103 @@
 <?php
 
 	use App\Livewire\Forms\UpdateUserForm;
+	use App\Livewire\Forms\User\UserForm;
 	use App\Models\User;
+	use App\Services\Image\AvatarService;
 	use App\Services\Image\ImageService;
+	use App\Services\Team\TeamFetchingService;
 	use Illuminate\Support\Facades\Auth;
 	use Illuminate\Support\Facades\Hash;
 	use Illuminate\Validation\Rule;
 	use Illuminate\Validation\Rules\Password as PasswordRule;
+	use Livewire\Attributes\Computed;
 	use Livewire\Volt\Component;
 	use Livewire\WithFileUploads;
+	use TallStackUi\Traits\Interactions;
 
 	new class extends Component {
 		use WithFileUploads;
 
-		public UpdateUserForm $userForm;
+		public UserForm $userForm;
 		public User $user;
 		public $avatar = null;
+		public ?string $image = null;
+		public int $avatarVersion = 0;
+
+		use Interactions;
 
 		public function mount():void
 		{
 			$this->user = Auth::user();
-			$this->userForm->fill($this->user);
+			$this->userForm->setUser($this->user, $this->user->tenant_id);
+			$this->image = $this->user->avatarUrl();
 		}
 
-		public function save():void
+		public function save(AvatarService $avatarService):void
 		{
-			$emailChanged = $this->user->email !== $this->userForm->email;
-			$passwordProvided = filled($this->userForm->password);
+			try {
+				$this->userForm->validate();
 
-			$rules = [];
-			if ($emailChanged) {
-				$rules['userForm.email'] = [
-					'required', 'email', 'max:254', Rule::unique('users', 'email')->ignore($this->user->id)
-				];
-			}
-			if ($passwordProvided) {
-				$rules['userForm.password'] = ['nullable', 'string', PasswordRule::defaults(), 'confirmed'];
-				$rules['userForm.password_confirmation'] = ['nullable', 'string'];
-			}
-			if (!empty($rules)) {
-				$this->validate($rules);
-			}
-
-			$validated = $this->userForm->validate();
-
-			if (empty($this->userForm->password)) {
-				unset($validated['password']);
-			} else {
-				$validated['password'] = Hash::make($this->userForm->password);
-			}
-
-			$validated = array_filter($validated, static fn($v) => $v !== '' && $v !== null);
-
-			$this->user->update($validated);
-
-			if ($this->avatar) {
-				$imageService = app(ImageService::class);
-				foreach ($this->user->images as $image) {
-					$imageService->deleteImage($image);
+				if ($this->avatar) {
+					$newAvatar = $avatarService->set($this->user, $this->avatar);
+					$this->image = $newAvatar->url;
+				} else {
+					$this->image = $this->user->avatarUrl();
 				}
-				$images = $imageService->uploadImagesForModel([$this->avatar], $this->user, 'users', 's3_public');
-				if (count($images) > 0) {
-					$imageService->setPrimaryImage($images[0]);
-				}
-			}
 
-			$this->reset(['avatar']);
-			session()->flash('message', 'Profile updated successfully.');
+				$this->userForm->update();
+
+				$this->reset(['avatar']);
+
+				$this->toast()
+					->success('Your profile was updated successfully!')
+					->send();
+
+			} catch (Throwable $e) {
+				logger()->error('Failed to save avatar', [
+					'user_id' => $this->user->id,
+					'error' => $e->getMessage(),
+				]);
+
+				$this->toast()
+					->danger('There was a problem when updating your profile. Please Try again.')
+					->send();
+			}
+		}
+
+		public function clearAvatar(Image $image):void
+		{
+			try {
+				app(ImageService::class)->deleteImage($this->user->avatar);
+
+				$this->user->update(['avatar_path' => '']);
+
+				$this->user->refresh();
+				$this->image = $this->user->avatarUrl();
+				$this->avatarVersion++;
+
+				$this->toast()
+					->success('Avatar deleted successfully!')
+					->send();
+
+			} catch (Throwable $e) {
+				// Log for debugging (or use Sentry, Bugsnag, etc.)
+				logger()->error('Failed to delete avatar', [
+					'user_id' => $this->user->id,
+					'error' => $e->getMessage(),
+				]);
+
+				// Gracefully notify the user
+				$this->toast()
+					->error('There was a problem deleting your avatar. Please try again.')
+					->send();
+			}
+		}
+
+		#[Computed]
+		public function getTeams()
+		{
+			return app(TeamFetchingService::class)->fetchTeamOptions();
 		}
 	};
 ?>
@@ -89,28 +120,76 @@
 	<form
 			wire:submit.prevent="save"
 			class="space-y-6">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<!-- Name -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+			<div class="col-span-full">
+				<x-ui.text-center-divider>Personal Information</x-ui.text-center-divider>
+			</div>
+			<div class="flex gap-4">
+				<div
+						class="relative group"
+						wire:key="avatar-version-{{ $avatarVersion }}">
+					<img
+							alt="User Avatar"
+							src="{{ $avatar ? $avatar->temporaryUrl() : $image }}"
+							class="rounded-sm h-20 w-20 object-cover" />
+					@if ($user->avatar_path)
+						<div class="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+							<x-button.circle
+									wire:click="clearAvatar"
+									color="red"
+									xs
+									icon="x-mark" />
+						</div>
+					@endif
+				</div>
+				<div class="flex-1">
+					<x-upload
+							class="w-full"
+							label="Avatar"
+							wire:model="avatar" />
+					<div
+							wire:loading
+							wire:target="avatar"
+							class="text-sm text-gray-500 mt-1">Uploading...
+					</div>
+				</div>
+			</div>
 			<div>
 				<x-input
-						label="Name"
+						label="Name *"
 						wire:model="userForm.name" />
 			</div>
 
 			<!-- Email -->
 			<div>
 				<x-input
-						label="Email"
+						label="Email *"
 						wire:model="userForm.email" />
 			</div>
 
 			<!-- Phone -->
 			<div>
 				<x-input
+						x-mask="(999)-999-9999"
 						label="Phone"
 						wire:model="userForm.phone" />
 			</div>
+			<div>
+				<x-select.styled
+						:options="$this->getTeams()"
+						label="Primary Team Discipline"
+						wire:model="userForm.primary_team_id" />
+			</div>
 
+			<div>
+				<x-input
+						label="Alternate Email"
+						wire:model="userForm.alternate_email" />
+			</div>
+
+			<div class="col-span-full">
+				<x-ui.text-center-divider>Agency Information</x-ui.text-center-divider>
+			</div>
 			<!-- Department -->
 			<div>
 				<x-input
@@ -132,21 +211,35 @@
 						wire:model="userForm.badge_number" />
 			</div>
 
+			<div>
+				<x-input
+						label="License Number"
+						wire:model="userForm.license_number" />
+			</div>
+
+			<div class="col-span-full">
+				<x-ui.text-center-divider>local Information</x-ui.text-center-divider>
+			</div>
 			<!-- Locale -->
 			<div>
 				<x-input
-						label="Locale"
+						disabled
+						label="Locale *"
 						wire:model="userForm.locale" />
 			</div>
 
 			<!-- Timezone -->
 			<div>
 				<x-input
-						label="Timezone"
+						disabled
+						label="Timezone *"
 						wire:model="userForm.timezone" />
 			</div>
 		</div>
 
+		<div class="col-span-full">
+			<x-ui.text-center-divider>Passwords</x-ui.text-center-divider>
+		</div>
 		<!-- Passwords -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 			<div>
@@ -157,18 +250,6 @@
 			</div>
 		</div>
 
-		<!-- Avatar Upload -->
-		<div>
-			<x-upload
-					label="Avatar"
-					wire:model="avatar" />
-			<div
-					wire:loading
-					wire:target="avatar"
-					class="text-sm text-gray-500 mt-1">Uploading...
-			</div>
-		</div>
-
 		<!-- Actions -->
 		<div class="flex items-center gap-3">
 			<x-button
@@ -176,14 +257,4 @@
 					type="submit" />
 		</div>
 	</form>
-
-	{{--	@if ($errors->any())--}}
-	{{--		<div class="mt-4 p-3 rounded bg-red-50 text-red-700">--}}
-	{{--			<ul class="list-disc list-inside space-y-1">--}}
-	{{--				@foreach ($errors->all() as $error)--}}
-	{{--					<li>{{ $error }}</li>--}}
-	{{--				@endforeach--}}
-	{{--			</ul>--}}
-	{{--		</div>--}}
-	{{--	@endif--}}
 </div>

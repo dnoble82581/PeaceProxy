@@ -63,12 +63,6 @@
 	})({})
 </script>
 
-
-{{--<script>--}}
-{{--	// Patch to make touch listeners passive--}}
-{{--	document.addEventListener('touchstart', function () {}, { passive: true })--}}
-{{--</script>--}}
-
 {{-- Styles --}}
 @vite(['resources/js/app.js', 'resources/css/app.css'])
 @livewireStyles

@@ -1,7 +1,0 @@
-
-
-negotiation card hostages not live updating.
-
-Objectives not live updating.
-
-Notes not live updating

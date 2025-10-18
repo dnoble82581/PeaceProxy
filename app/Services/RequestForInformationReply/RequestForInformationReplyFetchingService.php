@@ -5,6 +5,7 @@ namespace App\Services\RequestForInformationReply;
 use App\Contracts\RequestForInformationReplyRepositoryInterface;
 use App\DTOs\RequestForInformationReply\RequestForInformationReplyDTO;
 use App\Models\RequestForInformationReply;
+use Illuminate\Database\Eloquent\Collection;
 
 class RequestForInformationReplyFetchingService
 {
@@ -12,34 +13,40 @@ class RequestForInformationReplyFetchingService
     {
     }
 
-    public function getReplyById($replyId)
-    {
-        return $this->replyRepository->getReply($replyId);
-    }
-
-    public function getAllReplies()
+    public function getAllReplies(): Collection
     {
         return $this->replyRepository->getReplies();
     }
 
-    public function getRepliesByRfiId($rfiId)
+    /**
+     * @return Collection<int, RequestForInformationReply>
+     */
+    public function getRepliesByRfiId(int $rfiId): Collection
     {
         return $this->replyRepository->getRepliesByRfiId($rfiId);
     }
 
-    public function getRepliesByUserId($userId)
+    /**
+     * @return Collection<int, RequestForInformationReply>
+     */
+    public function getRepliesByUserId(int $userId): Collection
     {
         return RequestForInformationReply::where('user_id', $userId)->get();
     }
 
-    public function getReplyDTO($replyId): ?RequestForInformationReplyDTO
+    public function getReplyDTO(int $replyId): ?RequestForInformationReplyDTO
     {
         $reply = $this->getReplyById($replyId);
 
-        if (!$reply) {
+        if (! $reply) {
             return null;
         }
 
         return RequestForInformationReplyDTO::fromArray($reply->toArray());
+    }
+
+    public function getReplyById(int $replyId): RequestforInformationReply
+    {
+        return $this->replyRepository->getReply($replyId);
     }
 }

@@ -4,6 +4,7 @@
 	use Illuminate\Pagination\LengthAwarePaginator;
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\Layout;
+	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 	use Livewire\WithPagination;
 	use TallStackUi\Traits\Interactions;
@@ -15,6 +16,8 @@
 		public ?int $quantity = 10;
 		public ?string $search = null;
 		public bool $showDeleteModal = false;
+		public bool $showCreateModal = false;
+		public bool $showUpdateModal = false;
 		public array $sort = [
 			'column' => 'created_at',
 			'direction' => 'desc',
@@ -40,21 +43,42 @@
 			// Trim a search term once if it exists
 			$searchTerm = $this->search !== null? trim($this->search) : null;
 
-			return User::query()
+			$query = User::query()
 				->select([
-					'id', 'name', 'email', 'permissions', 'primary_team_id', 'created_at'
-				]) // Select only needed fields
+					'users.id',
+					'users.name',
+					'users.email',
+					'users.permissions',
+					'users.primary_team_id',
+					'users.created_at',
+				]) // Select only needed fields (qualified to avoid ambiguity when joining)
 				->with('primaryTeam')
-				->where('tenant_id', $tenantId)
+				->where('users.tenant_id', $tenantId)
 				->when($searchTerm, function ($query) use ($searchTerm) {
 					$query->where(function ($q) use ($searchTerm) {
-						$q->where('name', 'like', '%'.$searchTerm.'%')
-							->orWhere('email', 'like', '%'.$searchTerm.'%');
+						$q->where('users.name', 'like', '%'.$searchTerm.'%')
+							->orWhere('users.email', 'like', '%'.$searchTerm.'%');
 					});
-				})
-				->orderBy(...array_values($this->sort))
+				});
+
+			// Handle sorting, including sorting by related team name
+			if (($this->sort['column'] ?? null) === 'team') {
+				$query->leftJoin('teams', 'teams.id', '=', 'users.primary_team_id')
+					->orderBy('teams.name', $this->sort['direction'] ?? 'asc')
+					->orderBy('users.id'); // Deterministic ordering
+			} else {
+				$query->orderBy($this->sort['column'] ?? 'created_at', $this->sort['direction'] ?? 'desc');
+			}
+
+			return $query
 				->paginate($this->quantity)
 				->withQueryString();
+		}
+
+		#[On('close-modals')]
+		public function closeModals()
+		{
+			$this->showCreateModal = false;
 		}
 
 		public function confirmDelete(User $user):void
@@ -68,21 +92,21 @@
 			if ($this->userToDelete) {
 				try {
 					$this->userToDelete->delete();
-
 					// Refresh the component to update the table
 					$this->dispatch('$refresh');
 
-					$this->dialog()
+					$this->toast()
 						->success(__('Done!'), __('User deleted successfully.'))
 						->send();
 				} catch (\Exception $e) {
-					$this->dialog()
+					$this->toast()
 						->error(__('Error!'), __('Failed to delete user. Please try again.'))
 						->send();
 				} finally {
 					$this->userToDelete = null;
 				}
 			}
+			$this->showDeleteModal = false;
 		}
 	}
 ?>
@@ -90,12 +114,16 @@
 <div class="p-4">
 	<x-card>
 		<x-slot:header>
-			<h4 class="text-lg p-2 bg-gray-200/50 dark:text-white dark:bg-dark-800/50 rounded-t-lg">Manage Users</h4>
+			<div class="flex items-center justify-between py-2 px-4 bg-gray-200/50 dark:text-white dark:bg-dark-800/50 rounded-t-lg">
+				<h4 class="text-lg">Manage Users</h4>
+				<div>
+					<x-button
+							icon="plus"
+							wire:click="$toggle('showCreateModal')" />
+				</div>
+			</div>
 		</x-slot:header>
 
-		<div class="mb-4 mt-4">
-			<livewire:users.create @created="$refresh" />
-		</div>
 		<x-table
 				:$headers
 				:$sort
@@ -154,7 +182,18 @@
 			@endinteract
 		</x-table>
 	</x-card>
-	<livewire:users.update @updated="$refresh" />
+
+
+	<livewire:users.update-user @updated="$refresh" />
+
+	<x-modal
+			wire="showCreateModal"
+			name="create-user">
+		<x-slot:title>
+			Create New User
+		</x-slot:title>
+		<livewire:users.create-user />
+	</x-modal>
 
 	<x-modal
 			center

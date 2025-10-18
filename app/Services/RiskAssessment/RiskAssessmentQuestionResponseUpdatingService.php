@@ -14,7 +14,7 @@ class RiskAssessmentQuestionResponseUpdatingService
         $this->responseRepository = $responseRepository;
     }
 
-    public function updateResponse(int $id, RiskAssessmentQuestionResponseDTO $responseDTO)
+    public function updateResponse(int $id, RiskAssessmentQuestionResponseDTO $responseDTO): bool
     {
         return $this->responseRepository->updateResponse($id, $responseDTO->toArray());
     }

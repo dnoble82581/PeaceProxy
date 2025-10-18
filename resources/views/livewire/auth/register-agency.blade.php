@@ -2,63 +2,62 @@
 
 	use App\Enums\Tenant\TenantTypes;
 	use App\Livewire\Forms\CreateTenantForm;
-	use App\Livewire\Forms\CreateUserForm;
+	use App\Livewire\Forms\User\UserForm;
+	use App\Models\Team;
 	use App\Models\Tenant;
 	use App\Services\Tenant\TenantCreationService;
 	use App\Services\User\CreateUserService;
 	use Illuminate\Support\Facades\Auth;
 	use Illuminate\Support\Facades\Hash;
 	use Livewire\Attributes\Layout;
-	use Livewire\Attributes\Validate;
+	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.auth'), \Livewire\Attributes\Title('Register - PeaceProxy')] class extends Component {
+	new #[Layout('layouts.auth'), Title('Register - PeaceProxy')] class extends Component {
 		public CreateTenantForm $tenantForm;
-		public CreateUserForm $userForm;
-
-		public string $password_confirmation;
-
-		#[Validate('required|min:8|confirmed')]
-		public string $password = "";
+		public UserForm $userForm;
 
 		public function saveTenant():void
 		{
-			// Validate the password (required, min:8, confirmed)
-			$this->validateOnly('password');
-
+			// Validate and create the tenant first
 			$validatedTenant = $this->tenantForm->validate();
-			$validatedUser = $this->userForm->validate();
-
-			// Ensure the user is created with a hashed password
-			$validatedUser['password'] = Hash::make($this->password);
-
 			$newTenant = app(TenantCreationService::class)
 				->createTenant($validatedTenant);
-			$newUser = app(CreateUserService::class)
-				->createUserFromTenant($newTenant, $validatedUser);
+
+			// Ensure user form is validated using the new tenant context
+			$this->userForm->tenantId = $newTenant->id;
+			$this->userForm->validate();
+
+			// Build payload from UserForm to ensure defaults, then hash password
+			$userData = $this->userForm->payload();
+			if (! empty($userData['password'])) {
+				$userData['password'] = Hash::make((string) $userData['password']);
+			}
+
+			/** @var CreateUserService $userService */
+			$userService = app(CreateUserService::class);
+			$newUser = $userService->createUserFromTenant($newTenant, $userData);
 
 			$newUser->update([
 				'permissions' => 'admin',
 				'last_login_ip' => request()->ip(),
 				'last_login_at' => now(),
-				'primary_team_id' => $this->fetchDefaultTeam($newTenant)
+				'primary_team_id' => $this->fetchDefaultTeam($newTenant),
 			]);
 
 			$newTenant->update([
-				'billing_owner_id' => $newUser->id
+				'billing_owner_id' => $newUser->id,
 			]);
-
 
 			// Authenticate the user
 			Auth::login($newUser);
 
-			$defaultTeam = \App\Models\Team::where('slug', 'negotiation')->pluck('id');
-
+			$defaultTeam = Team::where('slug', 'negotiation')->pluck('id');
 			$newUser->teams()->attach($defaultTeam, ['is_primary' => true]);
 
 			// Redirect to the tenant dashboard after successful creation
 			$tenantSubdomain = $newTenant->subdomain;
-			$protocol = request()->secure()? 'https://' : 'http://';
+			$protocol = request()->secure() ? 'https://' : 'http://';
 			$dashboardUrl = "{$protocol}{$tenantSubdomain}.".config('app.domain')."/dashboard";
 			$this->redirect($dashboardUrl);
 		}
@@ -72,7 +71,6 @@
 ?>
 
 <div>
-	{{ $errors }}
 	<form
 			wire:submit.prevent="saveTenant"
 			class="space-y-4">
@@ -151,11 +149,11 @@
 			<p class="mb-2 text-sm text-gray-500">Create the password you will use to login.</p>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<x-password
-						wire:model="password"
+						wire:model="userForm.password"
 						label="Password" />
 				<x-password
 						label="Confirm Password"
-						wire:model="password_confirmation" />
+						wire:model="userForm.password_confirmation" />
 			</div>
 		</div>
 		<div class="flex items-center justify-end">

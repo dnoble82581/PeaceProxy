@@ -1,10 +1,14 @@
 includes:
-    - vendor/larastan/larastan/extension.neon
-    - vendor/nesbot/carbon/extension.neon
+  - vendor/larastan/larastan/extension.neon
+  - vendor/nesbot/carbon/extension.neon
 
 parameters:
+  level: 6
+  paths:
+    - app
+    - database
+  tmpDir: storage/phpstan
 
-    paths:
-        - app/
-
-    level: 5
+  ignoreErrors:
+    - '#Call to an undefined method Illuminate\\Support\\Collection::<.*>#'
+    - '#Access to an undefined property Illuminate\\Http\\Request::#'

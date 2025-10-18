@@ -9,6 +9,8 @@
 		class="bg-gray-100 text-dark-800 dark:bg-dark-900 dark:text-white antialiased min-h-screen"
 		x-bind:class="{ 'dark bg-dark-900': darkTheme, 'bg-white': !darkTheme }">
 
+<x-toast />
+
 <x-layout class="overflow-y-visible">
 	<x-slot:header>
 		<x-layout.header>

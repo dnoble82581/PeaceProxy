@@ -13,7 +13,7 @@ class RequestForInformationReplyCreationService
     {
     }
 
-    public function createReply(RequestForInformationReplyDTO $replyDTO, int $negotiationId)
+    public function createReply(RequestForInformationReplyDTO $replyDTO, int $negotiationId): RequestForInformationReply
     {
         // Ensure is_read is set to false for new replies
         $replyData = $replyDTO->toArray();

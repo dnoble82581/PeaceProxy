@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -32,6 +33,11 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     protected static function booted(): void
@@ -81,15 +87,6 @@ class User extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
-    }
-
-    public function avatarUrl(): string
-    {
-        if ($this->avatar_path) {
-            return $this->avatar_path;
-        } else {
-            return 'https://ui-avatars.com/api/?name='.$this->name;
-        }
     }
 
     /**
@@ -181,10 +178,21 @@ class User extends Authenticatable
         return $this->morphMany(Document::class, 'documentable');
     }
 
-    /**
-     * Get the images for the user.
-     */
-    public function images(): MorphMany
+    public function avatar(): MorphOne
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('type', 'avatar');
+    }
+
+    public function avatarUrl(): string
+    {
+        if ($this->avatar_path) {
+            return $this->avatar->url;
+        } else {
+            return 'https://ui-avatars.com/api/?name='.$this->name;
+        }
+    }
+
+    public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
     }

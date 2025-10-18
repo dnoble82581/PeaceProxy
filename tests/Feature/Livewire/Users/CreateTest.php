@@ -11,7 +11,7 @@ beforeEach(fn () => User::query()->delete());
 it('renders the create user component', function () {
     Livewire::test(Create::class)
         ->assertOk()
-        ->assertViewIs('livewire.users.create');
+        ->assertViewIs('livewire.users.create-user');
 });
 
 it('initializes with a new user', function () {

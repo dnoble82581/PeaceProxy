@@ -29,7 +29,6 @@ class ImageService
             return $image->delete();
         } catch (Exception $e) {
             Log::error('Failed to delete image: '.$e->getMessage());
-
             return false;
         }
     }

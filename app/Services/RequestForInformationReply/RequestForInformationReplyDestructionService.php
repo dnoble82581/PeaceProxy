@@ -11,11 +11,11 @@ class RequestForInformationReplyDestructionService
     {
     }
 
-    public function deleteReply($replyId)
+    public function deleteReply(int $replyId): ?RequestForInformationReply
     {
         $reply = $this->replyRepository->getReply($replyId);
 
-        if (!$reply) {
+        if (! $reply) {
             return null;
         }
 

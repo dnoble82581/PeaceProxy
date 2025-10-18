@@ -23,6 +23,13 @@ class Image extends Model
         'metadata' => 'array'
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function (Image $image) {
+            Storage::disk($image->disk)->delete($image->path);
+        });
+    }
+
     public function imageable(): MorphTo
     {
         return $this->morphTo();

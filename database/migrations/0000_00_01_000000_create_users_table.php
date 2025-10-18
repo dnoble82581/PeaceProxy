@@ -19,7 +19,7 @@ return new class () extends Migration {
             $table->string('password');
 
             // Role and Position
-            $table->string('permissions')->nullable(); // e.g., 'admin', 'user', 'superadmin', 'observer'
+            $table->string('permissions')->nullable()->default('user'); // e.g., 'admin', 'user', 'superadmin', 'observer'
             $table->string('rank_or_title')->nullable(); // Officer rank or mental health job title
             $table->foreignId('primary_team_id')->nullable()->index();
 

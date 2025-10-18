@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Laravel\Cashier\Billable;
 
 class Tenant extends Model
@@ -46,6 +47,20 @@ class Tenant extends Model
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+
+    public function logo(): MorphOne
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('type', 'logo');
+    }
+
+    public function logoUrl()
+    {
+        if ($this->logo_path) {
+            return $this->logo->url;
+        } else {
+            return 'https://ui-avatars.com/api/?name='.$this->agency_name;
+        }
     }
 
     public function teams(): HasMany
