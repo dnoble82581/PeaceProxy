@@ -9,10 +9,11 @@
 	use App\Services\NegotiationUser\NegotiationUserCreationService;
 	use Illuminate\Database\Eloquent\Collection;
 	use Livewire\Attributes\Layout;
+	use Livewire\Attributes\Title;
 	use Livewire\Attributes\Validate;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Negotiations - Peace Proxy')] class extends Component {
+	new #[Layout('layouts.app'), Title('Negotiations - Peace Proxy')] class extends Component {
 		public Collection $negotiations;
 		public bool $roleModal = false;
 		public bool $editModal = false;
@@ -320,53 +321,55 @@
 																	color="teal"
 																	flat
 																	icon="arrow-left-end-on-rectangle" />
-															<x-modal
-																	persistent
-																	center
-																	wire="roleModal"
-																	title="Choose Your Role">
-																{{--																<p>Choose your role in this negotiation</p>--}}
-																<div class="mb-4">
-																	<label
-																			class="block mb-2"
-																			for="chooseRole">Choose your role in this
-																	                         negotiation</label>
-																	<select
-																			class="text-black w-full dark:text-dark-300 dark:bg-dark-700 rounded-md text-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-																			placeholder="test"
-																			wire:model="choseRole"
-																			id="chooseRole"
-																			required
-																			class="mt-2">
-																		@if(empty($choseRole))
-																			<option
-																					value=""
-																					selected>Select Your Role...
-																			</option>
-																		@else
-																			<option value="">Make Selection</option>
-																		@endif
-																		@foreach(App\Enums\User\UserNegotiationRole::cases() as $role)
-																			<option value="{{ $role->value }}">{{ $role->label() }}</option>
-																		@endforeach
-																	</select>
-																	@error('choseRole')
-																	<p class="text-rose-500">{{ $message }}</p>
-																	@enderror
-																</div>
-																<div class="space-x-2">
-																	<x-button wire:click="enterNegotiation({{ $selectedNegotiation }})">
-																		Enter
-																	</x-button>
-																	<x-button
-																			wire:click="$toggle('roleModal')"
-																			color="zinc">Cancel
-																	</x-button>
-																</div>
+															<template x-teleport="body">
+																<x-modal
+																		persistent
+																		center
+																		wire="roleModal"
+																		title="Choose Your Role">
+																	{{--																<p>Choose your role in this negotiation</p>--}}
+																	<div class="mb-4">
+																		<label
+																				class="block mb-2"
+																				for="chooseRole">Choose your role in
+																		                         this
+																		                         negotiation</label>
+																		<select
+																				class="text-black w-full dark:text-dark-300 dark:bg-dark-700 rounded-md text-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+																				placeholder="test"
+																				wire:model="choseRole"
+																				id="chooseRole"
+																				required
+																				class="mt-2">
+																			@if(empty($choseRole))
+																				<option
+																						value=""
+																						selected>Select Your Role...
+																				</option>
+																			@else
+																				<option value="">Make Selection</option>
+																			@endif
+																			@foreach(App\Enums\User\UserNegotiationRole::cases() as $role)
+																				<option value="{{ $role->value }}">{{ $role->label() }}</option>
+																			@endforeach
+																		</select>
+																		@error('choseRole')
+																		<p class="text-rose-500">{{ $message }}</p>
+																		@enderror
+																	</div>
+																	<div class="space-x-2">
+																		<x-button wire:click="enterNegotiation({{ $selectedNegotiation }})">
+																			Enter
+																		</x-button>
+																		<x-button
+																				wire:click="$toggle('roleModal')"
+																				color="zinc">Cancel
+																		</x-button>
+																	</div>
 
 
-															</x-modal>
-
+																</x-modal>
+															</template>
 															<!-- Edit Negotiation Slide -->
 															<x-slide
 																	size="4xl"
