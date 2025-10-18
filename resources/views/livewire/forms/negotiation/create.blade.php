@@ -26,7 +26,7 @@
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 
-	new #[Layout('layouts.app')] class extends Component {
+ new #[Layout('components.layouts.app')] class extends Component {
 		public NegotiationForm $negotiationForm;
 		public string $subjectName = '';
 		public string $subjectPhone = '';

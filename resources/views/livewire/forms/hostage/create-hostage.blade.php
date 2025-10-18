@@ -16,7 +16,7 @@
 	use Illuminate\Support\Facades\Auth;
 	use Livewire\WithFileUploads;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+ new #[Layout('components.layouts.negotiation')] class extends Component {
 		use WithFileUploads;
 
 		public ?Negotiation $negotiation = null;

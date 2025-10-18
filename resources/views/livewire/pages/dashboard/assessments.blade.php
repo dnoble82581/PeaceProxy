@@ -8,7 +8,7 @@
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Http;
 
-	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Assessments - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.app'), \Livewire\Attributes\Title('Assessments - Peace Proxy')] class extends Component {
 		// Properties for template management
 		public $templates = [];
 		public $showCreateTemplateModal = false;

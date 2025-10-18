@@ -12,7 +12,7 @@
 	use Livewire\Volt\Component;
 	use Livewire\WithFileUploads;
 
-	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Settings - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.app'), \Livewire\Attributes\Title('Settings - Peace Proxy')] class extends Component {
 
 
 		public \App\Livewire\Forms\UpdateTenantForm $tenantForm;

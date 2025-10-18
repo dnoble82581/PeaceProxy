@@ -12,7 +12,7 @@
 	use Livewire\Attributes\On;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+ new #[Layout('components.layouts.negotiation')] class extends Component {
 		public Warrant $warrant;
 		public Negotiation $negotiation;
 		public Subject $primarySubject;

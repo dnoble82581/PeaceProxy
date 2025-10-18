@@ -6,7 +6,7 @@
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+ new #[Layout('components.layouts.negotiation')] class extends Component {
 		public Subject $subject;
 		public Negotiation $negotiation;
 

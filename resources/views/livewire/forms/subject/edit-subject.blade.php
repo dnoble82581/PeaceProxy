@@ -15,7 +15,7 @@
 	use Illuminate\Support\Facades\Storage;
 	use Illuminate\Support\Facades\Log;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+ new #[Layout('components.layouts.negotiation')] class extends Component {
 		use WithFileUploads;
 		use \TallStackUi\Traits\Interactions;
 

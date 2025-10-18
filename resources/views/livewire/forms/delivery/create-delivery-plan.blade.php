@@ -1,13 +1,20 @@
 <?php
 
+	use App\DTOs\DeliveryPlan\DeliveryPlanDTO;
 	use App\Enums\DeliveryPlan\Status as DeliveryPlanStatus;
 	use App\Events\DeliveryPlan\DeliveryPlanCreatedEvent;
+	use App\Livewire\Forms\DeliveryPlanForm;
 	use App\Models\Demand;
 	use App\Models\DeliveryPlan;
+	use App\Services\DeliveryPlan\DeliveryPlanCreationService;
+	use App\Services\Demand\DemandFetchingService;
 	use Illuminate\Support\Facades\Auth;
+	use Livewire\Attributes\Layout;
+	use Livewire\Attributes\On;
+	use Livewire\Volt\Component;
 
-	new #[\Livewire\Attributes\Layout('layouts.negotiation')] class extends \Livewire\Volt\Component {
-		public \App\Livewire\Forms\DeliveryPlanForm $form;
+	new #[Layout('components.layouts.negotiation')] class extends Component {
+		public DeliveryPlanForm $form;
 		public ?int $demandId = null;
 		public ?Demand $demand = null;
 		public ?int $negotiationId = null;
@@ -17,11 +24,11 @@
 
 		public function mount() {}
 
-		#[\Livewire\Attributes\On('load-demand')]
+		#[On('load-demand')]
 		public function loadDemand($demandId)
 		{
 			$this->demandId = $demandId;
-			$this->demand = app(\App\Services\Demand\DemandFetchingService::class)->getDemandById($demandId);
+			$this->demand = app(DemandFetchingService::class)->getDemandById($demandId);
 		}
 
 		public function fillRandom():void
@@ -70,9 +77,9 @@
 			// Ensure tenant_id is set properly
 			$this->form->tenant_id = tenant()->id;
 
-			$dto = \App\DTOs\DeliveryPlan\DeliveryPlanDTO::fromArray($this->form->toArray());
+			$dto = DeliveryPlanDTO::fromArray($this->form->toArray());
 
-			$deliveryPlan = app(\App\Services\DeliveryPlan\DeliveryPlanCreationService::class)->createDeliveryPlan($dto);
+			$deliveryPlan = app(DeliveryPlanCreationService::class)->createDeliveryPlan($dto);
 
 			if ($this->demand) {
 				$this->demand->deliveryPlans()->attach($deliveryPlan->id, [

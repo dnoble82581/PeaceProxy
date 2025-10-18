@@ -3,7 +3,7 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.auth'), \Livewire\Attributes\Title('Login - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.auth'), \Livewire\Attributes\Title('Login - Peace Proxy')] class extends Component {
 		public string $email = '';
 		public string $password = '';
 		public bool $rememberMe = false;

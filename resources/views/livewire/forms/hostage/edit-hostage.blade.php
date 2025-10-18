@@ -16,7 +16,7 @@
 	use Livewire\WithFileUploads;
 	use Illuminate\Support\Facades\Log;
 
-	new #[Layout('layouts.negotiation')] class extends Component {
+ new #[Layout('components.layouts.negotiation')] class extends Component {
 		use WithFileUploads;
 
 		public Hostage $hostage;

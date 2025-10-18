@@ -5,7 +5,7 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.negotiation'), \Livewire\Attributes\Title('Tactical NOC - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.negotiation'), \Livewire\Attributes\Title('Tactical NOC - Peace Proxy')] class extends Component {
 		public ?Negotiation $negotiation = null;
 
 		public function mount($negotiation):void

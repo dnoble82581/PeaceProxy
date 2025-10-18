@@ -4,7 +4,7 @@
 	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.guest')] #[Title('About Us | Peace Proxy')] class extends Component {}
+ new #[Layout('components.layouts.guest')] #[Title('About Us | Peace Proxy')] class extends Component {}
 
 ?>
 

@@ -9,7 +9,7 @@
 	use Livewire\WithPagination;
 	use TallStackUi\Traits\Interactions;
 
-	new #[Layout('layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
 		use WithPagination;
 		use Interactions;
 

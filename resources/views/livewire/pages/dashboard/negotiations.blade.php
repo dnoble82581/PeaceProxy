@@ -13,7 +13,7 @@
 	use Livewire\Attributes\Validate;
 	use Livewire\Volt\Component;
 
-	new #[Layout('layouts.app'), Title('Negotiations - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.app'), Title('Negotiations - Peace Proxy')] class extends Component {
 		public Collection $negotiations;
 		public bool $roleModal = false;
 		public bool $editModal = false;

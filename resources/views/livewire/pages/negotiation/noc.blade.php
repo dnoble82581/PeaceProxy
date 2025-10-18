@@ -11,7 +11,7 @@
 	use TallStackUi\Traits\Interactions;
 
 
-	new #[Layout('layouts.negotiation'), Title('NOC - Peace Proxy')] class extends Component {
+ new #[Layout('components.layouts.negotiation'), Title('NOC - Peace Proxy')] class extends Component {
 
 		public ?Negotiation $negotiation = null;
 		public bool $showPhoneModal = false;
