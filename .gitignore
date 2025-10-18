@@ -31,6 +31,3 @@ frankenphp-worker.php
 storage/phpstan/
 .phpstan.cache/
 
-# PHPStan cache
-storage/phpstan/
-.phpstan.cache/
