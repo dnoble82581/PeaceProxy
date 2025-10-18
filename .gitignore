@@ -26,3 +26,11 @@ yarn-error.log
 **/caddy
 frankenphp
 frankenphp-worker.php
+
+# PHPStan cache
+storage/phpstan/
+.phpstan.cache/
+
+# PHPStan cache
+storage/phpstan/
+.phpstan.cache/
