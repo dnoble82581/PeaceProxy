@@ -129,11 +129,15 @@
 </div>
 @push('scripts')
 	<script>
-		// Prevent form submission on Enter key press
-		document.getElementById('editHookForm').addEventListener('keydown', function (event) {
-			if (event.key === 'Enter') {
-				event.preventDefault() // Stop the form from submitting
-			}
-		})
+		// Prevent form submission on Enter key press (guard when form isn't present)
+		(function(){
+			const form = document.getElementById('editHookForm');
+			if (!form) { return; }
+			form.addEventListener('keydown', function (event) {
+				if (event.key === 'Enter') {
+					event.preventDefault(); // Stop the form from submitting
+				}
+			});
+		})();
 	</script>
 @endpush
