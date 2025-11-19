@@ -22,7 +22,15 @@
 		public array $statusOptions = [];
 
 
-		public function mount() {}
+		public function mount(): void
+		{
+			$this->statusOptions = collect(DeliveryPlanStatus::cases())
+				->map(fn ($case) => [
+					'label' => $case->label(),
+					'value' => $case->value,
+				])
+				->toArray();
+		}
 
 		#[On('load-demand')]
 		public function loadDemand($demandId)
@@ -147,10 +155,7 @@
 					label="Status"
 					hint="What stage is this delivery plan in?"
 					wire:model="form.status"
-					:options="collect(DeliveryPlanStatus::cases())->map(fn($case) => [
-						'label' => $case->label(),
-						'value' => $case->value,
-					])->toArray()" />
+					:options="$statusOptions" />
 		</div>
 
 		<!-- Window Starts At and Window Ends At -->

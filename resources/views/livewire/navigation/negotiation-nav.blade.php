@@ -32,7 +32,7 @@
 				}
 			}
 
-			return redirect(route('dashboard.negotiations', tenant()->subdomain));
+			return redirect(route('dashboard', tenant()->subdomain));
 		}
 
 		public function endNegotiation():Redirector

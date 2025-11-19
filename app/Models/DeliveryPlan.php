@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\DeliveryPlan\Status as DeliveryPlanStatus;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -63,7 +62,7 @@ class DeliveryPlan extends Model
     protected function casts(): array
     {
         return [
-            'status' => DeliveryPlanStatus::class,
+            'status' => \App\Enums\DeliveryPlan\Status::class,
             'scheduled_at' => 'datetime',
             'window_starts_at' => 'string',  // Properly cast time fields as string
             'window_ends_at' => 'string',    // Properly cast time fields as string
