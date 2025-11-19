@@ -30,29 +30,30 @@ class UserForm extends Form
 
     public ?string $email_verified_at = null;
 
-    public string $permissions = '';
+    // Many DB columns are nullable; form props must allow null to avoid TypeError during fill()
+    public ?string $permissions = null;
 
     public ?string $rank_or_title = null;
 
     public ?int $primary_team_id = null;
 
-    public string $badge_number = '';
+    public ?string $badge_number = null;
 
-    public string $license_number = '';
+    public ?string $license_number = null;
 
-    public string $department = '';
+    public ?string $department = null;
 
-    public string $phone = '';
+    public ?string $phone = null;
 
-    public string $extension = '';
+    public ?string $extension = null;
 
-    public string $alternate_email = '';
+    public ?string $alternate_email = null;
 
-    public string $last_login_at = '';
+    public ?string $last_login_at = null;
 
-    public string $last_login_ip = '';
+    public ?string $last_login_ip = null;
 
-    public string $avatar_path = '';
+    public ?string $avatar_path = null;
 
     public string $locale = 'en';
 
@@ -62,11 +63,11 @@ class UserForm extends Form
 
     public bool $is_active = true;
 
-    public string $two_factor_secret = '';
+    public ?string $two_factor_secret = null;
 
-    public string $two_factor_recovery_codes = '';
+    public ?string $two_factor_recovery_codes = null;
 
-    public string $remember_token = '';
+    public ?string $remember_token = null;
 
     public ?string $stripe_id = null;
 
@@ -113,7 +114,7 @@ class UserForm extends Form
     }
 
     /**
-     * @return array<string, bool|int|string>
+     * @return array<string, bool|int|string|null>
      */
     public function payload(): array
     {
@@ -127,7 +128,7 @@ class UserForm extends Form
             'locale' => $this->locale ?? 'en',
             'timezone' => $this->timezone ?? 'America/Chicago',
             'avatar_path' => $this->avatar_path,
-            'permissions' => $this->permissions === '' ? 'user' : $this->permissions,
+            'permissions' => ($this->permissions === null || $this->permissions === '') ? 'user' : $this->permissions,
             'rank_or_title' => $this->rank_or_title,
             'primary_team_id' => $this->primary_team_id,
             'badge_number' => $this->badge_number,
@@ -136,8 +137,8 @@ class UserForm extends Form
             'phone' => $this->phone,
             'extension' => $this->extension,
             'alternate_email' => $this->alternate_email,
-            'last_login_at' => $this->last_login_at === '' ? now() : $this->last_login_at,
-            'last_login_ip' => $this->last_login_ip === '' ? request()->ip() : $this->last_login_ip,
+            'last_login_at' => empty($this->last_login_at) ? now() : $this->last_login_at,
+            'last_login_ip' => empty($this->last_login_ip) ? request()->ip() : $this->last_login_ip,
             'trial_ends_at' => $this->trial_ends_at,
             'pm_type' => $this->pm_type,
             'pm_last_four' => $this->pm_last_four,
