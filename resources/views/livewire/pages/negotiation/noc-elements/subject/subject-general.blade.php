@@ -4,7 +4,9 @@
 	use App\Factories\MessageFactory;
 	use App\Models\Negotiation;
 	use App\Models\Subject;
+	use App\Models\User;
 	use App\Services\ContactPoint\ContactPointFetchingService;
+	use App\Support\EventNames\SubjectEventNames;
 	use Livewire\Volt\Component;
 	use Illuminate\View\View;
 	use TallStackUi\Traits\Interactions;
@@ -27,6 +29,7 @@
 
 		// Modal control
 		public bool $showPhoneIntegrationModal = false;
+		public bool $showEditImagesModal = false;
 
 		public function mount($primarySubject, $negotiation = null)
 		{
@@ -53,20 +56,36 @@
 		}
 
 		/**
-		 * Build rich slide objects instead of plain URLs.
-		 * Each item: [
-		 *   'id' => int|null,
-		 *   'url' => string,
-		 *   'thumb' => string|null,
-		 *   'caption' => string|null,
-		 *   'updated_at' => int|null,      // unix ts
-		 *   'uploader' => ['id' => int|null, 'name' => string|null],
-		 *   'is_primary' => bool,
-		 *   'is_placeholder' => bool,
-		 *   'ver' => int,                  // cache buster
-		 *   'key' => string,               // stable reactive key
-		 * ]
+		 * Format the most recent 5 moods for a compact chart.
+		 * Returns: ['categories' => string[], 'data' => int[]]
 		 */
+		public function formatRecentMoodsForChart():array
+		{
+			$logs = collect($this->recentMoods ?? [])
+				->sortByDesc('created_at')
+				->take(5)
+				->reverse()
+				->values();
+
+			$categories = $logs->map(function ($log) {
+				try {
+					$tz = authUser()->timezone ?? config('app.timezone', 'UTC');
+					return $log->created_at->setTimezone($tz)->format('H:i');
+				} catch (Throwable $e) {
+					return optional($log->created_at)->format('H:i') ?? '';
+				}
+			})->toArray();
+
+			$data = $logs->map(function ($log) {
+				return (int) ($log->mood_level->value ?? 0);
+			})->toArray();
+
+			return [
+				'categories' => $categories,
+				'data' => $data,
+			];
+		}
+
 		public function loadImageUrls():void
 		{
 			$this->imageUrls = [];               // now an array of objects
@@ -231,7 +250,7 @@
 				} elseif ($primaryEmail && isset($primaryEmail->value)) {
 					$this->primaryEmailAddress = $primaryEmail->value;
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				// Silently handle exceptions to prevent page breaking
 			}
 		}
@@ -256,6 +275,11 @@
 				]));
 		}
 
+		public function editSubjectImages()
+		{
+			$this->showEditImagesModal = true;
+		}
+
 		public function getListeners():array
 		{
 			$subjectId = $this->primarySubject?->id;
@@ -265,9 +289,9 @@
 			}
 			return
 				[
-					'echo-private:'.\App\Support\Channels\Subject::subjectMood($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
-					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
-					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.\App\Support\EventNames\SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
+					'echo-private:'.\App\Support\Channels\Subject::subjectMood($subjectId).',.'.SubjectEventNames::MOOD_CREATED => 'handleMoodCreated',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.SubjectEventNames::SUBJECT_UPDATED => 'handleSubjectUpdated',
+					'echo-private:'.\App\Support\Channels\Subject::subject($subjectId).',.'.SubjectEventNames::CONTACT_DELETED => 'handleContactDeleted',
 				];
 		}
 
@@ -284,12 +308,12 @@
 
 		}
 
-		public function handleContactDeleted(array $event)
+		public function handleContactDeleted(array $event):void
 		{
 			logger($event);
 		}
 
-		public function handleMoodCreated($event)
+		public function handleMoodCreated($event):void
 		{
 
 			$this->loadRecentMoods();
@@ -309,7 +333,7 @@
 			$this->toast()->success($message)->send();
 		}
 
-		protected function sendToastToThisUser($newMoodLabel, $newMoodIcon)
+		protected function sendToastToThisUser($newMoodLabel, $newMoodIcon):void
 		{
 
 			$criticalLabels = ['Severely Depressed', 'Suicidal', 'Hypomanic', 'Manic'];
@@ -354,9 +378,9 @@
 		/**
 		 * Get the user instance by ID (with fallback handling).
 		 */
-		protected function getUserById(int $userId):?\App\Models\User
+		protected function getUserById(int $userId):?User
 		{
-			return \App\Models\User::find($userId);
+			return User::find($userId);
 		}
 
 
@@ -406,12 +430,12 @@
 			@mouseenter="isHovering = true"
 			@mouseleave="isHovering = false"
 	>
-		<div class="overflow-hidden rounded-lg w-30 h-30 relative shadow-md">
+		<div class="overflow-hidden rounded-lg w-full h-full relative shadow-md">
 			<template
-					x-for="(s, i) in slides"
-					:key="s.key ?? i">
+					x-for="(slide, idx) in slides"
+					:key="slide.key ?? idx">
 				<div
-						x-show="activeSlide === i"
+						x-show="activeSlide === idx"
 						x-transition:enter="transition ease-out duration-300"
 						x-transition:enter-start="opacity-0 transform scale-90"
 						x-transition:enter-end="opacity-100 transform scale-100"
@@ -422,29 +446,39 @@
 				>
 					<img
 							class="w-full h-full object-cover"
-							:src="(s.src ?? s) /* works if you passed objects OR plain URLs */"
-							:alt="s.caption ?? (`Image ${s.id ?? ''}`)"
+							:src="(slide.src ?? slide)"
+							:alt="slide.caption || ('Image ' + (slide.id ?? ''))"
 					>
 
 					<div
 							class="absolute flex justify-between w-full bottom-1 left-0 px-2"
 							x-show="isHovering">
 						<x-button.circle
-								:disabled="!$hasPhoneNumber"
+								@disabled(!$hasPhoneNumber)
 								wire:click="openPhoneIntegrationModal"
 								sm
 								icon="phone"
 								color="primary" />
 						<x-button.circle
-								:disabled="!$hasEmailAddress"
-								href="{{ $hasEmailAddress ? 'mailto:' . $primaryEmailAddress : '' }}"
+								@disabled(!$hasEmailAddress)
+								@if($hasEmailAddress) href="mailto:{{ $primaryEmailAddress }}"
+								@endif
 								sm
 								icon="envelope"
 								color="secondary" />
 					</div>
 				</div>
 			</template>
-
+			<div
+					x-transition.opacity
+					x-show="isHovering"
+					class="absolute top-0 right-0 transition-opacity duration-200">
+				<x-button
+						wire:click="editSubjectImages"
+						xs
+						text="Edit"
+				/>
+			</div>
 			<!-- Nav -->
 			<button
 					@click="prevSlide"
@@ -473,7 +507,7 @@
 					x-show="slides.length > 1 && isHovering"
 					x-transition.opacity>
 				<template
-						x-for="(_, idx) in slides"
+						x-for="(slide, idx) in slides"
 						:key="idx">
 					<button
 							@click="activeSlide = idx"
@@ -481,7 +515,9 @@
 							class="h-1.5 w-1.5 rounded-full"></button>
 				</template>
 			</div>
+
 		</div>
+
 	</div>
 
 	<div class="space-y-3">
@@ -493,8 +529,7 @@
 			<p class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 px-3 py-1 rounded-md">
 				{{ $primarySubject->subjectAge() }} Year old {{ $primarySubject->gender ?? 'UNK Gender' }}
 			</p>
-			@php
-				$pn = $primaryPhoneNumber ?? '';
+			@php    $pn = $primaryPhoneNumber ?? '';
 				$digits = preg_replace('/\D+/', '', (string) $pn);
 				$formattedPhone = $pn;
 				if (strlen($digits) === 10) {
@@ -524,7 +559,14 @@
 		</div>
 	</div>
 	<div class="space-y-3">
-		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Risk Factors</h3>
+		<div class="flex items-center gap-2">
+			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Risk Factors</h3>
+			<x-button
+					flat
+					icon="pencil-square"
+					sm />
+		</div>
+
 		<div class="space-y-2">
 			@if($primarySubject && is_array($primarySubject->risk_factors))
 				@foreach($primarySubject->risk_factors as $riskFactor)
@@ -539,95 +581,18 @@
 	</div>
 	<div class="space-y-3">
 		<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Moods</h3>
-		<div class="mt-2">
-			@php
-				$width = 260; // px
-				$height = 60; // px
-				$pad = 4; // px
-				$maxPoints = 20;
-				$items = ($recentMoods ?? collect())->sortBy('created_at')->take($maxPoints)->values();
-				$count = $items->count();
-				$points = '';
-				$yFor = function(int $value) use ($height, $pad) {
-					$min = 1; $max = 11; // MoodLevels range
-					$norm = ($value - $min) / max(($max - $min), 1); // 0..1
-					return ($height - $pad) - $norm * ($height - 2 * $pad);
-				};
-				if ($count >= 2) {
-					$xStep = ($width - 2 * $pad) / max(($count - 1), 1);
-					for ($i = 0; $i < $count; $i++) {
-						$log = $items[$i];
-						$x = $pad + $i * $xStep;
-						$y = $yFor($log->mood_level->value);
-						$points .= ($i === 0 ? '' : ' ') . round($x, 2) . ',' . round($y, 2);
-					}
-				}
-			@endphp
-
-			<div class="bg-gray-50 dark:bg-dark-700 rounded-md p-2">
-				@if($count >= 2)
-					<svg
-							viewBox="0 0 {{ $width }} {{ $height }}"
-							width="100%"
-							height="70"
-							preserveAspectRatio="none"
-							aria-label="Mood trend">
-						<!-- Baseline grid lines -->
-						<line
-								x1="0"
-								y1="{{ $yFor(6) }}"
-								x2="{{ $width }}"
-								y2="{{ $yFor(6) }}"
-								stroke="currentColor"
-								class="text-gray-200 dark:text-dark-500"
-								stroke-dasharray="2,3" />
-						<!-- Trend polyline -->
-						<polyline
-								points="{{ $points }}"
-								fill="none"
-								stroke="currentColor"
-								class="text-pink-500 dark:text-pink-400"
-								stroke-width="2"
-								stroke-linejoin="round"
-								stroke-linecap="round" />
-						@for($i = 0; $i < $count; $i++)
-							@php
-								$log = $items[$i];
-								$xStep = ($width - 2 * $pad) / max(($count - 1), 1);
-								$x = $pad + $i * $xStep;
-								$y = $yFor($log->mood_level->value);
-							@endphp
-							<circle
-									cx="{{ $x }}"
-									cy="{{ $y }}"
-									r="2.2"
-									fill="currentColor"
-									class="text-blue-500 dark:text-blue-400">
-								<title>{{ $log->mood_level->label() }}
-									• {{ $log->created_at->format('M d, H:i') }}</title>
-							</circle>
-						@endfor
-					</svg>
-				@else
-					@php
-						// Render a neutral placeholder line when no/insufficient data
-						$neutralY = $yFor(6);
-						$placeholder = $pad . ',' . $neutralY . ' ' . ($width - $pad) . ',' . $neutralY;
-					@endphp
-					<svg
-							viewBox="0 0 {{ $width }} {{ $height }}"
-							width="100%"
-							height="70"
-							preserveAspectRatio="none"
-							aria-label="Mood trend placeholder">
-						<polyline
-								points="{{ $placeholder }}"
-								fill="none"
-								stroke="currentColor"
-								class="text-gray-300 dark:text-dark-500"
-								stroke-width="2" />
-					</svg>
-					<p class="text-xs text-gray-500 dark:text-gray-400">Data Needed</p>
+		<div
+				class="mt-2 w-48">
+			<div
+					class="bg-gray-50 dark:bg-dark-700 rounded-md p-2"
+					x-data="subjectMoodSpark(@js($this->formatRecentMoodsForChart()))"
+					x-init="init()"
+					@theme-changed.window="onThemeChanged($event.detail.theme)"
+					@mood-logs-updated.window="onMoodLogsUpdated($event.detail)"
+			>
+				<div class="spark w-full h-20"></div>
+				@if(($recentMoods ?? collect())->count() === 0)
+					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">No moods recorded</p>
 				@endif
 			</div>
 		</div>
@@ -645,6 +610,138 @@
 					wire:click="viewSubject"
 					icon="eye"
 					text="View" />
+			<x-dropdown.submenu
+					text="Quick Actions"
+					position="left-start">
+				<x-dropdown.items
+						wire:click="editSubjectImages"
+						text="Edit Images"
+						icon="photo" />
+				<x-dropdown.items
+						text="Edit Basic"
+						icon="finger-print" />
+				<x-dropdown.items
+						text="Edit Aliases"
+						icon="identification" />
+				<x-dropdown.items
+						text="Edit Risks"
+						icon="exclamation-circle" />
+			</x-dropdown.submenu>
 		</x-dropdown>
 	</div>
+	<x-slide
+			title="Edit Images"
+			wire="showEditImagesModal">
+		<livewire:forms.subject.edit-subject-images :subjectId="$primarySubject->id" />
+	</x-slide>
 </div>
+
+@push('scripts')
+	<!-- ApexCharts CDN (loaded once by the browser cache across pushes) -->
+	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+	<script>
+		function subjectMoodSpark (initial = { categories: [], data: [] }) {
+			return {
+				chart: null,
+				dark: document.documentElement.classList.contains('dark'),
+				data: initial,
+
+				init () {
+					this.render()
+					window.addEventListener('theme-changed', (e) => this.onThemeChanged(e.detail?.theme))
+				},
+
+				render () {
+					const el = this.$root.querySelector('.spark')
+					if (!el || typeof ApexCharts === 'undefined') { return }
+
+					const categories = (this.data?.categories?.length ? this.data.categories : [''])
+					const seriesData = (this.data?.data?.length ? this.data.data : [0])
+
+					const opts = {
+						chart: {
+							type: 'line',
+							height: 80,
+							sparkline: { enabled: true },
+							animations: { enabled: true }
+						},
+						stroke: { curve: 'smooth', width: 2 },
+						dataLabels: { enabled: false },
+						tooltip: {
+							enabled: true,
+							theme: this.dark ? 'dark' : 'light',
+							style: {
+								fontSize: '12px',
+								fontFamily: 'inherit',
+							},
+							custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+								const isDark = w.config.tooltip.theme === 'dark'
+								const bgColor = isDark ? '#374151' : '#F3F4F6' // Dark: gray-700, Light: gray-100
+								const textColor = isDark ? '#F9FAFB' : '#1F2937' // Dark: gray-50, Light: gray-800
+								const borderColor = isDark ? '#4B5563' : '#D1D5DB' // Dark: gray-600, Light: gray-300
+
+								const value = series[seriesIndex][dataPointIndex]
+								const v = Math.round(value ?? 0)
+								const labels = {
+									1: 'Suicidal',
+									2: 'Severely Depressed',
+									3: 'Depressed',
+									4: 'Sad',
+									5: 'Low',
+									6: 'Neutral',
+									7: 'Slightly Happy',
+									8: 'Happy',
+									9: 'Euphoric',
+									10: 'Hypomanic',
+									11: 'Manic',
+								}
+								const moodLabel = labels[v] ?? String(value)
+
+								return '<div class="custom-tooltip" style="' +
+									'background: ' + bgColor + '; ' +
+									'color: ' + textColor + '; ' +
+									'border: 1px solid ' + borderColor + '; ' +
+									'padding: 6px 8px; ' +
+									'border-radius: 4px; ' +
+									'box-shadow: 0 2px 5px rgba(0,0,0,0.15); ' +
+									'font-size: 12px;">' + moodLabel + '</div>'
+							}
+						},
+						series: [{ name: 'Mood', data: seriesData }],
+						xaxis: { categories },
+						yaxis: { min: 1, max: 11, tickAmount: 2 },
+						colors: [this.dark ? '#60A5FA' : '#2563EB']
+					}
+
+					if (this.chart) {
+						try {
+							this.chart.updateOptions({ xaxis: { categories }, series: [{ data: seriesData }] })
+							return
+						} catch (e) {
+							try { this.chart.destroy() } catch {}
+							this.chart = null
+						}
+					}
+
+					this.chart = new ApexCharts(el, opts)
+					this.chart.render()
+				},
+
+				onThemeChanged (theme) {
+					this.dark = theme === 'dark' || document.documentElement.classList.contains('dark')
+					if (this.chart) {
+						try { this.chart.updateOptions({ tooltip: { theme: this.dark ? 'dark' : 'light' } }) } catch {}
+					}
+				},
+
+				onMoodLogsUpdated (payload) {
+					if (!payload || !Array.isArray(payload.data) || !Array.isArray(payload.categories)) { return }
+					const last5 = payload.data.slice(-5)
+					const last5Cats = payload.categories.slice(-5)
+					this.data = { categories: last5Cats, data: last5 }
+					this.render()
+				}
+			}
+		}
+	</script>
+@endpush

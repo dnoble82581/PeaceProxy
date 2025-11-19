@@ -14,10 +14,11 @@
 	use Livewire\WithFileUploads;
 	use Illuminate\Support\Facades\Storage;
 	use Illuminate\Support\Facades\Log;
+	use TallStackUi\Traits\Interactions;
 
- new #[Layout('components.layouts.negotiation')] class extends Component {
+	new #[Layout('components.layouts.negotiation')] class extends Component {
 		use WithFileUploads;
-		use \TallStackUi\Traits\Interactions;
+		use Interactions;
 
 		public Subject $subject;
 		public ?Negotiation $negotiation = null;
@@ -162,8 +163,9 @@
 						$imageService = app(ImageService::class);
 						$imageService->setPrimaryImage($existingImage);
 
+						$this->subject->load('images');
 						// Show a notification
-						session()->flash('message', 'Primary image updated successfully.');
+						$this->toast()->info('Primary image updated successfully.')->send();
 					}
 				}
 			}
@@ -405,7 +407,7 @@
 						label="Date of Birth"
 						wire:model="createSubjectForm.date_of_birth"
 						placeholder="Enter date of birth" />
-				
+
 				<x-select.styled
 						label="Gender"
 						wire:model="createSubjectForm.gender"
@@ -683,8 +685,8 @@
 											@endphp
 
 											@if($isPrimary)
-												<div class="absolute top-2 left-2 bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
-													Primary
+												<div class="absolute top-2 left-2">
+													<x-badge>Primary</x-badge>
 												</div>
 											@endif
 										</div>
