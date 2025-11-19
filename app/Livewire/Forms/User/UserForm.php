@@ -32,7 +32,7 @@ class UserForm extends Form
 
     public string $permissions = '';
 
-    public string $rank_or_title = '';
+    public ?string $rank_or_title = null;
 
     public ?int $primary_team_id = null;
 
@@ -91,7 +91,7 @@ class UserForm extends Form
      */
     public function rules(): array
     {
-        $tenantId = $this->tenantId ?? (tenant()?->id ?? 0);
+        $tenantId = $this->tenantId ?? (tenant()->id ?? 0);
 
         return UserRules::forForm($this->user, $tenantId);
     }
@@ -154,7 +154,7 @@ class UserForm extends Form
 
         $data = $this->payload();
 
-        // If password is empty/null, keep existing (omit from update payload). If provided, hash the new password.
+        // If the password is empty/null, keep existing (omit from update payload). If provided, hash the new password.
         if (empty($data['password'])) {
             unset($data['password']);
         } else {

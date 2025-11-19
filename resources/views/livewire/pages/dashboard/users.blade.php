@@ -5,11 +5,12 @@
 	use Livewire\Attributes\Computed;
 	use Livewire\Attributes\Layout;
 	use Livewire\Attributes\On;
+	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
 	use Livewire\WithPagination;
 	use TallStackUi\Traits\Interactions;
 
- new #[Layout('components.layouts.app'), \Livewire\Attributes\Title('Users - Peace Proxy')] class extends Component {
+	new #[Layout('components.layouts.app'), Title('Users - Peace Proxy')] class extends Component {
 		use WithPagination;
 		use Interactions;
 
@@ -98,7 +99,7 @@
 					$this->toast()
 						->success(__('Done!'), __('User deleted successfully.'))
 						->send();
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					$this->toast()
 						->error(__('Error!'), __('Failed to delete user. Please try again.'))
 						->send();
@@ -141,9 +142,9 @@
 			{{ $row->primaryTeam?->name ?? 'None' }}
 			@endinteract
 
-				@interact('column_created_at', $row)
-				{{ $row->created_at?->diffForHumans() ?? '' }}
-				@endinteract
+			@interact('column_created_at', $row)
+			{{ $row->created_at?->diffForHumans() ?? '' }}
+			@endinteract
 
 			@interact('column_action', $row)
 			<div class="flex gap-2">

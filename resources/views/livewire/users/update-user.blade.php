@@ -1,14 +1,16 @@
 <?php
 
+	use App\Livewire\Forms\User\UserForm;
 	use App\Models\User;
 	use Illuminate\Validation\Rule;
 	use Livewire\Attributes\On;
+	use Livewire\Volt\Component;
 	use TallStackUi\Traits\Interactions;
 
-	new class extends \Livewire\Volt\Component {
+	new class extends Component {
 		use Interactions;
 
-		public \App\Livewire\Forms\User\UserForm $form;
+		public UserForm $form;
 		public bool $showUpdateModal = false;
 		public User $user;
 
