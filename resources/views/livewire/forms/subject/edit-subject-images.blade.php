@@ -1,9 +1,12 @@
 <?php
 
+	use App\Models\Image;
 	use App\Models\Subject;
+	use App\Services\Image\ImageService;
 	use App\Services\Subject\SubjectFetchingService;
 	use Illuminate\Http\UploadedFile;
 	use Illuminate\Support\Arr;
+	use Illuminate\Validation\ValidationException;
 	use Livewire\Volt\Component;
 	use Livewire\WithFileUploads;
 
@@ -43,14 +46,70 @@
 			);
 		}
 
-		public function deleteUpload(int $index):void
+		public function deleteUpload(array $content):void
 		{
-			if (!array_key_exists($index, $this->newImages)) {
+			if (!$this->newImages) {
 				return;
 			}
 
-			unset($this->newImages[$index]);
-			$this->newImages = array_values($this->newImages);
+			$files = Arr::wrap($this->newImages);
+
+			$file = collect($files)->filter(fn(UploadedFile $item
+			) => $item->getFilename() === $content['temporary_name'])->first();
+
+			rescue(fn() => $file->delete(), report: false);
+			$collect = collect($files)->filter(fn(UploadedFile $item
+			) => $item->getFilename() !== $content['temporary_name']);
+
+			$this->newImages = is_array($this->newImages)? $collect->toArray() : $collect->first();
+
+		}
+
+		public function saveNewImages():void
+		{
+			if (empty($this->newImages)) {
+				return;
+			}
+
+			$this->validate([
+				'newImages' => ['array', 'max:20'],
+				'newImages.*' => ['image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+			]);
+
+			$service = app(ImageService::class);
+			$service->uploadImagesForModel(
+				$this->newImages,
+				$this->subject,
+				'subjects',
+				's3_public'
+			);
+
+			$this->subject->load('images');
+			$this->reset(['newImages', 'backup']);
+		}
+
+		public function deleteExistingImage(int $imageId):void
+		{
+			/** @var Image|null $image */
+			$image = $this->subject->images->firstWhere('id', $imageId);
+			if (!$image) {
+				return;
+			}
+
+			app(ImageService::class)->deleteImage($image);
+			$this->subject->load('images');
+		}
+
+		public function setPrimaryImage(int $imageId):void
+		{
+			/** @var Image|null $image */
+			$image = $this->subject->images->firstWhere('id', $imageId);
+			if (!$image) {
+				return;
+			}
+
+			app(ImageService::class)->setPrimaryImage($image);
+			$this->subject->load('images');
 		}
 	}
 
@@ -65,53 +124,46 @@
 						class="relative"
 						wire:key="existing-image-{{ $image->id }}">
 					<img
-							class="w-full h-full object-cover rounded-lg"
+							class="w-full h-auto object-cover rounded-lg"
 							src="{{ $image->url }}"
 							alt="{{ $image->alt_text ?? 'Subject Image' }}">
+					<div class="absolute top-1 left-1">
+						@if($image->is_primary)
+							<span class="px-2 py-0.5 text-xs rounded bg-green-600/80 text-white">Primary</span>
+						@endif
+					</div>
 					<div class="absolute top-1 right-1 flex gap-1">
 						@if(!$image->is_primary)
 							<x-button.circle
+									type="button"
 									icon="sparkles"
-									sm />
+									sm
+									wire:click="setPrimaryImage({{ $image->id }})" />
 						@endif
-						<x-button.circle
-								color="red"
-								icon="x-mark"
-								sm />
-					</div>
-				</div>
-			@endforeach
-		</div>
-	@endif
-
-	@if($newImages)
-		<h3 class="mt-4">New Images</h3>
-		<div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-2">
-			@foreach ($newImages as $image)
-				<div
-						class="relative"
-						wire:key="new-image-{{ $loop->index }}">
-					<img
-							class="w-full h-full object-cover rounded-lg"
-							src="{{ $image->temporaryUrl() }}"
-							alt="New Subject Image">
-					<div class="absolute top-1 right-1">
 						<x-button.circle
 								type="button"
 								color="red"
 								icon="x-mark"
 								sm
-								wire:click="deleteUpload({{ $loop->index }})"
-						/>
+								wire:click="deleteExistingImage({{ $image->id }})" />
 					</div>
 				</div>
 			@endforeach
 		</div>
 	@endif
+	
 	<div>
 		<x-upload
+				delete
 				multiple
 				label="Upload Images"
 				wire:model="newImages" />
+
+		@if($newImages)
+			<div class="mt-4 flex justify-end">
+				<x-button wire:click="saveNewImages()">Save</x-button>
+			</div>
+		@endif
+
 	</div>
 </div>

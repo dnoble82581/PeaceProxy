@@ -18,6 +18,8 @@ class NegotiationDTO
         public ?array $tags = null,
         public ?Carbon $started_at = null,
         public ?Carbon $ended_at = null,
+        public ?float $latitude = null,
+        public ?float $longitude = null,
         public ?Carbon $created_at = null,
         public ?Carbon $updated_at = null,
     ) {
@@ -35,6 +37,8 @@ class NegotiationDTO
             $data['tags'] ?? null,
             isset($data['started_at']) ? Carbon::parse($data['started_at']) : null,
             isset($data['ended_at']) ? Carbon::parse($data['ended_at']) : null,
+            isset($data['latitude']) ? (float) $data['latitude'] : null,
+            isset($data['longitude']) ? (float) $data['longitude'] : null,
             isset($data['created_at']) ? Carbon::parse($data['created_at']) : null,
             isset($data['updated_at']) ? Carbon::parse($data['updated_at']) : null,
         );
@@ -52,6 +56,8 @@ class NegotiationDTO
             'tags' => $this->tags,
             'started_at' => $this->started_at,
             'ended_at' => $this->ended_at,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

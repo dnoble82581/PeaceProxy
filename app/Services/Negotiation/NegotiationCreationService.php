@@ -5,19 +5,40 @@ namespace App\Services\Negotiation;
 use App\Contracts\NegotiationRepositoryInterface;
 use App\DTOs\Assessment\AssessmentDTO;
 use App\Models\AssessmentTemplate;
+use App\Models\AssessmentTemplateQuestion;
 use App\Models\Negotiation as NegotiationModel;
 use App\Models\Subject;
 use App\Services\Assessment\AssessmentCreationService;
+use App\Services\Map\GeocodeService;
 use Carbon\Carbon;
 
 class NegotiationCreationService
 {
-    public function __construct(protected NegotiationRepositoryInterface $negotiationRepository)
-    {
+    public function __construct(
+        protected NegotiationRepositoryInterface $negotiationRepository,
+        protected GeocodeService $geocodeService,
+    ) {
     }
 
     public function createNegotiation($data)
     {
+        // Attempt to geocode from provided address fields
+        $addressParts = array_filter([
+            $data['location_address'] ?? null,
+            $data['location_city'] ?? null,
+            $data['location_state'] ?? null,
+            $data['location_zip'] ?? null,
+        ], fn ($v) => filled($v));
+
+        if (! empty($addressParts)) {
+            $fullAddress = implode(', ', $addressParts);
+            $coords = $this->geocodeService->geocode($fullAddress);
+            if ($coords) {
+                $data['latitude'] = $coords['lat'];
+                $data['longitude'] = $coords['lng'];
+            }
+        }
+
         /** @var NegotiationModel $negotiation */
         $negotiation = $this->negotiationRepository->createNegotiation($data);
 
@@ -33,7 +54,7 @@ class NegotiationCreationService
      */
     protected function ensureDefaultFbiAssessmentForNegotiation(NegotiationModel $negotiation): void
     {
-        $tenantId = tenant()->id;
+        $tenantId = (int) $negotiation->tenant_id;
 
         // 1) Ensure template exists (idempotent)
         $template = AssessmentTemplate::firstOrCreate(
@@ -61,7 +82,7 @@ class NegotiationCreationService
         ];
 
         foreach ($questions as $index => $text) {
-            \App\Models\AssessmentTemplateQuestion::firstOrCreate(
+            AssessmentTemplateQuestion::firstOrCreate(
                 [
                     'assessment_template_id' => $template->id,
                     'question' => $text,

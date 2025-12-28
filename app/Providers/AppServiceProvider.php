@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Negotiation;
 use App\Models\Tenant;
 use App\Models\Weapon;
+use App\Observers\Negotiation\NegotiationObserver;
 use App\Observers\Weapon\WeaponObserver;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -25,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
         Cashier::useCustomerModel(Tenant::class);   // <-- critical
 
         Weapon::observe(WeaponObserver::class);
+        Negotiation::observe(NegotiationObserver::class);
     }
 }

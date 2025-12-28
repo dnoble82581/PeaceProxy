@@ -84,7 +84,7 @@
 			class="mt-4 space-y-2"
 			x-show="tab === 'maps'">
 		<div class="p-4 text-gray-600 dark:text-dark-200">
-			<livewire:pages.tactical.board.maps />
+			<livewire:pages.tactical.board.maps :negotiation-id="$negotiationId" />
 		</div>
 	</div>
 

@@ -13,7 +13,7 @@
 	use Livewire\Attributes\Validate;
 	use Livewire\Volt\Component;
 
- new #[Layout('components.layouts.app'), Title('Negotiations - Peace Proxy')] class extends Component {
+	new #[Layout('components.layouts.app'), Title('Negotiations - Peace Proxy')] class extends Component {
 		public Collection $negotiations;
 		public bool $roleModal = false;
 		public bool $editModal = false;
@@ -370,14 +370,15 @@
 
 																</x-modal>
 															</template>
-															<!-- Edit Negotiation Slide -->
-															<x-slide
-																	size="4xl"
-																	persistent
-																	position="right"
-																	wire="editModal"
-																	title="Edit Negotiation">
-																<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20 px-8">
+       								<!-- Edit Negotiation Slide -->
+       								<template x-teleport="body">
+       									<x-slide
+       											size="4xl"
+       											persistent
+       											position="right"
+       											wire="editModal"
+       											title="Edit Negotiation">
+       										<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20 px-8">
 																	<!-- Basic Information -->
 																	<div class="mb-6">
 																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
@@ -515,9 +516,11 @@
 																		</div>
 																	</div>
 
-																	<!-- Action Buttons -->
+       										<!-- Action Buttons -->
 
-																	<x-slot:footer end>
+       										</div>
+
+       										<x-slot:footer end>
 																		<div class="space-x-2 bg-dark-200 dark:bg-dark-800 w-full p-4">
 																			<x-button
 																					wire:click="$toggle('editModal')"
@@ -530,29 +533,32 @@
 																				Save Changes
 																			</x-button>
 																		</div>
-																	</x-slot:footer>
-															</x-slide>
+       										</x-slot:footer>
+									</x-slide>
+								</template>
 
-															<!-- Delete Confirmation Modal -->
-															<x-modal
-																	persistent
-																	center
-																	wire="deleteModal"
-																	title="Delete Negotiation">
-																<p>Are you sure you want to delete this negotiation?
-																   This action cannot be undone.</p>
-																<div class="mt-4 space-x-2">
-																	<x-button
-																			wire:click="deleteNegotiation"
-																			color="rose">
-																		Delete
-																	</x-button>
-																	<x-button
-																			wire:click="$toggle('deleteModal')"
-																			color="zinc">Cancel
-																	</x-button>
-																</div>
-															</x-modal>
+																<!-- Delete Confirmation Modal -->
+																<template x-teleport="body">
+																	<x-modal
+																		persistent
+																		center
+																		wire="deleteModal"
+																		title="Delete Negotiation">
+																		<p>Are you sure you want to delete this negotiation?
+																		   This action cannot be undone.</p>
+																		<div class="mt-4 space-x-2">
+																			<x-button
+																				wire:click="deleteNegotiation"
+																				color="rose">
+																				Delete
+																			</x-button>
+																			<x-button
+																				wire:click="$toggle('deleteModal')"
+																				color="zinc">Cancel
+																			</x-button>
+																		</div>
+																	</x-modal>
+																</template>
 														</td>
 													</tr>
 												@endforeach

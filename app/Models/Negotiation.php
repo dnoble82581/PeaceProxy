@@ -26,6 +26,8 @@ class Negotiation extends Model
         'status' => NegotiationStatuses::class,
         'type' => NegotiationTypes::class,
         'tags' => 'array',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     /**
@@ -115,5 +117,10 @@ class Negotiation extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(Resource::class);
     }
 }

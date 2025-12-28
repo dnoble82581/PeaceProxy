@@ -4,6 +4,7 @@ namespace App\Services\Image;
 
 use App\Events\Subject\SubjectUpdatedEvent;
 use App\Models\Image;
+use App\Models\Subject;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +27,11 @@ class ImageService
             }
 
             // Delete the record from the database
-            return $image->delete();
+            $deleted = $image->delete();
+            if ($image->imageable_type == 'App\Models\Subject') {
+                event(new SubjectUpdatedEvent($image->imageable_id));
+            }
+            return $deleted;
         } catch (Exception $e) {
             Log::error('Failed to delete image: '.$e->getMessage());
             return false;
@@ -52,7 +57,11 @@ class ImageService
                 ->update(['is_primary' => false]);
 
             // Set this image as primary
-            return $image->update(['is_primary' => true]);
+            $updated = $image->update(['is_primary' => true]);
+            if ($image->imageable_type == 'App\Models\Subject') {
+                event(new SubjectUpdatedEvent($image->imageable_id));
+            }
+            return $updated;
         } catch (Exception $e) {
             Log::error('Failed to set primary image: '.$e->getMessage());
 
@@ -103,7 +112,7 @@ class ImageService
         }
         //		ToDo: Add more checks for other models
 
-        if ($model instanceof \App\Models\Subject) {
+        if ($model instanceof Subject) {
             event(new SubjectUpdatedEvent($model->id));
         }
 

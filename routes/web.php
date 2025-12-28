@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DonationController;
+use App\Http\Controllers\ResourcePositionController;
 use App\Http\Middleware\IdentifyTenantMiddleware;
 use App\Http\Middleware\RedirectToNocMiddleware;
 use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
@@ -16,9 +18,9 @@ Route::middleware([
     Volt::route('/about', 'pages.about.about-us')->name('about');
 
     // Donations
-    Route::post('/donate/checkout', [\App\Http\Controllers\DonationController::class, 'checkout'])->name('donations.checkout');
-    Route::get('/donate/success', [\App\Http\Controllers\DonationController::class, 'success'])->name('donations.success');
-    Route::get('/donate/cancel', [\App\Http\Controllers\DonationController::class, 'cancel'])->name('donations.cancel');
+    Route::post('/donate/checkout', [DonationController::class, 'checkout'])->name('donations.checkout');
+    Route::get('/donate/success', [DonationController::class, 'success'])->name('donations.success');
+    Route::get('/donate/cancel', [DonationController::class, 'cancel'])->name('donations.cancel');
 });
 
 // TENANT AWARE ROUTES
@@ -99,6 +101,10 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
         Volt::route('/{negotiation:title}/tactical-noc', 'pages.tactical.tactical-noc')->name('negotiation.tactical-noc');
         Volt::route('/{negotiation:title}/tactical-noc/create-delivery-plan', 'forms.create-delivery-plan')->name('negotiation.create-delivery-plan');
     });
+
+    Route::middleware(['auth'])
+        ->patch('/resources/{resource}/position', [ResourcePositionController::class, 'update'])
+        ->name('resources.position.update');
 
 });
 

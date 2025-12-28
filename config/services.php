@@ -9,6 +9,8 @@ return [
 
     'maps' => [
         'js_key' => env('GOOGLE_MAPS_API_KEY'),
+        'backend_key' => env('GOOGLE_MAPS_BACKEND_KEY'),
+        'map_id' => env('GOOGLE_MAPS_MAP_ID'), // optional: required for vector maps & Advanced Markers
     ],
 
     'iowa_sor' => [

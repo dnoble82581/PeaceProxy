@@ -15,6 +15,7 @@
 	use App\Models\Subject;
 	use App\Services\ContactPoint\ContactPointCreationService;
 	use App\Services\MoodLog\MoodLogCreationService;
+	use App\Services\Negotiation\NegotiationCreationService;
 	use App\Services\NegotiationSubject\NegotiationSubjectCreationService;
 	use App\Services\NegotiationUser\NegotiationUserCreationService;
 	use App\Services\Subject\SubjectCreationService;
@@ -143,7 +144,7 @@
 		{
 			$validated = $this->negotiationForm->validate();
 
-			$newNegotiation = Negotiation::create($validated);
+			$newNegotiation = app(NegotiationCreationService::class)->createNegotiation($validated);
 
 			$newSubject = $this->createSubject();
 
