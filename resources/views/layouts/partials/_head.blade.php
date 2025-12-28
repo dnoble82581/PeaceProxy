@@ -41,7 +41,12 @@
 		rel="icon"
 		href="{{ asset('assets/favicon.png') }}"
 		type="image/png">
-
+@if(Route::is('negotiation.tactical-noc'))
+	<script
+			async
+			src="https://maps.googleapis.com/maps/api/js?key={{config('services.maps.js_key')}}&callback=console.debug&libraries=maps,marker&v=beta&loading=async">
+	</script>
+@endif
 {{-- Styles --}}
 @vite(['resources/js/app.js', 'resources/css/app.css'])
 @livewireStyles
