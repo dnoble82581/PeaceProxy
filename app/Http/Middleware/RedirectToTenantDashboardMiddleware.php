@@ -10,7 +10,8 @@ class RedirectToTenantDashboardMiddleware
 {
     public function handle(Request $request, Closure $next, ...$guards)
     {
-        if ($request->is('horizon*')) {
+        // Allow system and tooling routes to pass through untouched
+        if ($request->is('horizon*') || $request->is('_boost/*')) {
             return $next($request);
         }
 

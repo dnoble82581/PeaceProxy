@@ -129,6 +129,56 @@
 				let map = null
 				let marker = null
 				let AdvancedMarkerElement = null
+				let geocoder = null
+
+				function setCenterAndMarker (pos) {
+					if (!pos || typeof pos.lat !== 'number' || typeof pos.lng !== 'number') { return }
+					if (map) { map.setCenter(pos) }
+					try {
+						if (marker && typeof marker.setMap === 'function') {
+							marker.setMap(null)
+						}
+					} catch (_) {}
+					// Prefer AdvancedMarkerElement to avoid deprecation notice; fall back safely
+					try {
+						if (AdvancedMarkerElement) {
+							marker = new AdvancedMarkerElement({ map, position: pos })
+						} else {
+							marker = new google.maps.Marker({ map, position: pos })
+						}
+					} catch (err) {
+						console.warn('Advanced marker failed, falling back to classic Marker.', err)
+						marker = new google.maps.Marker({ map, position: pos })
+					}
+				}
+
+				async function performGeocode (query) {
+					const value = (query ?? '').trim()
+					if (!value) { return }
+					if (!geocoder) { geocoder = new google.maps.Geocoder() }
+					try {
+						const { results } = await geocoder.geocode({
+							address: value,
+							componentRestrictions: { country: 'US' }
+						})
+						if (!Array.isArray(results) || results.length === 0) { return }
+						const loc = results[0].geometry?.location
+						if (!loc) { return }
+						const pos = { lat: loc.lat(), lng: loc.lng() }
+						setCenterAndMarker(pos)
+						// Keep Livewire state in sync so backend-rendered bits remain accurate
+						if (typeof window.$wire !== 'undefined') {
+							try {
+								$wire.set('search', value)
+								$wire.set('lat', pos.lat)
+								$wire.set('lng', pos.lng)
+							} catch (_) {}
+							try { $wire.dispatch('map-center-updated', { lat: pos.lat, lng: pos.lng }) } catch (_) {}
+						}
+					} catch (e) {
+						console.error('Client geocoding failed:', e)
+					}
+				}
 
 				const init = async () => {
 					try {
@@ -136,7 +186,7 @@
 						try {
 							({ AdvancedMarkerElement } = await google.maps.importLibrary('marker'))
 						} catch (err) {
-							console.warn('AdvancedMarkerElement not available, falling back to standard Marker.', err)
+							console.warn('AdvancedMarkerElement not available; will fall back to standard Marker.', err)
 						}
 
 						const center = { lat: @json($lat ?? 0), lng: @json($lng ?? 0) }
@@ -149,19 +199,34 @@
 							zoom: 14,
 							mapId: configuredMapId || undefined,
 						})
+						setCenterAndMarker(center)
 
-						if (AdvancedMarkerElement && configuredMapId) {
-							marker = new AdvancedMarkerElement({ map, position: center })
-						} else {
-							marker = new google.maps.Marker({ map, position: center })
+						// Intercept Livewire events and DOM events to do client-side geocoding in production
+						const input = document.getElementById('text-input')
+						const button = document.getElementById('text-input-button')
+						if (input) {
+							// Capture phase to beat Livewire's keydown handler
+							input.addEventListener('keydown', (e) => {
+								if (e.key === 'Enter') {
+									e.preventDefault()
+									e.stopImmediatePropagation()
+									performGeocode(input.value)
+								}
+							}, true)
+						}
+						if (button) {
+							button.addEventListener('click', (e) => {
+								e.preventDefault()
+								e.stopImmediatePropagation()
+								performGeocode(input ? input.value : '')
+							})
 						}
 
 						window.addEventListener('map-center-updated', (event) => {
 							const { lat, lng } = event.detail || {}
 							if (lat == null || lng == null) { return }
 							const pos = { lat: parseFloat(lat), lng: parseFloat(lng) }
-							if (map) { map.setCenter(pos) }
-							if (marker) { marker.setPosition(pos) }
+							setCenterAndMarker(pos)
 						})
 					} catch (e) {
 						console.error('Failed to initialize Google Map:', e)
