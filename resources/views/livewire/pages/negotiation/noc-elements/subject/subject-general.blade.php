@@ -561,10 +561,6 @@
 	<div class="space-y-3">
 		<div class="flex items-center gap-2">
 			<h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide">Risk Factors</h3>
-			<x-button
-					flat
-					icon="pencil-square"
-					sm />
 		</div>
 
 		<div class="space-y-2">
