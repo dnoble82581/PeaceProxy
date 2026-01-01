@@ -30,6 +30,9 @@
 		// Modal control
 		public bool $showPhoneIntegrationModal = false;
 		public bool $showEditImagesModal = false;
+		public bool $showEditBasicModal = false;
+		public bool $showEditAliasesModal = false;
+		public bool $showEditRisksModal = false;
 
 		public function mount($primarySubject, $negotiation = null)
 		{
@@ -278,6 +281,21 @@
 		public function editSubjectImages()
 		{
 			$this->showEditImagesModal = true;
+		}
+
+		public function editSubjectBasic(): void
+		{
+			$this->showEditBasicModal = true;
+		}
+
+		public function editSubjectAliases(): void
+		{
+			$this->showEditAliasesModal = true;
+		}
+
+		public function editSubjectRisks(): void
+		{
+			$this->showEditRisksModal = true;
 		}
 
 		public function getListeners():array
@@ -614,12 +632,15 @@
 						text="Edit Images"
 						icon="photo" />
 				<x-dropdown.items
+						wire:click="editSubjectBasic"
 						text="Edit Basic"
 						icon="finger-print" />
 				<x-dropdown.items
+						wire:click="editSubjectAliases"
 						text="Edit Aliases"
 						icon="identification" />
 				<x-dropdown.items
+						wire:click="editSubjectRisks"
 						text="Edit Risks"
 						icon="exclamation-circle" />
 			</x-dropdown.submenu>
@@ -629,6 +650,21 @@
 			title="Edit Images"
 			wire="showEditImagesModal">
 		<livewire:forms.subject.edit-subject-images :subjectId="$primarySubject->id" />
+	</x-slide>
+	<x-slide
+			title="Edit Basic Info"
+			wire="showEditBasicModal">
+		<livewire:forms.subject.edit-subject-basic :subjectId="$primarySubject->id" />
+	</x-slide>
+	<x-slide
+			title="Edit Aliases"
+			wire="showEditAliasesModal">
+		<livewire:forms.subject.edit-subject-aliases :subjectId="$primarySubject->id" />
+	</x-slide>
+	<x-slide
+			title="Edit Risks"
+			wire="showEditRisksModal">
+		<livewire:forms.subject.edit-subject-risks :subjectId="$primarySubject->id" />
 	</x-slide>
 </div>
 

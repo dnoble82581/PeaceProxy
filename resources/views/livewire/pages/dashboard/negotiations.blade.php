@@ -306,21 +306,33 @@
 															{{ $negotiation->creator ? $negotiation->creator->name : 'Unknown' }}
 														</td>
 														<td class="relative py-4 pr-4 pl-3 text-right text-xs font-medium whitespace-nowrap sm:pr-0">
-															<x-button
-																	wire:click="openEditModal({{ $negotiation->id }})"
-																	color="sky"
-																	flat
-																	icon="pencil-square" />
-															<x-button
-																	wire:click="openDeleteModal({{ $negotiation->id }})"
-																	color="rose"
-																	flat
-																	icon="x-mark" />
-															<x-button
-																	wire:click="openRoleModal({{ $negotiation->id }})"
-																	color="teal"
-																	flat
-																	icon="arrow-left-end-on-rectangle" />
+
+
+															@if($negotiation->status->value === "resolved")
+																<div class="text-center">
+																	<x-tooltip
+																			color="pink"
+																			text="This negotiation has been resolved. No action may be performed on it." />
+																</div>
+
+															@else
+																<x-button
+																		wire:click="openEditModal({{ $negotiation->id }})"
+																		color="sky"
+																		flat
+																		icon="pencil-square" />
+																<x-button
+																		wire:click="openDeleteModal({{ $negotiation->id }})"
+																		color="rose"
+																		flat
+																		icon="x-mark" />
+																<x-button
+																		wire:click="openRoleModal({{ $negotiation->id }})"
+																		color="teal"
+																		flat
+																		icon="arrow-left-end-on-rectangle" />
+															@endif
+
 															<template x-teleport="body">
 																<x-modal
 																		persistent
@@ -370,157 +382,157 @@
 
 																</x-modal>
 															</template>
-       								<!-- Edit Negotiation Slide -->
-       								<template x-teleport="body">
-       									<x-slide
-       											size="4xl"
-       											persistent
-       											position="right"
-       											wire="editModal"
-       											title="Edit Negotiation">
-       										<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20 px-8">
-																	<!-- Basic Information -->
-																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
-																			Basic Information</h2>
-																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
-																			Edit the
-																			basic
-																			details
-																			about this
-																			negotiation</p>
+															<!-- Edit Negotiation Slide -->
+															<template x-teleport="body">
+																<x-slide
+																		size="4xl"
+																		persistent
+																		position="right"
+																		wire="editModal"
+																		title="Edit Negotiation">
+																	<div class="mt-4 space-y-6 overflow-y-auto h-full pb-20 px-8">
+																		<!-- Basic Information -->
+																		<div class="mb-6">
+																			<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																				Basic Information</h2>
+																			<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																				Edit the
+																				basic
+																				details
+																				about this
+																				negotiation</p>
 
-																		<div class="grid grid-cols-1 gap-4">
-																			<div>
-																				<x-input
-																						icon="user"
-																						label="Title *"
-																						wire:model="title"
-																						placeholder="Enter negotiation title"
-																						required />
-																			</div>
-																			<div>
-																				<x-select.styled
-																						class="w-full"
-																						icon="flag"
-																						label="Status *"
-																						wire:model="status"
-																						placeholder="Enter status"
-																						:options="collect(App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
+																			<div class="grid grid-cols-1 gap-4">
+																				<div>
+																					<x-input
+																							icon="user"
+																							label="Title *"
+																							wire:model="title"
+																							placeholder="Enter negotiation title"
+																							required />
+																				</div>
+																				<div>
+																					<x-select.styled
+																							class="w-full"
+																							icon="flag"
+																							label="Status *"
+																							wire:model="status"
+																							placeholder="Enter status"
+																							:options="collect(App\Enums\Negotiation\NegotiationStatuses::cases())->map(fn($status) => [
 																						'label' => $status->label(),
 																						'value' => $status->value,
 																						])->toArray()"
-																						required />
-																			</div>
-																			<div>
-																				<x-select.styled
-																						class="w-full"
-																						icon="shield-exclamation"
-																						label="Type *"
-																						wire:model="type"
-																						placeholder="Enter type"
-																						:options="collect(App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
+																							required />
+																				</div>
+																				<div>
+																					<x-select.styled
+																							class="w-full"
+																							icon="shield-exclamation"
+																							label="Type *"
+																							wire:model="type"
+																							placeholder="Enter type"
+																							:options="collect(App\Enums\Negotiation\NegotiationTypes::cases())->map(fn($type) => [
 																						'label' => $type->label(),
 																						'value' => $type->value,
 																						])->toArray()"
-																						required />
+																							required />
+																				</div>
 																			</div>
 																		</div>
-																	</div>
 
-																	<!-- Summary and Details -->
-																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
-																			Summary and Details</h2>
-																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
-																			Provide
-																			additional
-																			information
-																			about the
-																			negotiation</p>
+																		<!-- Summary and Details -->
+																		<div class="mb-6">
+																			<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																				Summary and Details</h2>
+																			<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																				Provide
+																				additional
+																				information
+																				about the
+																				negotiation</p>
 
-																		<div class="grid grid-cols-1 gap-4">
-																			<x-textarea
-																					label="Summary"
-																					wire:model="summary"
-																					placeholder="Enter a brief summary of the negotiation"
-																					rows="3" />
+																			<div class="grid grid-cols-1 gap-4">
+																				<x-textarea
+																						label="Summary"
+																						wire:model="summary"
+																						placeholder="Enter a brief summary of the negotiation"
+																						rows="3" />
 
-																			<x-textarea
-																					label="Initial Complaint"
-																					wire:model="initial_complaint"
-																					placeholder="Describe the initial complaint or situation"
-																					rows="3" />
+																				<x-textarea
+																						label="Initial Complaint"
+																						wire:model="initial_complaint"
+																						placeholder="Describe the initial complaint or situation"
+																						rows="3" />
 
-																			<x-textarea
-																					label="Negotiation Strategy"
-																					wire:model="negotiation_strategy"
-																					placeholder="Outline the strategy for this negotiation"
-																					rows="3" />
-																		</div>
-																	</div>
-
-																	<!-- Location Information -->
-																	<div class="mb-6">
-																		<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
-																			Location Information</h2>
-																		<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
-																			Enter
-																			details
-																			about
-																			where the
-																			negotiation
-																			took
-																			place</p>
-
-																		<div class="grid grid-cols-1 gap-4">
-																			<x-input
-																					icon="map-pin"
-																					label="Location Name"
-																					wire:model="location"
-																					placeholder="Enter location name" />
-
-																			<x-input
-																					icon="home"
-																					label="Address"
-																					wire:model="location_address"
-																					placeholder="Enter street address" />
-
-																			<div class="grid grid-cols-2 gap-4">
-																				<x-input
-																						icon="building-office"
-																						label="City"
-																						wire:model="location_city"
-																						placeholder="Enter city" />
-
-																				<x-input
-																						icon="map"
-																						label="State"
-																						wire:model="location_state"
-																						placeholder="Enter state" />
+																				<x-textarea
+																						label="Negotiation Strategy"
+																						wire:model="negotiation_strategy"
+																						placeholder="Outline the strategy for this negotiation"
+																						rows="3" />
 																			</div>
-
-																			<x-input
-																					icon="hashtag"
-																					label="ZIP Code"
-																					wire:model="location_zip"
-																					placeholder="Enter ZIP code" />
-
-																			<x-tag
-																					hint="Add tag and then commit it by pressing enter"
-																					placeholder="Add tags"
-																					icon="tag"
-																					label="Tags"
-																					limit="4"
-																					wire:model="tags" />
 																		</div>
+
+																		<!-- Location Information -->
+																		<div class="mb-6">
+																			<h2 class="text-lg font-semibold text-dark-500 dark:text-dark-100">
+																				Location Information</h2>
+																			<p class="mb-4 text-sm text-gray-500 dark:text-dark-300">
+																				Enter
+																				details
+																				about
+																				where the
+																				negotiation
+																				took
+																				place</p>
+
+																			<div class="grid grid-cols-1 gap-4">
+																				<x-input
+																						icon="map-pin"
+																						label="Location Name"
+																						wire:model="location"
+																						placeholder="Enter location name" />
+
+																				<x-input
+																						icon="home"
+																						label="Address"
+																						wire:model="location_address"
+																						placeholder="Enter street address" />
+
+																				<div class="grid grid-cols-2 gap-4">
+																					<x-input
+																							icon="building-office"
+																							label="City"
+																							wire:model="location_city"
+																							placeholder="Enter city" />
+
+																					<x-input
+																							icon="map"
+																							label="State"
+																							wire:model="location_state"
+																							placeholder="Enter state" />
+																				</div>
+
+																				<x-input
+																						icon="hashtag"
+																						label="ZIP Code"
+																						wire:model="location_zip"
+																						placeholder="Enter ZIP code" />
+
+																				<x-tag
+																						hint="Add tag and then commit it by pressing enter"
+																						placeholder="Add tags"
+																						icon="tag"
+																						label="Tags"
+																						limit="4"
+																						wire:model="tags" />
+																			</div>
+																		</div>
+
+																		<!-- Action Buttons -->
+
 																	</div>
 
-       										<!-- Action Buttons -->
-
-       										</div>
-
-       										<x-slot:footer end>
+																	<x-slot:footer end>
 																		<div class="space-x-2 bg-dark-200 dark:bg-dark-800 w-full p-4">
 																			<x-button
 																					wire:click="$toggle('editModal')"
@@ -533,32 +545,32 @@
 																				Save Changes
 																			</x-button>
 																		</div>
-       										</x-slot:footer>
-									</x-slide>
-								</template>
+																	</x-slot:footer>
+																</x-slide>
+															</template>
 
-																<!-- Delete Confirmation Modal -->
-																<template x-teleport="body">
-																	<x-modal
+															<!-- Delete Confirmation Modal -->
+															<template x-teleport="body">
+																<x-modal
 																		persistent
 																		center
 																		wire="deleteModal"
 																		title="Delete Negotiation">
-																		<p>Are you sure you want to delete this negotiation?
-																		   This action cannot be undone.</p>
-																		<div class="mt-4 space-x-2">
-																			<x-button
+																	<p>Are you sure you want to delete this negotiation?
+																	   This action cannot be undone.</p>
+																	<div class="mt-4 space-x-2">
+																		<x-button
 																				wire:click="deleteNegotiation"
 																				color="rose">
-																				Delete
-																			</x-button>
-																			<x-button
+																			Delete
+																		</x-button>
+																		<x-button
 																				wire:click="$toggle('deleteModal')"
 																				color="zinc">Cancel
-																			</x-button>
-																		</div>
-																	</x-modal>
-																</template>
+																		</x-button>
+																	</div>
+																</x-modal>
+															</template>
 														</td>
 													</tr>
 												@endforeach
