@@ -3,6 +3,7 @@
 namespace App\Services\Note;
 
 use App\Contracts\NoteRepositoryInterface;
+use App\Events\Note\NoteDeletedEvent;
 use App\Models\Note;
 
 class NoteDeletionService
@@ -25,7 +26,11 @@ class NoteDeletionService
 
         $this->addLogEntry($note);
 
-        return $this->noteRepository->deleteNote($id);
+        $deleted = $this->noteRepository->deleteNote($id);
+
+        event(new NoteDeletedEvent($note->id, $note->negotiation_id));
+
+        return $deleted;
     }
 
     private function addLogEntry(Note $note): void

@@ -43,4 +43,10 @@ class NegotiationEventNames
     public const TRIGGER_UPDATED = 'TriggerUpdated';
 
     public const TRIGGER_DELETED = 'TriggerDeleted';
+
+    public const NOTE_CREATED = 'NoteCreated';
+
+    public const NOTE_UPDATED = 'NoteUpdated';
+
+    public const NOTE_DELETED = 'NoteDeleted';
 }

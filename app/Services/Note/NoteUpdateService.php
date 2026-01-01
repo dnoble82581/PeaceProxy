@@ -4,6 +4,7 @@ namespace App\Services\Note;
 
 use App\Contracts\NoteRepositoryInterface;
 use App\DTOs\Note\NoteDTO;
+use App\Events\Note\NoteUpdatedEvent;
 use App\Models\Note;
 
 class NoteUpdateService
@@ -24,6 +25,8 @@ class NoteUpdateService
         }
 
         $this->addLogEntry($note);
+
+        event(new NoteUpdatedEvent($note->id, $note->negotiation_id));
 
         return $note;
     }

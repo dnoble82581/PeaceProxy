@@ -11,6 +11,8 @@
 	use App\Services\Pin\PinCreationService;
 	use App\Services\Pin\PinDeletionService;
 	use App\Services\Pin\PinFetchingService;
+	use App\Support\Channels\Negotiation;
+	use App\Support\EventNames\NegotiationEventNames;
 	use Carbon\Carbon;
 	use Illuminate\Support\Facades\Auth;
 
@@ -158,15 +160,19 @@
 				return [];
 			}
 			return [
-				"echo-private:tenants.$this->tenantId.notifications,.NotePinned" => 'loadNotes',
-				"echo-private:tenants.$this->tenantId.notifications,.NoteUnpinned" => 'loadNotes',
-				"echo-presence:negotiation.$this->negotiationId,.NoteCreated" => 'handleNoteCreated',
+				"echo-private:tenants.$this->tenantId.notifications,.NotePinned" => 'loadPinnedNotes',
+				"echo-private:tenants.$this->tenantId.notifications,.NoteUnpinned" => 'loadPinnedNotes',
+				'echo-private:'.Negotiation::negotiation($this->negotiationId).',.'.NegotiationEventNames::NOTE_CREATED => 'handleNoteChanged',
+				'echo-private:'.Negotiation::negotiation($this->negotiationId).',.'.NegotiationEventNames::NOTE_UPDATED => 'handleNoteChanged',
+				'echo-private:'.Negotiation::negotiation($this->negotiationId).',.'.NegotiationEventNames::NOTE_DELETED => 'handleNoteChanged',
 			];
 		}
 
-		public function handleNoteCreated(array $data)
+		public function handleNoteChanged(array $event): void
 		{
 			$this->loadNotes();
+			$this->showCreateModal = false;
+			$this->showEditModal = false;
 		}
 
 		public function pinNote($noteId):void

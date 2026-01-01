@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NoteCreatedEvent implements ShouldBroadcastNow
+class NoteDeletedEvent implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -29,7 +29,7 @@ class NoteCreatedEvent implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return NegotiationEventNames::NOTE_CREATED;
+        return NegotiationEventNames::NOTE_DELETED;
     }
 
     public function broadcastWith(): array

@@ -38,6 +38,10 @@ Broadcast::channel(Negotiation::NEGOTIATION_OBJECTIVE_PATTERN, function (User $u
     return true;
 });
 
+Broadcast::channel(Negotiation::NEGOTIATION_PATTERN, function (User $user, int $negotiationId) {
+    return true;
+});
+
 Broadcast::channel(Negotiation::NEGOTIATION_DEMAND_PATTERN, function (User $user, int $negotiationId) {
     return true;
 });
