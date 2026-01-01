@@ -914,22 +914,48 @@
 							class="flex items-center gap-1"
 							x-data="{
         get list(){ return Object.values(members) },
-        initials(n){ return (n||'').trim().split(/\s+/).map(p=>p[0]).join('').slice(0,2).toUpperCase() }
+        initials: function(name, email, id){
+          var n = (name || '').trim();
+          if (n.length) {
+            var parts = n.split(/\s+/).filter(Boolean);
+            if (parts.length === 1) {
+              return parts[0].slice(0, 2).toUpperCase();
+            }
+            var first = (parts[0] && parts[0][0]) ? parts[0][0] : '';
+            var lastPart = parts[parts.length - 1] || '';
+            var last = lastPart ? lastPart[0] : '';
+            var val = (first + last).toUpperCase();
+            return val || '?';
+          }
+          if (email && typeof email === 'string' && email.length) {
+            return email[0].toUpperCase();
+          }
+          if (id !== undefined && id !== null) {
+            return String(id).slice(0, 2).toUpperCase();
+          }
+          return '?';
+        }
       }">
 
-						<template
-								x-for="(u, i) in list"
-								:key="u.id">
+						<template x-for="u in list">
 							<!-- ONE root per iteration -->
-							<span class="inline-flex items-center gap-1 mt-2">
-        <!-- Avatar -->
-        <img
-		        x-show="u.avatar"
-		        :src="u.avatar"
-		        class="size-6 rounded-full object-cover"
-		        :alt="u.name || ('User #' + (u.id ?? ''))"
-        >
-      </span>
+									<span class="inline-flex items-center gap-1 mt-2">
+					        <!-- Avatar -->
+					        <img
+					        	x-show="u.avatar"
+					        	:src="u.avatar"
+					        	class="size-6 rounded-full object-cover"
+					        	:alt="u.name || ('User #' + (u.id ? u.id : ''))"
+					        >
+					        <!-- Initials fallback when no avatar -->
+					        <span
+					        	x-show="!u.avatar"
+					        	class="size-6 rounded-full bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-100 grid place-items-center text-[10px] font-semibold uppercase"
+					        	:title="u.name || ('User #' + (u.id ? u.id : ''))"
+					        >
+ 	        				<span x-text="initials(u?.name, u?.email, (typeof u === 'object' ? u?.id : u))"></span>
+					        </span>
+					      </span>
 						</template>
 					</div>
 				</div>

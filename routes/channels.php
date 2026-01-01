@@ -39,7 +39,11 @@ Broadcast::channel(Negotiation::NEGOTIATION_OBJECTIVE_PATTERN, function (User $u
 });
 
 Broadcast::channel(Negotiation::NEGOTIATION_PATTERN, function (User $user, int $negotiationId) {
-    return true;
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'avatar' => $user->avatarUrl(),
+    ];
 });
 
 Broadcast::channel(Negotiation::NEGOTIATION_DEMAND_PATTERN, function (User $user, int $negotiationId) {
