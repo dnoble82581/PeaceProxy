@@ -26,6 +26,11 @@ class NoteFetchingService
         return $this->noteRepository->getNotes();
     }
 
+    public function getNotesForNegotiation(int $negotiationId): Collection
+    {
+        return $this->noteRepository->getNotesForNegotiation($negotiationId);
+    }
+
     public function getNoteDTO($noteId): ?NoteDTO
     {
         $note = $this->getNote($noteId);

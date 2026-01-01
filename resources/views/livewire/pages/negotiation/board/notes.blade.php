@@ -36,13 +36,20 @@
 
 		public function loadNotes():void
 		{
-			$this->notes = app(NoteFetchingService::class)->getNotes();
+			if (!empty($this->negotiationId)) {
+				$this->notes = app(NoteFetchingService::class)->getNotesForNegotiation((int) $this->negotiationId);
+			} else {
+				$this->notes = collect();
+			}
 			$this->loadPinnedNotes();
 		}
 
 		public function loadPinnedNotes():void
 		{
 			$this->pinnedNotes = [];
+			if (!auth()->check()) {
+				return;
+			}
 			$pins = app(PinFetchingService::class)->getPins();
 
 			foreach ($pins as $pin) {

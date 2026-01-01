@@ -1,9 +1,11 @@
 <?php
 
-	use App\Models\Negotiation;
+ use App\Models\Negotiation;
 	use App\Models\User;
 	use App\Models\Tenant;
 	use App\Models\Log;
+	use App\Models\Assessment;
+	use App\Models\AssessmentTemplate;
 	use App\Enums\Negotiation\NegotiationStatuses;
 	use App\Enums\User\UserNegotiationRole;
 	use App\Services\Auth\LogoutService;
@@ -11,7 +13,8 @@
 	use Livewire\Attributes\Layout;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\DB;
-	use Carbon\Carbon;
+ use Carbon\Carbon;
+ 	use Illuminate\Support\Facades\Schema;
 
  new #[Layout('components.layouts.app')] class extends Component {
 		public $stats;
@@ -21,6 +24,10 @@
 		public $userActivityData;
 		public $tenantInfo;
 		public $recentLogs;
+		public $fbiAssessmentData;
+		public $subjectGenderData;
+		public $subjectAgeData;
+		public $subjectRaceData;
 
 		// Filter properties
 		public $selectedUser = null;
@@ -140,6 +147,138 @@
 			$this->userActivityData = [
 				'months' => $userMonths,
 				'counts' => $userCounts
+			];
+
+			// FBI High Risk Assessment distribution (tenant-wide)
+			$fbiTemplateId = AssessmentTemplate::where('tenant_id', $tenantId)
+				->where('name', 'FBI High Risk Assessment')
+				->value('id');
+
+			$low = 0; $moderate = 0; $high = 0; $totalAssessments = 0; $avgScore = 0;
+			if ($fbiTemplateId) {
+				$agg = Assessment::where('tenant_id', $tenantId)
+					->where('assessment_template_id', $fbiTemplateId)
+					->whereNotNull('completed_at')
+					->selectRaw('SUM(CASE WHEN score BETWEEN 0 AND 3 THEN 1 ELSE 0 END) as low')
+					->selectRaw('SUM(CASE WHEN score BETWEEN 4 AND 6 THEN 1 ELSE 0 END) as moderate')
+					->selectRaw('SUM(CASE WHEN score BETWEEN 7 AND 10 THEN 1 ELSE 0 END) as high')
+					->selectRaw('COUNT(*) as total')
+					->selectRaw('COALESCE(AVG(score),0) as avg_score')
+					->first();
+
+				$low = (int) ($agg->low ?? 0);
+				$moderate = (int) ($agg->moderate ?? 0);
+				$high = (int) ($agg->high ?? 0);
+				$totalAssessments = (int) ($agg->total ?? 0);
+				$avgScore = (float) ($agg->avg_score ?? 0);
+			}
+
+			$this->fbiAssessmentData = [
+				'labels' => ['Low (0–3)', 'Moderate (4–6)', 'High (7–10)'],
+				'counts' => [$low, $moderate, $high],
+				'colors' => ['#10B981', '#F59E0B', '#EF4444'], // emerald, amber, red
+				'total' => $totalAssessments,
+				'avgScore' => round($avgScore, 1),
+			];
+
+			// Subject demographics across all tenant negotiations
+			$selectColumns = ['subjects.id', 'subjects.gender', 'subjects.date_of_birth'];
+			$hasRaceColumn = Schema::hasColumn('subjects', 'race');
+			if ($hasRaceColumn) {
+				$selectColumns[] = 'subjects.race';
+			}
+			$subjects = DB::table('subjects')
+				->join('negotiation_subjects', 'subjects.id', '=', 'negotiation_subjects.subject_id')
+				->join('negotiations', 'negotiation_subjects.negotiation_id', '=', 'negotiations.id')
+				->where('negotiations.tenant_id', $tenantId)
+				->select($selectColumns)
+				->distinct()
+				->get();
+
+			// Gender breakdown
+			$genderCounts = [];
+			foreach ($subjects as $s) {
+				$raw = is_string($s->gender) ? trim(strtolower($s->gender)) : null;
+				$label = $raw ? ucfirst($raw) : 'Unknown';
+				$genderCounts[$label] = ($genderCounts[$label] ?? 0) + 1;
+			}
+			if (empty($genderCounts)) {
+				$genderLabels = [];
+				$genderSeries = [];
+			} else {
+				ksort($genderCounts);
+				$genderLabels = array_keys($genderCounts);
+				$genderSeries = array_values($genderCounts);
+			}
+			$this->subjectGenderData = [
+				'labels' => $genderLabels,
+				'counts' => $genderSeries,
+				'colors' => ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#6366F1','#14B8A6'],
+			];
+
+			// Age breakdown (buckets)
+			$ageBuckets = [
+				'<18' => 0,
+				'18–24' => 0,
+				'25–34' => 0,
+				'35–44' => 0,
+				'45–54' => 0,
+				'55–64' => 0,
+				'65+' => 0,
+				'Unknown' => 0,
+			];
+			foreach ($subjects as $s) {
+				if (!empty($s->date_of_birth)) {
+					try {
+						$age = Carbon::parse($s->date_of_birth)->age;
+					} catch (\Throwable $e) {
+						$age = null;
+					}
+				} else {
+					$age = null;
+				}
+				if ($age === null) {
+					$ageBuckets['Unknown']++;
+				} elseif ($age < 18) {
+					$ageBuckets['<18']++;
+				} elseif ($age <= 24) {
+					$ageBuckets['18–24']++;
+				} elseif ($age <= 34) {
+					$ageBuckets['25–34']++;
+				} elseif ($age <= 44) {
+					$ageBuckets['35–44']++;
+				} elseif ($age <= 54) {
+					$ageBuckets['45–54']++;
+				} elseif ($age <= 64) {
+					$ageBuckets['55–64']++;
+				} else {
+					$ageBuckets['65+']++;
+				}
+			}
+			$this->subjectAgeData = [
+				'labels' => array_keys($ageBuckets),
+				'counts' => array_values($ageBuckets),
+				'colors' => ['#60A5FA'],
+			];
+
+			// Race breakdown (if column exists)
+			$raceLabels = [];
+			$raceCounts = [];
+			if (Schema::hasColumn('subjects', 'race')) {
+				$raceMap = [];
+				foreach ($subjects as $s) {
+					$raw = isset($s->race) && is_string($s->race) ? trim($s->race) : '';
+					$label = $raw !== '' ? $raw : 'Unknown';
+					$raceMap[$label] = ($raceMap[$label] ?? 0) + 1;
+				}
+				ksort($raceMap);
+				$raceLabels = array_keys($raceMap);
+				$raceCounts = array_values($raceMap);
+			}
+			$this->subjectRaceData = [
+				'labels' => $raceLabels,
+				'counts' => $raceCounts,
+				'colors' => ['#F59E0B','#10B981','#3B82F6','#EF4444','#8B5CF6','#EC4899','#6366F1','#14B8A6'],
 			];
 
 			// Prepare negotiation status data for chart
@@ -315,6 +454,10 @@
 				trendsChart: null,  // Area chart for negotiation trends
 				rolesChart: null,   // Bar chart for user roles
 				activityChart: null, // Area chart for user activity/growth
+				fbiAssessmentChart: null, // Donut chart for FBI High Risk Assessment distribution
+				subjectGenderChart: null, // Donut chart for subject gender breakdown
+				subjectAgeChart: null, // Bar chart for subject age buckets
+				subjectRaceChart: null, // Donut chart for subject race breakdown
 
 				// Track whether charts have been initialized
 				chartsInitialized: false,
@@ -493,10 +636,51 @@
 							},
 							tooltip: {
 								theme: this.dark ? 'dark' : 'light',
-							}
-						})
-					}
-				},
+  					}
+  				})
+  			}
+
+  			if (this.fbiAssessmentChart) {
+  				this.fbiAssessmentChart.updateOptions({
+  					chart: {
+  						foreColor: this.dark ? '#D1D5DB' : '#4B5563',
+  					},
+  					theme: {
+  						mode: this.dark ? 'dark' : 'light',
+  					},
+  					tooltip: {
+  						theme: this.dark ? 'dark' : 'light',
+  					}
+  				})
+  			}
+
+  			if (this.subjectGenderChart) {
+  				this.subjectGenderChart.updateOptions({
+  					chart: { foreColor: this.dark ? '#D1D5DB' : '#4B5563' },
+  					theme: { mode: this.dark ? 'dark' : 'light' },
+  					tooltip: { theme: this.dark ? 'dark' : 'light' },
+  				})
+  			}
+  			if (this.subjectAgeChart) {
+  				const gridLineColor = this.dark ? '#374151' : '#E5E7EB'
+  				const labelColor = this.dark ? '#FFFFFF' : '#4B5563'
+  				this.subjectAgeChart.updateOptions({
+  					chart: { foreColor: this.dark ? '#D1D5DB' : '#4B5563' },
+  					theme: { mode: this.dark ? 'dark' : 'light' },
+  					grid: { borderColor: gridLineColor },
+  					xaxis: { labels: { style: { colors: labelColor } } },
+  					yaxis: { labels: { style: { colors: labelColor } } },
+  					tooltip: { theme: this.dark ? 'dark' : 'light' },
+  				})
+  			}
+  			if (this.subjectRaceChart) {
+  				this.subjectRaceChart.updateOptions({
+  					chart: { foreColor: this.dark ? '#D1D5DB' : '#4B5563' },
+  					theme: { mode: this.dark ? 'dark' : 'light' },
+  					tooltip: { theme: this.dark ? 'dark' : 'light' },
+  				})
+  			}
+  		},
 
 				// Main initialization function
 				initCharts () {
@@ -514,7 +698,11 @@
 					this.initNegotiationTrendsChart()
 					this.initUserRolesChart()
 					this.initUserActivityChart()
-
+					this.initFbiAssessmentChart()
+					this.initSubjectGenderChart()
+					this.initSubjectAgeChart()
+					this.initSubjectRaceChart()
+					
 					this.chartsInitialized = true
 				},
 
@@ -539,6 +727,22 @@
 						this.activityChart.destroy()
 						this.activityChart = null
 					}
+					if (this.fbiAssessmentChart) {
+						this.fbiAssessmentChart.destroy()
+						this.fbiAssessmentChart = null
+					}
+					if (this.subjectGenderChart) {
+						this.subjectGenderChart.destroy()
+						this.subjectGenderChart = null
+					}
+					if (this.subjectAgeChart) {
+						this.subjectAgeChart.destroy()
+						this.subjectAgeChart = null
+					}
+					if (this.subjectRaceChart) {
+						this.subjectRaceChart.destroy()
+						this.subjectRaceChart = null
+					}
 				},
 
 				// Show empty state for a chart
@@ -554,6 +758,167 @@
 						element.innerHTML = ''
 						element.appendChild(emptyState)
 					}
+				},
+
+				// Initialize FBI High Risk Assessment chart
+				initFbiAssessmentChart () {
+					const data = @json($fbiAssessmentData['counts']);
+					const labels = @json($fbiAssessmentData['labels']);
+					const colors = @json($fbiAssessmentData['colors']);
+					const total = @json($fbiAssessmentData['total']);
+					const avgScore = @json($fbiAssessmentData['avgScore']);
+
+					const container = document.querySelector('#fbi-assessment-chart')
+					if (!container) {
+						return
+					}
+
+					if (!data || data.reduce((a, b) => a + b, 0) === 0) {
+						this.showEmptyState('#fbi-assessment-chart', 'No completed FBI assessments yet')
+						return
+					}
+
+					const options = {
+						series: data,
+						labels: labels,
+						chart: {
+							type: 'donut',
+							height: 320,
+							fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto',
+							foreColor: this.dark ? '#D1D5DB' : '#4B5563',
+						},
+						colors: colors,
+						plotOptions: {
+							pie: {
+								donut: {
+									size: '68%',
+									labels: {
+										show: true,
+										total: {
+											show: true,
+											label: 'Completed',
+											fontSize: '14px',
+											color: this.dark ? '#D1D5DB' : '#4B5563',
+											formatter: () => `${total} | Avg ${avgScore}`,
+										}
+									}
+								}
+							}
+						},
+						legend: {
+							position: 'bottom',
+							labels: {
+								colors: this.dark ? '#D1D5DB' : '#4B5563',
+							}
+						},
+						dataLabels: {
+							enabled: true,
+							formatter: (val) => `${Math.round(val)}%`,
+							style: {
+								colors: [this.dark ? '#F9FAFB' : '#111827']
+							}
+						},
+						tooltip: {
+							theme: this.dark ? 'dark' : 'light',
+							fillSeriesColor: false,
+							y: {
+								formatter: (value) => `${value} assessments`
+							}
+						}
+					}
+
+					this.fbiAssessmentChart = new ApexCharts(document.querySelector('#fbi-assessment-chart'), options)
+					this.fbiAssessmentChart.render()
+				
+					// Return early to keep method boundaries clear
+					return
+				},
+
+				// Initialize Subject Gender chart
+				initSubjectGenderChart () {
+					const data = @json($subjectGenderData['counts'] ?? []);
+					const labels = @json($subjectGenderData['labels'] ?? []);
+					const colors = @json($subjectGenderData['colors'] ?? []);
+
+					const el = document.querySelector('#subject-gender-chart')
+					if (!el) { return }
+					if (!data.length || !data.some(v => v > 0)) {
+						this.showEmptyState('#subject-gender-chart', 'No subject gender data')
+						return
+					}
+
+					const options = {
+						series: data,
+						labels: labels,
+						chart: {
+							type: 'donut',
+							height: 280,
+							foreColor: this.dark ? '#D1D5DB' : '#4B5563',
+						},
+						colors: colors.length ? colors : ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6'],
+						legend: { position: 'bottom' },
+						dataLabels: { enabled: true, formatter: (val) => `${Math.round(val)}%` },
+						tooltip: { theme: this.dark ? 'dark' : 'light' },
+						plotOptions: { pie: { donut: { size: '60%' } } },
+					}
+					this.subjectGenderChart = new ApexCharts(el, options)
+					this.subjectGenderChart.render()
+				},
+
+				// Initialize Subject Age chart
+				initSubjectAgeChart () {
+					const data = @json($subjectAgeData['counts'] ?? []);
+					const labels = @json($subjectAgeData['labels'] ?? []);
+
+					const el = document.querySelector('#subject-age-chart')
+					if (!el) { return }
+					if (!data.length || !data.some(v => v > 0)) {
+						this.showEmptyState('#subject-age-chart', 'No subject age data')
+						return
+					}
+
+					const labelColor = this.dark ? '#FFFFFF' : '#4B5563'
+					const gridLineColor = this.dark ? '#374151' : '#E5E7EB'
+					const options = {
+						series: [{ name: 'Subjects', data }],
+						chart: { type: 'bar', height: 280, foreColor: this.dark ? '#D1D5DB' : '#4B5563', toolbar: { show: false } },
+						plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+						dataLabels: { enabled: false },
+						grid: { borderColor: gridLineColor },
+						xaxis: { categories: labels, labels: { style: { colors: labelColor } } },
+						yaxis: { labels: { style: { colors: labelColor } } },
+						colors: ['#60A5FA'],
+						tooltip: { theme: this.dark ? 'dark' : 'light' },
+					}
+					this.subjectAgeChart = new ApexCharts(el, options)
+					this.subjectAgeChart.render()
+				},
+
+				// Initialize Subject Race chart
+				initSubjectRaceChart () {
+					const data = @json($subjectRaceData['counts'] ?? []);
+					const labels = @json($subjectRaceData['labels'] ?? []);
+					const colors = @json($subjectRaceData['colors'] ?? []);
+
+					const el = document.querySelector('#subject-race-chart')
+					if (!el) { return }
+					if (!labels.length || !data.length || !data.some(v => v > 0)) {
+						this.showEmptyState('#subject-race-chart', 'No subject race data')
+						return
+					}
+
+					const options = {
+						series: data,
+						labels: labels,
+						chart: { type: 'donut', height: 280, foreColor: this.dark ? '#D1D5DB' : '#4B5563' },
+						colors: colors.length ? colors : ['#F59E0B','#10B981','#3B82F6','#EF4444','#8B5CF6'],
+						legend: { position: 'bottom' },
+						dataLabels: { enabled: true, formatter: (val) => `${Math.round(val)}%` },
+						tooltip: { theme: this.dark ? 'dark' : 'light' },
+						plotOptions: { pie: { donut: { size: '60%' } } },
+					}
+					this.subjectRaceChart = new ApexCharts(el, options)
+					this.subjectRaceChart.render()
 				},
 
 				// Initialize negotiation status chart
@@ -913,6 +1278,52 @@
 				</x-slot:header>
 				<div class="p-4">
 					<div id="negotiation-trends-chart"></div>
+				</div>
+			</x-card>
+		</div>
+	</div>
+
+	<!-- Subject Demographics -->
+	<div class="mb-6">
+		<h3 class="text-xl font-bold mb-4">Subject Demographics</h3>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<x-card>
+				<x-slot:header>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">By Gender</h4>
+				</x-slot:header>
+				<div class="p-4">
+					<div id="subject-gender-chart"></div>
+				</div>
+			</x-card>
+			<x-card>
+				<x-slot:header>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">By Age</h4>
+				</x-slot:header>
+				<div class="p-4">
+					<div id="subject-age-chart"></div>
+				</div>
+			</x-card>
+			<x-card>
+				<x-slot:header>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">By Race</h4>
+				</x-slot:header>
+				<div class="p-4">
+					<div id="subject-race-chart"></div>
+				</div>
+			</x-card>
+		</div>
+	</div>
+
+	<!-- Assessment Analytics -->
+	<div class="mb-6">
+		<h3 class="text-xl font-bold mb-4">Assessment Analytics</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<x-card>
+				<x-slot:header>
+					<h4 class="p-2 text-lg bg-gray-200/50 dark:bg-dark-800/50 rounded-t-lg">FBI High Risk Assessment</h4>
+				</x-slot:header>
+				<div class="p-4">
+					<div id="fbi-assessment-chart"></div>
 				</div>
 			</x-card>
 		</div>

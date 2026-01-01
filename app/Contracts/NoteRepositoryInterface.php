@@ -10,6 +10,8 @@ interface NoteRepositoryInterface
 
     public function getNotes();
 
+    public function getNotesForNegotiation($negotiationId);
+
     public function updateNote($id, $data);
 
     public function deleteNote($id);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Note extends Model
 {
@@ -34,7 +35,7 @@ class Note extends Model
 
     public function pin()
     {
-        return $this->morphOne(\App\Models\Pin::class, 'pinnable');
+        return $this->morphOne(Pin::class, 'pinnable');
     }
 
     public function author(): BelongsTo

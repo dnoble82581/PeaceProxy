@@ -18,6 +18,13 @@ class NoteRepository implements NoteRepositoryInterface
         return Note::orderBy('created_at', 'desc')->get();
     }
 
+    public function getNotesForNegotiation($negotiationId): Collection
+    {
+        return Note::where('negotiation_id', $negotiationId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function updateNote($id, $data)
     {
         $note = $this->getNote($id);
