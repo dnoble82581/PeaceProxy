@@ -159,34 +159,36 @@
 					wire:click="startCreate" />
 		</div>
 	</x-slot:header>
-	<x-modal wire="showForm">
-		<x-card header="{{ $editingId ? 'Edit Objective' : 'Create Objective' }}">
-			<div class="p-4 space-y-3">
-				<x-input
-						label="Objective Label"
-						wire:model.defer="objective"
-						placeholder="Enter objective..." />
-				<x-select.styled
-						label="Priority"
-						wire:model.defer="priority"
-						:options="$this->getPriorityOptions()"
-						placeholder="Priority" />
-			</div>
-			<x-slot:footer>
-				<div class="flex justify-end gap-2">
-					<x-button
-							sm
-							wire:click="cancel"
-							color="slate">Cancel
-					</x-button>
-					<x-button
-							sm
-							primary
-							wire:click="save">{{ $editingId ? 'Update' : 'Create' }}</x-button>
+	<template x-teleport="body">
+		<x-modal wire="showForm">
+			<x-card header="{{ $editingId ? 'Edit Objective' : 'Create Objective' }}">
+				<div class="p-4 space-y-3">
+					<x-input
+							label="Objective Label"
+							wire:model.defer="objective"
+							placeholder="Enter objective..." />
+					<x-select.styled
+							label="Priority"
+							wire:model.defer="priority"
+							:options="$this->getPriorityOptions()"
+							placeholder="Priority" />
 				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				<x-slot:footer>
+					<div class="flex justify-end gap-2">
+						<x-button
+								sm
+								wire:click="cancel"
+								color="slate">Cancel
+							</x-button>
+						<x-button
+								sm
+								primary
+								wire:click="save">{{ $editingId ? 'Update' : 'Create' }}</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 
 	<div class="flow-root overflow-y-scroll h-[10rem]">
 		<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
