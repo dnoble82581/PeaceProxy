@@ -177,28 +177,32 @@
 			</div>
 		</div>
 	</div>
-	<x-modal
-			id="view-demand-modal"
-			center
-			title="View Demand"
-			wire="showViewDemandModal"
-			x-on:hidden.window="$wire.closeModal()">
-		@if($demandToView)
-			<livewire:forms.demand.view-demand
-					:demand="$demandToView"
-					:key="'demand-'.$demandToView->id" />
-		@endif
-	</x-modal>
-	<x-slide
-			size="3xl"
-			wire="showCreateDeliveryPlanModal">
-		<x-slot:title>
-			Create Delivery Plan
-		</x-slot:title>
-		<div>
-			<livewire:forms.delivery.create-delivery-plan
-					wire:key="'create-delivery-plan-form'" />
-		</div>
-	</x-slide>
+	<template x-teleport="body">
+		<x-modal
+				id="view-demand-modal"
+				center
+				title="View Demand"
+				wire="showViewDemandModal"
+				x-on:hidden.window="$wire.closeModal()">
+			@if($demandToView)
+				<livewire:forms.demand.view-demand
+						:demand="$demandToView"
+						:key="'demand-'.$demandToView->id" />
+			@endif
+		</x-modal>
+	</template>
+	<template x-teleport="body">
+		<x-slide
+				size="3xl"
+				wire="showCreateDeliveryPlanModal">
+			<x-slot:title>
+				Create Delivery Plan
+			</x-slot:title>
+			<div>
+				<livewire:forms.delivery.create-delivery-plan
+						wire:key="'create-delivery-plan-form'" />
+			</div>
+		</x-slide>
+	</template>
 
 </div>

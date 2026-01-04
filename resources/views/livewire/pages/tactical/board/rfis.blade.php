@@ -297,245 +297,251 @@
 	</div>
 
 	<!-- View RFI & Responses Modal -->
-	<x-modal
-			id="view-rfi-responses-modal"
-			size="6xl"
-			wire="showResponsesModal"
-			x-on:hidden.window="$wire.closeModal()">
-		<x-card title="Request Details & Responses">
-			<div class="space-y-6">
-				@if($viewingRfi)
-					<div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 border border-gray-200 dark:border-dark-600">
-						<h3 class="text-lg font-semibold mb-2">{{ $viewingRfi->title }}</h3>
-						<div class="flex items-center mb-3">
-							<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">{{ $viewingRfi->status }}</span>
-							<span class="text-xs text-gray-500 dark:text-dark-300 ml-3">Created {{ $viewingRfi->created_at?->format('Y-m-d H:i') }}</span>
+	<template x-teleport="body">
+		<x-modal
+				id="view-rfi-responses-modal"
+				size="6xl"
+				wire="showResponsesModal"
+				x-on:hidden.window="$wire.closeModal()">
+			<x-card title="Request Details & Responses">
+				<div class="space-y-6">
+					@if($viewingRfi)
+						<div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 border border-gray-200 dark:border-dark-600">
+							<h3 class="text-lg font-semibold mb-2">{{ $viewingRfi->title }}</h3>
+							<div class="flex items-center mb-3">
+								<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">{{ $viewingRfi->status }}</span>
+								<span class="text-xs text-gray-500 dark:text-dark-300 ml-3">Created {{ $viewingRfi->created_at?->format('Y-m-d H:i') }}</span>
+							</div>
+							<div class="prose dark:prose-invert max-w-none">
+								<p>{{ $viewingRfi->body }}</p>
+							</div>
+							<div class="mt-3 text-sm text-gray-500 dark:text-dark-300">
+								<p>From: {{ $viewingRfi->sender?->name }}</p>
+							</div>
 						</div>
-						<div class="prose dark:prose-invert max-w-none">
-							<p>{{ $viewingRfi->body }}</p>
-						</div>
-						<div class="mt-3 text-sm text-gray-500 dark:text-dark-300">
-							<p>From: {{ $viewingRfi->sender?->name }}</p>
-						</div>
-					</div>
-				@endif
-
-				<div>
-					<h4 class="text-md font-semibold mb-3 text-gray-700 dark:text-dark-200">Documents</h4>
-					<div class="mt-2 flow-root overflow-hidden rounded-lg border border-gray-200 dark:border-dark-600">
-						<table class="w-full text-left">
-							<thead class="bg-gray-50 dark:bg-dark-700">
-							<tr>
-								<th class="px-3 py-2 text-xs font-semibold">Name</th>
-								<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Type</th>
-								<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Size</th>
-								<th class="px-3 py-2 text-xs font-semibold">Category</th>
-								<th class="py-2 pl-3 text-right">
-									<x-button.circle
-											wire:click="$set('showUploadDocModal', true)"
-											color="sky"
-											icon="plus" />
-								</th>
-							</tr>
-							</thead>
-							<tbody>
-							@forelse(($viewingRfi?->documents ?? []) as $document)
-								<tr>
-									<td class="px-3 py-2 text-xs font-medium">{{ $document->name }}</td>
-									<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->file_type }}</td>
-									<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $this->formatFileSize($document->file_size) }}</td>
-									<td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->category }}</td>
-									<td class="px-3 py-2 text-right">
-										<x-button.circle
-												wire:click="viewRfiDocument({{ $document->id }})"
-												flat
-												color="sky"
-												icon="eye"
-												sm />
-										<x-button.circle
-												wire:click="deleteRfiDocument({{ $document->id }})"
-												flat
-												color="red"
-												icon="trash"
-												sm />
-									</td>
-								</tr>
-							@empty
-								<tr>
-									<td
-											colspan="5"
-											class="text-center p-4 text-gray-500">No documents attached.
-									</td>
-								</tr>
-							@endforelse
-							</tbody>
-						</table>
-					</div>
-
-					<h4 class="text-md font-semibold mt-6 mb-3 text-gray-700 dark:text-dark-200">Responses</h4>
-					@if($viewingRfiId && count($replies) > 0)
-						<div class="space-y-4">
-							@foreach($replies as $reply)
-								<div class="border rounded-lg p-4 border-gray-200 dark:border-dark-600">
-									<div class="flex justify-between items-start">
-										<div>
-											<p class="font-semibold text-gray-800 dark:text-dark-100">{{ is_string($reply->user->name ?? null) ? $reply->user->name : '' }}</p>
-											<p class="text-sm text-gray-500 dark:text-dark-300">{{ $reply->created_at ? $reply->created_at->format('Y-m-d H:i') : '' }}</p>
-										</div>
-									</div>
-									<div class="mt-2">
-										<p class="text-gray-700 dark:text-dark-200">{{ is_string($reply->body ?? null) ? $reply->body : '' }}</p>
-									</div>
-								</div>
-							@endforeach
-						</div>
-					@else
-						<p class="text-center text-gray-500 dark:text-dark-300">No responses yet.</p>
 					@endif
 
-					<div class="mt-4">
-						<x-textarea
-								label="Your Response"
-								wire:model="replyBody"
-								rows="3" />
+					<div>
+						<h4 class="text-md font-semibold mb-3 text-gray-700 dark:text-dark-200">Documents</h4>
+						<div class="mt-2 flow-root overflow-hidden rounded-lg border border-gray-200 dark:border-dark-600">
+							<table class="w-full text-left">
+								<thead class="bg-gray-50 dark:bg-dark-700">
+								<tr>
+									<th class="px-3 py-2 text-xs font-semibold">Name</th>
+									<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Type</th>
+									<th class="hidden md:table-cell px-3 py-2 text-xs font-semibold">Size</th>
+									<th class="px-3 py-2 text-xs font-semibold">Category</th>
+									<th class="py-2 pl-3 text-right">
+										<x-button.circle
+												wire:click="$set('showUploadDocModal', true)"
+												color="sky"
+												icon="plus" />
+									</th>
+								</tr>
+								</thead>
+								<tbody>
+								@forelse(($viewingRfi?->documents ?? []) as $document)
+									<tr>
+										<td class="px-3 py-2 text-xs font-medium">{{ $document->name }}</td>
+										<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->file_type }}</td>
+										<td class="hidden md:table-cell px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $this->formatFileSize($document->file_size) }}</td>
+										<td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-300">{{ $document->category }}</td>
+										<td class="px-3 py-2 text-right">
+											<x-button.circle
+													wire:click="viewRfiDocument({{ $document->id }})"
+													flat
+													color="sky"
+													icon="eye"
+													sm />
+											<x-button.circle
+													wire:click="deleteRfiDocument({{ $document->id }})"
+													flat
+													color="red"
+													icon="trash"
+													sm />
+										</td>
+									</tr>
+								@empty
+									<tr>
+										<td
+												colspan="5"
+												class="text-center p-4 text-gray-500">No documents attached.
+										</td>
+									</tr>
+								@endforelse
+								</tbody>
+							</table>
+						</div>
+
+						<h4 class="text-md font-semibold mt-6 mb-3 text-gray-700 dark:text-dark-200">Responses</h4>
+						@if($viewingRfiId && count($replies) > 0)
+							<div class="space-y-4">
+								@foreach($replies as $reply)
+									<div class="border rounded-lg p-4 border-gray-200 dark:border-dark-600">
+										<div class="flex justify-between items-start">
+											<div>
+												<p class="font-semibold text-gray-800 dark:text-dark-100">{{ is_string($reply->user->name ?? null) ? $reply->user->name : '' }}</p>
+												<p class="text-sm text-gray-500 dark:text-dark-300">{{ $reply->created_at ? $reply->created_at->format('Y-m-d H:i') : '' }}</p>
+											</div>
+										</div>
+										<div class="mt-2">
+											<p class="text-gray-700 dark:text-dark-200">{{ is_string($reply->body ?? null) ? $reply->body : '' }}</p>
+										</div>
+									</div>
+								@endforeach
+							</div>
+						@else
+							<p class="text-center text-gray-500 dark:text-dark-300">No responses yet.</p>
+						@endif
+
+						<div class="mt-4">
+							<x-textarea
+									label="Your Response"
+									wire:model="replyBody"
+									rows="3" />
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-2">
-					<x-button
-							flat
-							wire:click="$set('showResponsesModal', false)">Close
-					</x-button>
-					<x-button
-							primary
-							wire:click="submitReply">Submit Response
-					</x-button>
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-2">
+						<x-button
+								flat
+								wire:click="$set('showResponsesModal', false)">Close
+							</x-button>
+						<x-button
+								primary
+								wire:click="submitReply">Submit Response
+							</x-button>
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 
 
 	<!-- Upload RFI Document Modal -->
-	<x-modal wire="showUploadDocModal">
-		<x-card title="Upload Document">
-			<div class="space-y-4">
-				<div>
-					<x-upload
-							label="File"
-							wire:model="docFile"
-							id="rfi-doc-file"
-							class="mt-1 block w-full" />
+	<template x-teleport="body">
+		<x-modal wire="showUploadDocModal">
+			<x-card title="Upload Document">
+				<div class="space-y-4">
+					<div>
+						<x-upload
+								label="File"
+								wire:model="docFile"
+								id="rfi-doc-file"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-input
+								label="Name"
+								wire:model="docName"
+								id="rfi-doc-name"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-input
+								label="Category"
+								wire:model="docCategory"
+								id="rfi-doc-category"
+								class="mt-1 block w-full" />
+					</div>
+					<div>
+						<x-textarea
+								label="Description"
+								wire:model="docDescription"
+								id="rfi-doc-description"
+								class="mt-1 block w-full" />
+					</div>
+					<div class="flex items-center">
+						<x-checkbox
+								label="Private"
+								wire:model="docPrivate"
+								id="rfi-doc-private" />
+					</div>
 				</div>
-				<div>
-					<x-input
-							label="Name"
-							wire:model="docName"
-							id="rfi-doc-name"
-							class="mt-1 block w-full" />
-				</div>
-				<div>
-					<x-input
-							label="Category"
-							wire:model="docCategory"
-							id="rfi-doc-category"
-							class="mt-1 block w-full" />
-				</div>
-				<div>
-					<x-textarea
-							label="Description"
-							wire:model="docDescription"
-							id="rfi-doc-description"
-							class="mt-1 block w-full" />
-				</div>
-				<div class="flex items-center">
-					<x-checkbox
-							label="Private"
-							wire:model="docPrivate"
-							id="rfi-doc-private" />
-				</div>
-			</div>
-			<x-slot:footer>
-				<div class="flex justify-end gap-x-4">
-					<x-button
-							flat
-							text="Cancel"
-							wire:click="$toggle('showUploadDocModal')" />
-					<x-button
-							primary
-							label="Upload"
-							text="Upload"
-							wire:click="uploadRfiDocument"
-							wire:loading.attr="disabled" />
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				<x-slot:footer>
+					<div class="flex justify-end gap-x-4">
+						<x-button
+								flat
+								text="Cancel"
+								wire:click="$toggle('showUploadDocModal')" />
+						<x-button
+								primary
+								label="Upload"
+								text="Upload"
+								wire:click="uploadRfiDocument"
+								wire:loading.attr="disabled" />
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 
 	<!-- View RFI Document Modal -->
-	<x-modal
-			wire="showViewDocModal"
-			max-width="4xl">
-		<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
-			@if($currentDocument && $documentUrl)
-				<div class="space-y-4">
-					<div class="flex justify-between">
-						<div>
-							<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
-							<p class="text-sm text-gray-500">
-								Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
-							<p class="text-sm text-gray-500">
-								Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
+	<template x-teleport="body">
+		<x-modal
+				wire="showViewDocModal"
+				max-width="4xl">
+			<x-card title="{{ $currentDocument ? $currentDocument->name : 'Document' }}">
+				@if($currentDocument && $documentUrl)
+					<div class="space-y-4">
+						<div class="flex justify-between">
+							<div>
+								<p class="text-sm text-gray-500">Type: {{ $currentDocument->file_type }}</p>
+								<p class="text-sm text-gray-500">
+									Size: {{ $this->formatFileSize($currentDocument->file_size) }}</p>
+								<p class="text-sm text-gray-500">
+									Uploaded: {{ $currentDocument->created_at->format('M d, Y') }}</p>
+							</div>
+							<div>
+								<x-button
+										href="{{ $documentUrl }}"
+										target="_blank"
+										primary
+										label="Expand"
+										icon="arrows-pointing-out" />
+							</div>
 						</div>
-						<div>
-							<x-button
-									href="{{ $documentUrl }}"
-									target="_blank"
-									primary
-									label="Expand"
-									icon="arrows-pointing-out" />
+						<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
+							@if(Str::startsWith($currentDocument->file_type, 'image/'))
+								<img
+										src="{{ $documentUrl }}"
+										alt="{{ $currentDocument->name }}"
+										class="max-w-full h-auto mx-auto" />
+							@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
+								<iframe
+										src="{{ $documentUrl }}"
+										class="w-full h-96"
+										frameborder="0"></iframe>
+							@else
+								<div class="text-center py-8">
+									<p>Preview not available for this file type.</p>
+									<p class="mt-2">Please download the file to view it.</p>
+								</div>
+							@endif
 						</div>
-					</div>
-					<div class="border rounded-lg p-4 bg-gray-50 dark:bg-dark-800">
-						@if(Str::startsWith($currentDocument->file_type, 'image/'))
-							<img
-									src="{{ $documentUrl }}"
-									alt="{{ $currentDocument->name }}"
-									class="max-w-full h-auto mx-auto" />
-						@elseif(Str::startsWith($currentDocument->file_type, 'application/pdf'))
-							<iframe
-									src="{{ $documentUrl }}"
-									class="w-full h-96"
-									frameborder="0"></iframe>
-						@else
-							<div class="text-center py-8">
-								<p>Preview not available for this file type.</p>
-								<p class="mt-2">Please download the file to view it.</p>
+						@if($currentDocument->description)
+							<div>
+								<h3 class="text-sm font-medium">Description</h3>
+								<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
 							</div>
 						@endif
 					</div>
-					@if($currentDocument->description)
-						<div>
-							<h3 class="text-sm font-medium">Description</h3>
-							<p class="mt-1 text-sm text-gray-500">{{ $currentDocument->description }}</p>
-						</div>
-					@endif
-				</div>
-			@else
-				<div class="py-8 text-center">
-					<p>Document not found or unable to generate preview.</p>
-				</div>
-			@endif
-			<x-slot:footer>
-				<div class="flex justify-end">
-					<x-button
-							flat
-							label="Close"
-							x-on:click="close" />
-				</div>
-			</x-slot:footer>
-		</x-card>
-	</x-modal>
+				@else
+					<div class="py-8 text-center">
+						<p>Document not found or unable to generate preview.</p>
+					</div>
+				@endif
+				<x-slot:footer>
+					<div class="flex justify-end">
+						<x-button
+								flat
+								label="Close"
+								x-on:click="close" />
+					</div>
+				</x-slot:footer>
+			</x-card>
+		</x-modal>
+	</template>
 </div>
