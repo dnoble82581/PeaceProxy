@@ -142,25 +142,33 @@
 	</x-card>
 
 	<!-- Slides for quick edits -->
-	<x-slide
-			title="Edit Mental Health History"
-			wire="showEditMentalHealthHistoryModal">
-		<livewire:forms.subject.edit-subject-mental-health-history :subjectId="$subject->id" />
-	</x-slide>
-	<x-slide
-			title="Edit Substance Abuse History"
-			wire="showEditSubstanceAbuseHistoryModal">
-		<livewire:forms.subject.edit-subject-substance-abuse-history :subjectId="$subject->id" />
-	</x-slide>
-	<x-slide
-			title="Edit Criminal History"
-			wire="showEditCriminalHistoryModal">
-		<livewire:forms.subject.edit-subject-criminal-history :subjectId="$subject->id" />
-	</x-slide>
-	<x-slide
-			title="Edit Notes"
-			wire="showEditNotesModal">
-		<livewire:forms.subject.edit-subject-notes :subjectId="$subject->id" />
-	</x-slide>
+	<template x-teleport="body">
+		<x-slide
+				title="Edit Mental Health History"
+				wire="showEditMentalHealthHistoryModal">
+			<livewire:forms.subject.edit-subject-mental-health-history :subjectId="$subject->id" />
+		</x-slide>
+	</template>
+	<template x-teleport="body">
+		<x-slide
+				title="Edit Substance Abuse History"
+				wire="showEditSubstanceAbuseHistoryModal">
+			<livewire:forms.subject.edit-subject-substance-abuse-history :subjectId="$subject->id" />
+		</x-slide>
+	</template>
+	<template x-teleport="body">
+		<x-slide
+				title="Edit Criminal History"
+				wire="showEditCriminalHistoryModal">
+			<livewire:forms.subject.edit-subject-criminal-history :subjectId="$subject->id" />
+		</x-slide>
+	</template>
+	<template x-teleport="body">
+		<x-slide
+				title="Edit Notes"
+				wire="showEditNotesModal">
+			<livewire:forms.subject.edit-subject-notes :subjectId="$subject->id" />
+		</x-slide>
+	</template>
 
 </div>
