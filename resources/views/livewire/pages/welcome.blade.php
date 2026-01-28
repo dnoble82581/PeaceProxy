@@ -621,9 +621,9 @@
 						<div class="pt-8 sm:inline-block sm:w-full sm:px-4">
 							<figure class="rounded-2xl bg-gray-50 p-8 text-sm/6 dark:bg-white/2.5">
 								<blockquote class="text-gray-900 dark:text-gray-100">
-									<p>“Anim sit consequat culpa commodo eu do nisi commodo ut aute aliqua. Laborum esse
-									   duis tempor consectetur officia mollit fugiat. Exercitation qui elit minim minim
-									   quis fugiat ex.”</p>
+									<p>“One of the most significant obstacles to successful resolution is poor
+									   information sharing between negotiation teams and operational commanders. The
+									   absence of integrated systems increases the risk of contradictory actions.”</p>
 								</blockquote>
 								<figcaption class="mt-6 flex items-center gap-x-4">
 									<img
