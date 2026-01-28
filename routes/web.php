@@ -16,6 +16,7 @@ Route::middleware([
 ])->group(function () {
     Volt::route('/', 'pages.welcome');
     Volt::route('/about', 'pages.about.about-us')->name('about');
+    Volt::route('/contact', 'forms.contact.contact-us')->name('contact');
 
     // Donations
     Route::post('/donate/checkout', [DonationController::class, 'checkout'])->name('donations.checkout');
