@@ -1,4 +1,5 @@
 <div style="font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; line-height:1.5; color:#111827;">
+
     <h2 style="margin:0 0 12px; font-size:20px;">New Contact Us Message</h2>
 
     <p style="margin:0 0 16px;">You've received a new message from the website contact form.</p>
