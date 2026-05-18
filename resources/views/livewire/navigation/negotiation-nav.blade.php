@@ -98,7 +98,7 @@
 		<x-theme-switch
 				@click="alert('clicked')"
 				only-icons />
-		<x-dropdown>
+		<x-dropdown class="z-20">
 			<x-slot:action>
 				<x-button
 						color=""
