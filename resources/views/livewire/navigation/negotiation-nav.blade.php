@@ -81,7 +81,7 @@
 <div class="flex items-center justify-between py-2 px-8 dark:bg-dark-700 mb-4">
 	<div class="flex items-center gap-4">
 		<div>
-			<x-avatar image="{{ authUser()->avatar_path}}" />
+			<x-avatar image="{{ authUser()->avatarUrl()}}" />
 		</div>
 		<div>
 			<p class="text-sm font-bold">{{ authUser()->name }}</p>
