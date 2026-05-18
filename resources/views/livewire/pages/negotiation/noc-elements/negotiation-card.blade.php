@@ -18,7 +18,7 @@
 <div
 		class="h-[13rem] border border-gray-300 rounded-lg text-dark-800 dark:text-primary-50 dark:bg-dark-800 px-2 pb-2 overflow-y-auto"
 		x-data="{tab: 'hostages'}">
-	<div class="sticky top-0 z-10 bg-white dark:bg-dark-800">
+	<div class="bg-white dark:bg-dark-800">
 		<div class="grid grid-cols-1 sm:hidden">
 			<!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
 			<select
@@ -101,7 +101,7 @@
 			</div>
 		</div>
 	</div>
-	
+
 	<div
 			x-show="tab === 'hostages'"
 			class="overflow-visible">
