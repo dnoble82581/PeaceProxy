@@ -6,23 +6,44 @@
 	 * PURPOSE: Tenant-first billing dashboard (view subscription, manage plan, invoices, payment method)
 	 */
 
+	use Illuminate\Http\RedirectResponse;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
-	use Stripe\Price;
-	use Stripe\Stripe;
 
+	/**
+	 * Livewire Volt Billing Dashboard Component
+	 *
+	 * Exposes a normalized snapshot of the tenant's subscription, invoices,
+	 * and default payment method for easy rendering in Blade.
+	 */
 	new class extends Component {
-		public ?array $subscription = null;   // short array form for blade ease
+		/** @var array{ id?: string, name?: string, stripe_status?: string, stripe_price?: string, quantity?: int, on_grace_period?: bool, ends_at?: string|null, trial_ends_at?: string|null, price_display?: string }|null */
+		public ?array $subscription = null;
+		/** @var array<int, array{id: string, number: string, amount_cents: int, amount_display: string, currency: string, date: string, status: string, hosted_invoice_url: ?string, invoice_pdf: ?string}> */
 		public array $invoices = [];
-		public ?array $pm = null;             // default payment method
-		public string $portalUrl = '';
+		/** @var array{ brand?: string|null, last4?: string|null, exp_month?: int|null, exp_year?: int|null }|null */
+		public ?array $pm = null;
 
+		/**
+		 * Map Stripe price ID to a human-friendly label without API calls.
+		 */
+		private function priceDisplayFromId(?string $priceId):string
+		{
+			$monthly = (string) config('billing.prices.team_monthly');
+			$yearly = (string) config('billing.prices.team_yearly');
+			return match ($priceId) {
+				$monthly => 'Monthly plan',
+				$yearly => 'Yearly plan',
+				default => '—',
+			};
+		}
+
+		/**
+		 * Bootstrap data for the billing dashboard.
+		 */
 		public function mount():void
 		{
 			$tenant = Auth::user()->tenant;
-
-			// Ensure a Stripe customer exists so we can fetch PM/Invoices even if not subscribed yet
-			$tenant->createOrGetStripeCustomer();
 
 			$sub = $tenant->subscription('default');
 			if ($sub) {
@@ -37,16 +58,7 @@
 					'trial_ends_at' => optional($sub->trial_ends_at)?->toDateTimeString(),
 				];
 
-				try {
-					Stripe::setApiKey(config('services.stripe.secret'));
-					$price = Price::retrieve($sub->stripe_price);
-
-					$this->subscription['price_display'] =
-						'$'.number_format($price->unit_amount / 100, 2).
-						' / '.$price->recurring->interval;
-				} catch (\Exception $e) {
-					$this->subscription['price_display'] = 'Unknown';
-				}
+				$this->subscription['price_display'] = $this->priceDisplayFromId($sub->stripe_price);
 			}
 
 			// Default payment method (if present)
@@ -60,13 +72,12 @@
 			}
 
 			// Recent invoices (limit 12)
+//			dd($tenant->invoices());
 			$this->invoices = collect($tenant->invoices())->take(12)->map(function ($inv) {
-				$amountCents = (int) ($inv->total() ?? 0); // normalize to int
 				return [
 					'id' => $inv->id,
 					'number' => $inv->number,
-					'amount_cents' => $amountCents,
-					'amount_display' => number_format($amountCents / 100, 2), // "12.34"
+					'amount_display' => $inv->total(),
 					'currency' => strtoupper($inv->currency),
 					'date' => $inv->date()->toDateTimeString(),
 					'status' => $inv->status,
@@ -77,7 +88,11 @@
 		}
 
 		// Stripe Customer Portal (hosted)
-		public function portal()
+
+		/**
+		 * Open Stripe's hosted billing portal.
+		 */
+		public function portal():mixed
 		{
 			$tenant = auth()->user()->tenant;
 			$tenant->createOrGetStripeCustomer();
@@ -86,26 +101,28 @@
 			return $this->redirect($session);
 		}
 
-		// Cancel at period end
-		public function cancel()
+		/**
+		 * Cancel subscription at period end.
+		 */
+		public function cancel():mixed
 		{
 			$tenant = Auth::user()->tenant;
 			$tenant->subscription('default')?->cancel();
 			session()->flash('ok', 'Subscription will cancel at period end.');
-			return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
+			return redirect()->route('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
 		}
 
 		// Resume if on grace period
-		public function resume()
+		public function resume():RedirectResponse
 		{
 			$tenant = Auth::user()->tenant;
 			$tenant->subscription('default')?->resume();
 			session()->flash('ok', 'Subscription resumed.');
-			return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
+			return redirect()->route('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
 		}
 
 		// Swap plan (expects a price id from config/billing.php)
-		public function swap(string $price)
+		public function swap(string $price):void
 		{
 			$tenant = Auth::user()->tenant;
 			$tenant->subscription('default')?->swap($price);
@@ -117,7 +134,7 @@
 		}
 
 		// Refresh subscription data
-		public function refreshSubscription()
+		public function refreshSubscription():void
 		{
 			$tenant = Auth::user()->tenant;
 			$sub = $tenant->subscription('default');
@@ -134,34 +151,13 @@
 					'trial_ends_at' => optional($sub->trial_ends_at)?->toDateTimeString(),
 				];
 
-				try {
-					Stripe::setApiKey(config('services.stripe.secret'));
-					$price = Price::retrieve($sub->stripe_price);
-
-					$this->subscription['price_display'] =
-						'$'.number_format($price->unit_amount / 100, 2).
-						' / '.$price->recurring->interval;
-				} catch (\Exception $e) {
-					$this->subscription['price_display'] = 'Unknown';
-				}
+				$this->subscription['price_display'] = $this->priceDisplayFromId($sub->stripe_price);
 			}
 		}
-
-		// Optional: Update seat quantity
-//		public function syncSeats(int $qty)
-//		{
-//			$tenant = Auth::user()->tenant;
-//			$sub = $tenant->subscription('default');
-//			if ($sub) {
-//				$sub->updateQuantity(max(1, $qty));
-//				session()->flash('ok', 'Seats updated.');
-//			}
-//			return $this->redirectRoute('billing.index', ['tenantSubdomain' => tenant()->subdomain]);
-//		}
 	};
 ?>
 
-<div class="dark:bg-dark-800">
+<div class="dark:bg-dark-800 p-8">
 	<h1 class="text-lg mb-4 font-semibold">Billing</h1>
 
 	@if (session('ok'))
@@ -176,7 +172,10 @@
 	@endif
 
 	<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-		<!-- Subscription card -->
+		@php
+			use Illuminate\Support\Carbon
+		@endphp
+				<!-- Subscription card -->
 		<div class="md:col-span-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-800">
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-semibold">Subscription</h2>
@@ -188,7 +187,6 @@
 					<span class="text-xs px-2 py-0.5 rounded-full bg-neutral-100">Not subscribed</span>
 				@endif
 			</div>
-
 			@if(!$subscription)
 				<p class="mt-4 text-neutral-600">No active plan. Choose one on the <a
 							href="{{ route('tenant.pricing', ['tenantSubdomain' => tenant()->subdomain]) }}"
@@ -204,8 +202,13 @@
 						<dd class="font-medium">{{ $subscription['quantity'] ?? 1 }}</dd>
 					</div>
 					<div>
-						<dt class="text-neutral-500 dark:text-dark-400">Trial ends</dt>
-						<dd class="font-medium">{{ $subscription['trial_ends_at'] ?? '—' }}</dd>
+						@if($subscription['price_display'] === 'Monthly plan' || $subscription['price_display'] === 'Yearly plan')
+							<dt class="text-neutral-500 dark:text-dark-400">Customer Since</dt>
+							<dd class="font-medium">{{Carbon::parse(tenant()->subscription()->created_at)->format('M d Y') }}</dd>
+						@else
+							<dt class="text-neutral-500 dark:text-dark-400">Trial ends</dt>
+							<dd class="font-medium">{{ $subscription['trial_ends_at'] ? Carbon::parse($subscription['trial_ends_at'])->format('M d Y') : '—' }}</dd>
+						@endif
 					</div>
 					<div>
 						<dt class="text-neutral-500 dark:text-dark-400">Cancels at</dt>
@@ -226,7 +229,7 @@
 							Subscribed to Monthly</span>
 					@else
 						<button
-								wire:click="swap(@js($monthly))"
+								wire:click="swap('{{ $monthly }}')"
 								class="rounded-xl border px-3 py-2 text-sm hover:bg-dark-600 hover:cursor-pointer">
 							Switch to Monthly
 						</button>
@@ -241,7 +244,7 @@
 							Subscribed to Yearly</span>
 					@else
 						<button
-								wire:click="swap(@js($yearly))"
+								wire:click="swap('{{ $yearly }}')"
 								class="rounded-xl border px-3 py-2 text-sm hover:bg-neutral-50"
 						>
 							Switch to Yearly
@@ -298,10 +301,10 @@
 				                                                       /{{ $pm['exp_year'] }}</p>
 				<p class="mt-3 text-xs text-neutral-500 dark:text-dark-400">Update or add methods via the Customer
 				                                                            Portal.</p>
-				<button
-						wire:click="portal"
-						class="mt-3 w-full rounded-xl border px-3 py-2 text-sm hover:bg-neutral-50">Manage in Portal
-				</button>
+				<x-button
+						class="w-full mt-3"
+						wire:click="portal">Manage in Portal
+				</x-button>
 			@else
 				<p class="mt-3 text-sm text-neutral-600">No default payment method on file.</p>
 				<a
@@ -333,7 +336,7 @@
 					<tr>
 						<td class="py-2">{{ $inv['date'] }}</td>
 						<td class="py-2">{{ $inv['number'] }}</td>
-						<td class="py-2">${{ $inv['amount_display'] }} {{ $inv['currency'] }}</td>
+						<td class="py-2">{{ $inv['amount_display'] }} {{ $inv['currency'] }}</td>
 						<td class="py-2">{{ ucfirst($inv['status']) }}</td>
 						<td class="py-2">
 							<a
@@ -361,25 +364,6 @@
 		</div>
 	</div>
 </div>
-
-<?php
-	/**
-	 * ROUTE: Add this to the tenant-aware group (see earlier message)
-	 * Route::view('/billing', 'billing.index')->name('billing.index');
-	 *
-	 * BLADE WRAPPER: resources/views/billing/index.blade.php
-	 * @extends('layouts.app')
-	 * @section('content')
-	 *     <livewire:billing-index />
-	 * @endsection
-	 *
-	 * NOTES:
-	 * - Uses Cashier helpers: subscription(), invoices(), defaultPaymentMethod().
-	 * - Swap buttons read price IDs from config('billing.prices.*').
-	 * - Customer Portal button uses Cashier's redirect helper.
-	 * - Seat sync is optional; wire it to your own team size rules if needed.
-	 */
-?>
 
 @once
 	<script src="https://js.stripe.com/v3/"></script>

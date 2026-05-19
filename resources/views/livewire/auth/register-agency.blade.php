@@ -13,7 +13,7 @@
 	use Livewire\Attributes\Title;
 	use Livewire\Volt\Component;
 
- new #[Layout('components.layouts.auth'), Title('Register - PeaceProxy')] class extends Component {
+	new #[Layout('components.layouts.auth'), Title('Register - PeaceProxy')] class extends Component {
 		public CreateTenantForm $tenantForm;
 		public UserForm $userForm;
 
@@ -30,7 +30,7 @@
 
 			// Build payload from UserForm to ensure defaults, then hash password
 			$userData = $this->userForm->payload();
-			if (! empty($userData['password'])) {
+			if (!empty($userData['password'])) {
 				$userData['password'] = Hash::make((string) $userData['password']);
 			}
 
@@ -48,7 +48,7 @@
 			$newTenant->update([
 				'billing_owner_id' => $newUser->id,
 			]);
-
+			
 			// Authenticate the user
 			Auth::login($newUser);
 
@@ -57,7 +57,7 @@
 
 			// Redirect to the tenant dashboard after successful creation
 			$tenantSubdomain = $newTenant->subdomain;
-			$protocol = request()->secure() ? 'https://' : 'http://';
+			$protocol = request()->secure()? 'https://' : 'http://';
 			$dashboardUrl = "{$protocol}{$tenantSubdomain}.".config('app.domain')."/dashboard";
 			$this->redirect($dashboardUrl);
 		}

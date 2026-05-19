@@ -36,6 +36,11 @@ class Tenant extends Model
         return $this->hasMany(AssessmentQuestionsAnswer::class, 'tenant_id');
     }
 
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscribed() || $this->onGenericTrial();
+    }
+
     public function negotiations(): HasMany
     {
         return $this->hasMany(Negotiation::class);

@@ -5,10 +5,11 @@ use App\Http\Controllers\ResourcePositionController;
 use App\Http\Middleware\IdentifyTenantMiddleware;
 use App\Http\Middleware\RedirectToNocMiddleware;
 use App\Http\Middleware\RedirectToTenantDashboardMiddleware;
+use App\Http\Middleware\SubscriptionMiddleware;
 use Livewire\Volt\Volt;
 
 Broadcast::routes([
-'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
+    'middleware' => ['web', 'auth', IdentifyTenantMiddleware::class], // Add your middleware like 'tenant'
 ]);
 
 Route::middleware([
@@ -35,7 +36,7 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
     //	DASHBOARD ROUTES
     Route::prefix('/dashboard')->group(function () {
         Volt::route('', 'pages.dashboard.dashboard')
-            ->name('dashboard');
+            ->name('dashboard')->middleware(SubscriptionMiddleware::class);
 
         Volt::route('/negotiations', 'pages.dashboard.negotiations')
             ->name('dashboard.negotiations');
@@ -74,7 +75,6 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
 
         Volt::route('/{negotiation?}/subject/{subject:name}/show', 'pages.subject.show-subject')
             ->name('subject.show');
-
 
         Volt::route('/{negotiationId}/subject/{subjectId}/contact-point/{contactPointId}/edit', 'forms.contact.edit-contact-point')
             ->name('contact-point.edit');

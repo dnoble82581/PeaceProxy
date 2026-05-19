@@ -57,6 +57,7 @@
 					wire:navigate
 					:route="route('dashboard.negotiations', authUser()->tenant->subdomain)"
 					:current="request()->routeIs('dashboard.negotiations')"
+					:visible="false"
 					text="Negotiations"
 					icon="archive-box"
 			/>
@@ -81,7 +82,13 @@
 					text="Settings"
 					icon="cog"
 			/>
-
+			<x-side-bar.item
+					wire:navigate
+					:route="route('billing.index', authUser()->tenant->subdomain)"
+					:current="request()->routeIs('billing.index')"
+					text="Billing"
+					icon="building-library"
+			/>
 			<div class="absolute bottom-8">
 				<x-side-bar.item
 						target="_blank"
@@ -101,7 +108,6 @@
 	<x-slot:footer>
 		<h1 class="text-white">test</h1>
 	</x-slot:footer>
-
 	{{ $slot }}
 </x-layout>
 

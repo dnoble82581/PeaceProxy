@@ -7,6 +7,7 @@
 	 * PURPOSE: Pricing table (Monthly/Yearly) + Stripe card modal + subscription flow for TENANT-first billing
 	 */
 
+	use App\Services\Billing\StripeService;
 	use Livewire\Volt\Component;
 	use Illuminate\Support\Facades\Auth;
 	use Stripe\Exception\ApiErrorException;
@@ -20,7 +21,6 @@
 		public function mount():void
 		{
 			$tenant = Auth::user()->tenant;
-			$tenant->createOrGetStripeCustomer();
 			$intent = $tenant->createSetupIntent();
 
 			$this->clientSecret = $intent->client_secret;
@@ -30,22 +30,18 @@
 		}
 
 		// Livewire action invoked from JS after collecting a PM with Elements
-		public function startSubscription(string $priceId, string $paymentMethodId):void
+		public function startMonthlySubscription(StripeService $stripeService):void
 		{
-			$tenant = Auth::user()->tenant;
+			$session = $stripeService->startSubscription(config('billing.prices.team_monthly'));
 
-			$tenant->updateDefaultPaymentMethod($paymentMethodId);
-			$subscription = $tenant->newSubscription('default', $priceId)
-				->trialDays(30) // Add a 30-day free trial
-				->create($paymentMethodId);
+			$this->redirect($session->url);
+		}
 
-			// Save the trial end date to the tenant model
-			$tenant->trial_ends_at = $subscription->trial_ends_at;
-			$tenant->save();
+		public function startYearlySubscription(StripeService $stripeService):void
+		{
+			$session = $stripeService->startSubscription(config('billing.prices.team_yearly'));
 
-			session()->flash('ok', 'Subscribed successfully. Your 30-day free trial has started.');
-			$this->dispatch('userSubscribed');
-			// define this route to your billing dashboard
+			$this->redirect($session->url);
 		}
 
 		// Optional: open Stripe Customer Portal
@@ -59,7 +55,7 @@
 				$returnUrl = route('billing.index', ['tenantSubdomain' => tenant()->subdomain], true);
 				$url = $tenant->billingPortalUrl($returnUrl);
 				return $this->redirect($url);
-			} catch (\Stripe\Exception\ApiErrorException $e) {
+			} catch (ApiErrorException $e) {
 				// This is what you’ll see when portal isn’t configured in the current mode
 				report($e);
 				session()->flash('error',
@@ -70,111 +66,16 @@
 	};
 ?>
 
-<div
-		x-data="{
-        modal:false,
-        selectedPrice:null,
-        processing:false,
-        errorMessage:'',
-        async waitForStripe(maxTries = 20){
-            let tries = 0;
-            while(typeof window.Stripe === 'undefined' && tries < maxTries){
-                await new Promise(r => setTimeout(r, 150));
-                tries++;
-            }
-            return typeof window.Stripe !== 'undefined';
-        },
-        async open(price){
-            this.errorMessage = '';
-            this.selectedPrice = price;
-            this.modal = true;
-            await this.$nextTick();
-
-            const pk = @js($publishableKey);
-            if(location.protocol !== 'https:' && pk.startsWith('pk_live_')){
-                this.errorMessage = 'Stripe requires HTTPS when using live keys. Please open this site over HTTPS or switch to test keys.';
-                return;
-            }
-
-            const stripeReady = await this.waitForStripe();
-            if(!stripeReady){
-                this.errorMessage = 'Stripe.js failed to load. Please refresh the page.';
-                return;
-            }
-
-            try{
-                if(!window.__ppStripe){
-                    window.__ppStripe = Stripe(pk);
-                }
-                if(!window.__ppElements){
-                    window.__ppElements = window.__ppStripe.elements({ clientSecret: @js($clientSecret) });
-                }
-                if(!window.__ppPayment){
-                    window.__ppPayment = window.__ppElements.create('payment');
-                }
-                try { window.__ppPayment.unmount(); } catch(e) {}
-                window.__ppPayment.mount('#pp-payment-element');
-            } catch(e){
-                this.errorMessage = (e && e.message) ? e.message : 'Unable to initialize Stripe Elements.';
-            }
-        },
-        async subscribe(){
-            if(!window.__ppStripe || !window.__ppElements){
-                this.$dispatch('toast', {type:'error', text: 'Payment form is not ready yet.'});
-                return;
-            }
-            this.processing = true;
-            const {error, setupIntent} = await window.__ppStripe.confirmSetup({
-                elements: window.__ppElements,
-                redirect: 'if_required',
-            });
-            if(error){
-                this.processing = false;
-                this.$dispatch('toast', {type:'error', text: error.message});
-                return;
-            }
-            $wire.startSubscription(this.selectedPrice, setupIntent.payment_method);
-        }
-    }"
-		class="min-h-[calc(100vh-6rem)] bg-neutral-50 py-12 dark:bg-dark-800"
->
+<div class="min-h-[calc(100vh-6rem)] bg-neutral-50 py-12 dark:bg-dark-800">
 	<div class="mx-auto max-w-6xl px-4">
 		<header class="text-center mb-10">
 			<h1 class="text-3xl font-bold tracking-tight">Choose your plan</h1>
 			<p class="mt-2 text-neutral-600 dark:text-dark-300">Tenant-first billing — one subscription per agency.</p>
 		</header>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-			<!-- Free Trial -->
-			<div class="rounded-2xl border border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
-				<div class="flex items-baseline gap-2">
-					<h2 class="text-xl font-semibold">Free Trial</h2>
-					<x-badge
-							text="Free"
-							color="slate"
-							round
-							xs />
-				</div>
-				<div class="mt-4 flex items-end gap-1">
-					<span class="text-4xl font-bold">$0</span>
-					<span class="text-neutral-500">/mo</span>
-				</div>
-				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
-					<li>✔ Full access for 30 days</li>
-					<li>✔ No credit card required</li>
-					<li>✔ Cancel anytime</li>
-					<li>✔ All features included</li>
-					<li>✔ Email support</li>
-				</ul>
-				<button
-						@click="open(@js($priceMonthly))"
-						class="mt-6 w-full rounded-xl bg-slate-600 text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-				>Start free trial
-				</button>
-			</div>
-
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			<!-- Monthly -->
-			<div class="rounded-2xl border border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
+			<div class="rounded-2xl border flex flex-col gap-4 justify-evenly border-neutral-200 bg-white dark:bg-dark-700 p-6 shadow-sm">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
 					<x-badge
@@ -184,25 +85,26 @@
 							text="Monthly" />
 				</div>
 				<div class="mt-4 flex items-end gap-1">
-					<span class="text-4xl font-bold">$99</span>
+					<span class="text-4xl font-bold">$299</span>
 					<span class="text-neutral-500">/mo</span>
 				</div>
-				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
+				<ul class="space-y-2 text-sm text-neutral-700 dark:text-neutral-200">
 					<li>✔ Unlimited incidents</li>
 					<li>✔ Team collaboration</li>
 					<li>✔ Real-time chat (Reverb)</li>
 					<li>✔ Reports & exports</li>
 					<li>✔ Email support</li>
 				</ul>
-				<button
-						@click="open(@js($priceMonthly))"
-						class="mt-6 w-full rounded-xl bg-black text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/20"
+				<x-button
+						loading="startMonthlySubscription"
+						wire:click="startMonthlySubscription"
+						class="w-full"
 				>Start monthly
-				</button>
+				</x-button>
 			</div>
 
 			<!-- Yearly -->
-			<div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-700 dark:text-dark-300">
+			<div class="rounded-2xl h-full border flex flex-col justify-between border-neutral-200 bg-white p-6 shadow-sm dark:bg-dark-700 dark:text-dark-300">
 				<div class="flex items-baseline gap-2">
 					<h2 class="text-xl font-semibold">Agency Plan</h2>
 					<x-badge
@@ -212,7 +114,7 @@
 							class="animate-pulse" />
 				</div>
 				<div class="mt-4 flex items-end gap-1">
-					<span class="text-4xl font-bold">$999</span>
+					<span class="text-4xl font-bold">$2999</span>
 					<span class="text-neutral-500">/yr</span>
 				</div>
 				<ul class="mt-6 space-y-2 text-sm text-neutral-700 dark:text-dark-300">
@@ -220,11 +122,15 @@
 					<li>✔ All monthly features</li>
 					<li>✔ Priority support</li>
 				</ul>
-				<button
-						@click="open(@js($priceYearly))"
-						class="mt-6 w-full rounded-xl bg-primary-600 text-white py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/20"
-				>Start yearly
-				</button>
+				<div class="">
+					<x-button
+							loading="startYearlySubscription"
+							class="w-full"
+							wire:click="startYearlySubscription"
+					>Start yearly
+					</x-button>
+				</div>
+
 			</div>
 		</div>
 
@@ -241,48 +147,6 @@
 				{{ session('ok') }}
 			</div>
 		@endif
-	</div>
-
-	<!-- Modal -->
-	<div
-			x-cloak
-			x-show="modal"
-			x-transition.opacity
-			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-			style="display: none;"
-			@keydown.escape.window="modal=false"
-	>
-		<div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-			<div class="flex items-center justify-between">
-				<h3 class="text-lg font-semibold">Add payment method</h3>
-				<button
-						@click="modal=false; try { window.__ppPayment && window.__ppPayment.unmount(); } catch(e) {}"
-						class="p-1 rounded-lg hover:bg-neutral-100 dark:text-dark-700">✕
-				</button>
-			</div>
-
-			<template x-if="errorMessage">
-				<div
-						class="mt-4 rounded-lg bg-amber-50 text-amber-900 p-3 text-sm"
-						x-text="errorMessage"></div>
-			</template>
-
-			<template x-if="!errorMessage">
-				<div
-						class="mt-4"
-						id="pp-payment-element"></div>
-			</template>
-
-			<button
-					@click="subscribe()"
-					:disabled="processing || errorMessage"
-					class="mt-6 w-full rounded-xl bg-black text-white py-3 font-medium disabled:opacity-60"
-			>
-				<span x-show="!processing">Confirm & Subscribe</span>
-				<span x-show="processing">Processing…</span>
-			</button>
-			<p class="mt-3 text-xs text-neutral-500">Secure payments by Stripe.</p>
-		</div>
 	</div>
 </div>
 

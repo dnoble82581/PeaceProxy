@@ -10,7 +10,7 @@ class BillingController
     public function showSubscribe(Request $request)
     {
         $tenant = $request->user()->tenant;
-        $tenant->createOrGetStripeCustomer();        // ensures stripe_id
+        $tenant->createOrGetStripeCustomer();
 
         $intent = $tenant->createSetupIntent();
 
