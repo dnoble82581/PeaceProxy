@@ -39,16 +39,16 @@ Route::domain('{tenantSubdomain}.'.config('app.domain'))->middleware([
             ->name('dashboard')->middleware(SubscriptionMiddleware::class);
 
         Volt::route('/negotiations', 'pages.dashboard.negotiations')
-            ->name('dashboard.negotiations');
+            ->name('dashboard.negotiations')->middleware(SubscriptionMiddleware::class);
 
         Volt::route('/settings', 'pages.dashboard.settings')
             ->name('dashboard.settings');
 
         Volt::route('/users', 'pages.dashboard.users')
-            ->name('dashboard.users');
+            ->name('dashboard.users')->middleware(SubscriptionMiddleware::class);
 
         Volt::route('/assessments', 'pages.dashboard.assessments')
-            ->name('pages.dashboard.assessments');
+            ->name('pages.dashboard.assessments')->middleware(SubscriptionMiddleware::class);
 
     });
 

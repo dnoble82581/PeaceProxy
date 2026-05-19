@@ -20,6 +20,7 @@
 		public function saveTenant():void
 		{
 			// Validate and create the tenant first
+			$this->tenantForm->trial_ends_at = now()->addDays(30);
 			$validatedTenant = $this->tenantForm->validate();
 			$newTenant = app(TenantCreationService::class)
 				->createTenant($validatedTenant);
@@ -48,7 +49,7 @@
 			$newTenant->update([
 				'billing_owner_id' => $newUser->id,
 			]);
-			
+
 			// Authenticate the user
 			Auth::login($newUser);
 

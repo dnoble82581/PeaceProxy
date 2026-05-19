@@ -83,6 +83,9 @@ class CreateTenantForm extends Form
     #[Validate(['nullable', 'exists:users,id'])]
     public $billing_owner_id = null;
 
+    #[Validate(['nullable', 'date', 'after_or_equal:today'])]
+    public $trial_ends_at = null;
+
     public function toArray()
     {
         return [
@@ -106,6 +109,10 @@ class CreateTenantForm extends Form
             'timezone' => $this->timezone,
             'locale' => $this->locale,
             'billing_owner_id' => $this->billing_owner_id,
+            'primary_color' => $this->primary_color,
+            'secondary_color' => $this->secondary_color,
+            'logo_path' => $this->logo_path,
+            'trial_ends_at' => $this->trial_ends_at,
         ];
     }
 }

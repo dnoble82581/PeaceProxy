@@ -135,11 +135,11 @@
 		</div>
 
 		<div class="mt-8 text-center">
-			<button
+			<x-button
+					loading="managePortal"
 					wire:click="managePortal"
-					class="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium dark:text-dark-800 hover:bg-neutral-50"
 			>Manage billing
-			</button>
+			</x-button>
 		</div>
 
 		@if (session('ok'))

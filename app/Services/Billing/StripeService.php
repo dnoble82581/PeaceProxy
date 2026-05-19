@@ -23,4 +23,9 @@ class StripeService
                 'cancel_url' => route('dashboard', ['tenantSubdomain' => tenant()->subdomain]),
             ]);
     }
+
+    public function startTrial()
+    {
+
+    }
 }
