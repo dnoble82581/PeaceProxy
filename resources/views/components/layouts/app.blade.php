@@ -57,7 +57,6 @@
 					wire:navigate
 					:route="route('dashboard.negotiations', authUser()->tenant->subdomain)"
 					:current="request()->routeIs('dashboard.negotiations')"
-					:visible="false"
 					text="Negotiations"
 					icon="archive-box"
 			/>
@@ -108,6 +107,17 @@
 	<x-slot:footer>
 		<h1 class="text-white">test</h1>
 	</x-slot:footer>
+	@if(tenant()->onTrial())
+		<div class="mb-4">
+			<x-banner>
+				<x-slot:text>
+					You are currently trying out PeaceProxy. Your trial will expire
+					on {{ tenant()->trial_ends_at->format('M d, Y') }}.
+				</x-slot:text>
+			</x-banner>
+		</div>
+	@endif
+
 	{{ $slot }}
 </x-layout>
 

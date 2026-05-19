@@ -202,13 +202,8 @@
 						<dd class="font-medium">{{ $subscription['quantity'] ?? 1 }}</dd>
 					</div>
 					<div>
-						@if($subscription['price_display'] === 'Monthly plan' || $subscription['price_display'] === 'Yearly plan')
-							<dt class="text-neutral-500 dark:text-dark-400">Customer Since</dt>
-							<dd class="font-medium">{{Carbon::parse(tenant()->subscription()->created_at)->format('M d Y') }}</dd>
-						@else
-							<dt class="text-neutral-500 dark:text-dark-400">Trial ends</dt>
-							<dd class="font-medium">{{ $subscription['trial_ends_at'] ? Carbon::parse($subscription['trial_ends_at'])->format('M d Y') : '—' }}</dd>
-						@endif
+						<dt class="text-neutral-500 dark:text-dark-400">Trial ends</dt>
+						<dd class="font-medium">{{ $subscription['trial_ends_at'] ? Carbon::parse($subscription['trial_ends_at'])->format('M d Y') : '—' }}</dd>
 					</div>
 					<div>
 						<dt class="text-neutral-500 dark:text-dark-400">Cancels at</dt>
